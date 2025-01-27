@@ -1,0 +1,46 @@
+amazon_align=# \d dentistas
+                                               Tabela "public.dentistas"
+       Coluna        |            Tipo             | OrdenaþÒo | Pode ser nulo |                PadrÒo
+---------------------+-----------------------------+-----------+---------------+---------------------------------------
+ id                  | integer                     |           | not null      | nextval('dentistas_id_seq'::regclass)
+ nome                | character varying           |           | not null      |
+ cpf                 | character varying           |           | not null      |
+ cro                 | character varying           |           | not null      |
+ telefone            | character varying           |           |               |
+ email               | character varying           |           | not null      |
+ endereco            | character varying           |           |               |
+ cidade              | character varying           |           | not null      |
+ estado              | character(2)                |           | not null      |
+ especializacao      | character varying           |           |               |
+ data_credenciamento | timestamp without time zone |           |               | CURRENT_TIMESTAMP
+ status              | character varying           |           |               | 'Ativo'::character varying
+ observacoes         | text                        |           |               |
+═ndices:
+    "dentistas_pkey" PRIMARY KEY, btree (id)
+    "dentistas_cpf_key" UNIQUE CONSTRAINT, btree (cpf)
+    "dentistas_cro_key" UNIQUE CONSTRAINT, btree (cro)
+    "dentistas_email_key" UNIQUE CONSTRAINT, btree (email)
+
+
+================================================================================================================================
+
+amazon_align=# \d pacientes
+                                              Tabela "public.pacientes"
+      Coluna       |            Tipo             | OrdenaþÒo | Pode ser nulo |                PadrÒo
+-------------------+-----------------------------+-----------+---------------+---------------------------------------
+ id                | integer                     |           | not null      | nextval('pacientes_id_seq'::regclass)
+ dentista_id       | integer                     |           | not null      |
+ nome              | character varying           |           | not null      |
+ email             | character varying           |           | not null      |
+ telefone          | character varying           |           |               |
+ endereco          | character varying           |           |               |
+ cpf               | character varying           |           |               |
+ data_nascimento   | date                        |           |               |
+ historico_clinico | text                        |           |               |
+ status            | character varying           |           |               | 'Ativo'::character varying
+ data_criacao      | timestamp without time zone |           |               | CURRENT_TIMESTAMP
+═ndices:
+    "pacientes_pkey" PRIMARY KEY, btree (id)
+    "pacientes_cpf_key" UNIQUE CONSTRAINT, btree (cpf)
+Restriþ§es de chave estrangeira:
+    "fk_dentista" FOREIGN KEY (dentista_id) REFERENCES dentistas(id) ON DELETE CASCADE
