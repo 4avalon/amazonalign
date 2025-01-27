@@ -1,0 +1,111 @@
+/* Estilo geral do container de busca */
+#search-container {
+  display: flex;
+  align-items: center;
+  margin-left: auto; /* Move para o lado direito do menu */
+  gap: 8px; /* Espaçamento entre input e botão */
+}
+
+/* Estilo para o input */
+#search-input {
+  width: 200px;
+  padding: 8px;
+  font-size: 1rem;
+  border: 2px solid #ff5722; /* Substitua pela cor correspondente */
+
+  border-radius: 5px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  background-color: var(--foreground-color);
+  color: var(--text-color);
+}
+
+
+#search-input:focus {
+  outline: none;
+  border-color: var(--hover-color);
+  box-shadow: var(--box-shadow-hover);
+}
+
+/* Estilo para o botão de busca */
+#search-button {
+  padding: 8px 16px;
+  font-size: 1rem;
+  background-color: var(--primary-color);
+  color: var(--foreground-color);
+  border: 2px solid #ff5722; /* Substitua pela cor correspondente */
+
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+#search-button:hover {
+  background-color: var(--hover-color);
+  border-color: var(--hover-color);
+  color: var(--foreground-color);
+}
+
+
+/* Dropdown de resultados */
+#search-results-container {
+  width: 100%;
+  background-color: var(--background-color);
+  border: 1px solid var(--secondary-color);
+  border-radius: 5px;
+  padding: 10px;
+  z-index: 1000;
+  box-shadow: var(--box-shadow);
+}
+
+/* Botão de fechar no dropdown */
+#close-search-dropdown {
+  float: right;
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  color: var(--accent-color);
+  transition: color 0.3s ease;
+}
+
+#close-search-dropdown:hover {
+  color: var(--highlight-color);
+}
+
+/* Estilo dos itens de resultado */
+.search-item {
+  padding: 10px;
+  margin: 5px 0;
+  background-color: var(--secondary-color);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.search-item:hover {
+  background-color: var(--hover-color);
+  color: var(--foreground-color);
+  transform: scale(1.02); /* Efeito de leve zoom */
+}
+
+.search-item h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--text-color);
+}
+
+.search-item p {
+  margin: 5px 0 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary-color);
+}
+
+/* Destaque para as palavras encontradas */
+.search-item-highlight {
+  background-color: var(--accent-color);
+  color: var(--foreground-color);
+  font-weight: bold;
+  padding: 2px 4px;
+  border-radius: 3px;
+}

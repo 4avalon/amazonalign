@@ -1,0 +1,21 @@
+footer {
+  background-color: var(--header-footer-background); /* Fundo dinâmico */
+  color: var(--header-footer-text-color); /* Texto dinâmico */
+  text-align: center;
+  padding: 20px 0;
+  font-size: 0.9rem;
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2); /* Sombra padrão */
+  border-top: 3px solid var(--header-footer-border); /* Destaque na borda superior */
+}
+
+footer a {
+  text-decoration: none;
+  color: var(--header-footer-text-color); /* Link com cor de texto padrão */
+  margin: 0 10px;
+  transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+
+footer a:hover {
+  color: var(--header-footer-link-hover); /* Cor ao passar o mouse */
+  text-shadow: 0 1px 4px var(--header-footer-link-hover); /* Efeito de sombra */
+}

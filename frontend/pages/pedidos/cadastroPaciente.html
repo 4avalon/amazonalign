@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon Align - Fazer Pedido</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f7;
+        }
+        header {
+            background-color: #00A884;
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 1.8em;
+        }
+        section {
+            padding: 40px 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #005C89;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        form label {
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+        form input, form select, form textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        form button {
+            background-color: #00A884;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        form button:hover {
+            background-color: #005C89;
+        }
+        .status-info {
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Pedido Page -->
+    <header>
+        <h1>Fazer Pedido</h1>
+    </header>
+    <section>
+        <h2>Solicitação de Alinhadores</h2>
+        <p>Preencha os detalhes abaixo para realizar a solicitação de planejamento ortodôntico e produção de alinhadores.</p>
+        <form id="pedido-form">
+            <label for="paciente-nome">Nome do Paciente</label>
+            <input type="text" id="paciente-nome" name="paciente-nome" placeholder="Digite o nome do paciente" required>
+
+            <label for="idade">Idade do Paciente</label>
+            <input type="number" id="idade" name="idade" placeholder="Digite a idade do paciente" required>
+
+            <label for="dados-clinicos">Dados Clínicos</label>
+            <textarea id="dados-clinicos" name="dados-clinicos" placeholder="Descreva o caso clínico" rows="4" required></textarea>
+
+            <label for="arquivos">Upload de Arquivos (STL ou OBJ)</label>
+            <input type="file" id="arquivos" name="arquivos" accept=".stl,.obj" required>
+
+            <label for="preferencia-planejamento">Preferência de Planejamento</label>
+            <select id="preferencia-planejamento" name="preferencia-planejamento" required>
+                <option value="videoconferencia">Planejamento por Videoconferência</option>
+                <option value="interno">Planejamento Interno (envio para aprovação)</option>
+            </select>
+
+            <label for="informacoes-adicionais">Informações Adicionais</label>
+            <textarea id="informacoes-adicionais" name="informacoes-adicionais" placeholder="Adicione informações adicionais, se necessário" rows="4"></textarea>
+
+            <button type="submit">Enviar Pedido</button>
+        </form>
+
+        <div class="status-info">
+            <p>Após o envio, você poderá acompanhar o status do seu pedido diretamente no painel do profissional credenciado.</p>
+        </div>
+    </section>
+
+</body>
+</html>

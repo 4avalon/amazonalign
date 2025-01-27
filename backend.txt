@@ -1,0 +1,354 @@
+// backend\config\db.js
+
+// backend/config/db.js
+import pkg from 'pg';
+const { Client } = pkg;
+
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const client = new Client({
+  connectionString: process.env.DATABASE_URL,
+});
+
+client.connect()
+  .then(() => console.log('Conectado ao PostgreSQL com sucesso!'))
+  .catch(err => console.error('Erro ao conectar ao PostgreSQL:', err));
+
+export default client;
+
+
+
+// backend\controllers\dentistaController.js
+
+import { listarDentistas, adicionarDentista, removerDentista } from '../models/dentista.js';
+
+// Listar todos os dentistas
+export const listarDentistasController = async (req, res) => {
+  try {
+    const dentistas = await listarDentistas();
+    res.status(200).json(dentistas);
+  } catch (err) {
+    res.status(500).send('Erro ao listar dentistas');
+  }
+};
+
+// Adicionar um dentista
+export const adicionarDentistaController = async (req, res) => {
+  const { nome, email, telefone, senha } = req.body;
+  try {
+    const dentista = await adicionarDentista(nome, email, telefone, senha);
+    res.status(201).json(dentista);
+  } catch (err) {
+    res.status(500).send('Erro ao adicionar dentista');
+  }
+};
+
+// Remover um dentista
+export const removerDentistaController = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const dentista = await removerDentista(id);
+    if (!dentista) {
+      return res.status(404).send('Dentista não encontrado');
+    }
+    res.status(200).json({ message: 'Dentista removido com sucesso' });
+  } catch (err) {
+    res.status(500).send('Erro ao remover dentista');
+  }
+};
+
+
+
+// backend\controllers\pacienteController.js
+
+import { listarPacientes, adicionarPaciente, removerPaciente } from '../models/paciente.js';
+
+// Listar todos os pacientes
+export const listarPacientesController = async (req, res) => {
+  try {
+    const pacientes = await listarPacientes();
+    res.status(200).json(pacientes);
+  } catch (err) {
+    res.status(500).send('Erro ao listar pacientes');
+  }
+};
+
+// Adicionar um paciente
+export const adicionarPacienteController = async (req, res) => {
+  const { nome, email, telefone, dentista_id } = req.body;
+  try {
+    const paciente = await adicionarPaciente(nome, email, telefone, dentista_id);
+    res.status(201).json(paciente);
+  } catch (err) {
+    res.status(500).send('Erro ao adicionar paciente');
+  }
+};
+
+// Remover um paciente
+export const removerPacienteController = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const paciente = await removerPaciente(id);
+    if (!paciente) {
+      return res.status(404).send('Paciente não encontrado');
+    }
+    res.status(200).json({ message: 'Paciente removido com sucesso' });
+  } catch (err) {
+    res.status(500).send('Erro ao remover paciente');
+  }
+};
+
+
+
+// backend\controllers\pedidoController.js
+
+import { listarPedidos, adicionarPedido, removerPedido } from '../models/pedido.js';
+
+// Listar todos os pedidos
+export const listarPedidosController = async (req, res) => {
+  try {
+    const pedidos = await listarPedidos();
+    res.status(200).json(pedidos);
+  } catch (err) {
+    res.status(500).send('Erro ao listar pedidos');
+  }
+};
+
+// Adicionar um pedido
+export const adicionarPedidoController = async (req, res) => {
+  const { paciente_id, pedido_details } = req.body;
+  try {
+    const pedido = await adicionarPedido(paciente_id, pedido_details);
+    res.status(201).json(pedido);
+  } catch (err) {
+    res.status(500).send('Erro ao adicionar pedido');
+  }
+};
+
+// Remover um pedido
+export const removerPedidoController = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const pedido = await removerPedido(id);
+    if (!pedido) {
+      return res.status(404).send('Pedido não encontrado');
+    }
+    res.status(200).json({ message: 'Pedido removido com sucesso' });
+  } catch (err) {
+    res.status(500).send('Erro ao remover pedido');
+  }
+};
+
+
+
+// backend\middlewares\errorHandler.js
+
+// backend/middlewares/errorHandler.js
+export const errorHandler = (err, req, res, next) => {
+  console.error('Erro inesperado:', err);
+  res.status(500).send({ message: 'Erro interno do servidor. Tente novamente mais tarde.' });
+};
+
+
+
+// backend\middlewares\validate.js
+
+// backend/middlewares/validate.js
+import { check, validationResult } from 'express-validator';
+
+// Validação para adicionar ou atualizar dentistas
+export const validateDentista = [
+  check('nome').notEmpty().withMessage('O nome é obrigatório'),
+  check('email').isEmail().withMessage('O email precisa ser válido'),
+  check('telefone').notEmpty().withMessage('O telefone é obrigatório'),
+  check('senha').notEmpty().withMessage('A senha é obrigatória'),
+];
+
+// Validação para adicionar ou atualizar pacientes
+export const validatePaciente = [
+  check('nome').notEmpty().withMessage('O nome é obrigatório'),
+  check('email').isEmail().withMessage('O email precisa ser válido'),
+  check('telefone').notEmpty().withMessage('O telefone é obrigatório'),
+  check('dentista_id').isInt().withMessage('O ID do dentista deve ser um número válido'),
+];
+
+// Validação para adicionar ou atualizar pedidos
+export const validatePedido = [
+  check('paciente_id').isInt().withMessage('O ID do paciente deve ser um número válido'),
+  check('pedido_details').notEmpty().withMessage('Os detalhes do pedido são obrigatórios'),
+];
+
+// Middleware para verificar erros de validação
+export const handleValidationErrors = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  next();
+};
+
+
+
+// backend\models\dentista.js
+
+import client from '../config/db.js';
+
+// Listar dentistas
+export const listarDentistas = async () => {
+  const result = await client.query('SELECT * FROM dentistas');
+  return result.rows;
+};
+
+// Adicionar dentista
+export const adicionarDentista = async (nome, email, telefone, senha) => {
+  const result = await client.query(
+    'INSERT INTO dentistas (nome, email, telefone, senha) VALUES ($1, $2, $3, $4) RETURNING *',
+    [nome, email, telefone, senha]
+  );
+  return result.rows[0];
+};
+
+// Remover dentista
+export const removerDentista = async (id) => {
+  const result = await client.query('DELETE FROM dentistas WHERE id = $1 RETURNING *', [id]);
+  return result.rows[0];
+};
+
+
+
+// backend\models\paciente.js
+
+import client from '../config/db.js';
+
+// Listar pacientes
+export const listarPacientes = async () => {
+  const result = await client.query('SELECT * FROM pacientes');
+  return result.rows;
+};
+
+// Adicionar paciente
+export const adicionarPaciente = async (nome, email, telefone, dentista_id) => {
+  const result = await client.query(
+    'INSERT INTO pacientes (nome, email, telefone, dentista_id) VALUES ($1, $2, $3, $4) RETURNING *',
+    [nome, email, telefone, dentista_id]
+  );
+  return result.rows[0];
+};
+
+// Remover paciente
+export const removerPaciente = async (id) => {
+  const result = await client.query('DELETE FROM pacientes WHERE id = $1 RETURNING *', [id]);
+  return result.rows[0];
+};
+
+
+
+// backend\models\pedido.js
+
+import client from '../config/db.js';
+
+// Listar pedidos
+export const listarPedidos = async () => {
+  const result = await client.query('SELECT * FROM pedidos');
+  return result.rows;
+};
+
+// Adicionar pedido
+export const adicionarPedido = async (paciente_id, pedido_details) => {
+  const result = await client.query(
+    'INSERT INTO pedidos (paciente_id, pedido_details) VALUES ($1, $2) RETURNING *',
+    [paciente_id, pedido_details]
+  );
+  return result.rows[0];
+};
+
+// Remover pedido
+export const removerPedido = async (id) => {
+  const result = await client.query('DELETE FROM pedidos WHERE id = $1 RETURNING *', [id]);
+  return result.rows[0];
+};
+
+
+
+// backend\routes\dentistas.js
+
+import express from 'express';
+import { listarDentistasController, adicionarDentistaController, removerDentistaController } from '../controllers/dentistaController.js';
+import { validateDentista, handleValidationErrors } from '../middlewares/validate.js';
+
+const router = express.Router();
+
+router.get('/', listarDentistasController);
+router.post('/', validateDentista, handleValidationErrors, adicionarDentistaController);
+router.put('/:id', validateDentista, handleValidationErrors, adicionarDentistaController);
+router.delete('/:id', removerDentistaController);
+
+export default router;
+
+
+
+// backend\routes\pacientes.js
+
+import express from 'express';
+import { listarPacientesController, adicionarPacienteController, removerPacienteController } from '../controllers/pacienteController.js';
+import { validatePaciente, handleValidationErrors } from '../middlewares/validate.js';
+
+const router = express.Router();
+
+router.get('/', listarPacientesController);
+router.post('/', validatePaciente, handleValidationErrors, adicionarPacienteController);
+router.put('/:id', validatePaciente, handleValidationErrors, adicionarPacienteController);
+router.delete('/:id', removerPacienteController);
+
+export default router;
+
+
+
+// backend\routes\pedidos.js
+
+import express from 'express';
+import { listarPedidosController, adicionarPedidoController, removerPedidoController } from '../controllers/pedidoController.js';
+import { validatePedido, handleValidationErrors } from '../middlewares/validate.js';
+
+const router = express.Router();
+
+router.get('/', listarPedidosController);
+router.post('/', validatePedido, handleValidationErrors, adicionarPedidoController);
+router.delete('/:id', removerPedidoController);
+
+export default router;
+
+
+
+// backend\server.js
+
+// backend/server.js
+import express from 'express';
+import dotenv from 'dotenv';
+import cors from 'cors';
+import dentistasRoutes from './routes/dentistas.js';
+import pacientesRoutes from './routes/pacientes.js';
+import pedidosRoutes from './routes/pedidos.js';
+import { errorHandler } from './middlewares/errorHandler.js';  // Importando o middleware de erro
+
+dotenv.config();
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+app.use('/dentistas', dentistasRoutes);
+app.use('/pacientes', pacientesRoutes);
+app.use('/pedidos', pedidosRoutes);
+
+// Middleware para capturar erros
+app.use(errorHandler);
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
+});
+

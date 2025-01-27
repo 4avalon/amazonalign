@@ -1,0 +1,17 @@
+<div id="login-panel" style="display: true;"> <!-- Painel de boas-vindas inicialmente oculto -->
+  <p>Bem-vindo, <span id="user-name">Tem que Logar</span></p>
+  <button id="logout-button">Sair</button>
+</div>
+
+<div id="login-form-container">
+  <form id="loginForm"> <!-- Corrigido o ID para corresponder ao JavaScript -->
+    <label for="username">Usuário:</label>
+    <input type="text" id="username" name="username" placeholder="Digite seu usuário..." required />
+    
+    <label for="password">Senha:</label>
+    <input type="password" id="password" name="password" placeholder="Digite sua senha..." required />
+    
+    <button type="submit">Entrar</button>
+    <p id="loginMessage" style="color: red;"></p> <!-- Adicionado um espaço para exibir mensagens -->
+  </form>
+</div>

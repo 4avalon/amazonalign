@@ -1,0 +1,120 @@
+nav {
+  background-color: var(--header-footer-background); /* Fundo dinâmico */
+  color: var(--header-footer-text-color); /* Cor do texto dinâmico */
+  padding: 15px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Sombra padrão */
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+nav.scrolled {
+  background-color: rgba(0, 0, 0, 0.8); /* Fundo mais escuro ao rolar */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); /* Sombra mais forte */
+}
+
+nav .logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--header-footer-text-color); /* Cor primária dinâmica */
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  gap: 20px; /* Espaçamento entre os itens */
+}
+
+nav a {
+  text-decoration: none;
+  color: var(--header-footer-text-color); /* Cor do texto dinâmico */
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 10px 15px;
+  border-radius: 5px;
+  transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
+}
+
+nav a:hover {
+  background-color: var(--header-footer-link-hover); /* Fundo ao passar o mouse */
+  color: var(--header-footer-background); /* Texto ajustado dinamicamente */
+  transform: scale(1.05); /* Efeito de zoom */
+}
+
+nav a.active {
+  background-color: var(--header-footer-border); /* Fundo dinâmico para link ativo */
+  color: var(--header-footer-background); /* Texto branco dinâmico */
+  font-weight: bold;
+  border-bottom: 2px solid var(--header-footer-background); /* Destaque na parte inferior */
+}
+
+
+   header {
+            background-color: #00A884;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        header img {
+            height: 50px;
+        }
+        nav ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+        nav ul li {
+            position: relative;
+            margin: 0 15px;
+        }
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        nav ul li ul {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: #FFFFFF;
+            color: #00A884;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            list-style: none;
+            padding: 10px 0;
+        }
+        nav ul li ul li {
+            margin: 0;
+        }
+        nav ul li ul li a {
+            color: #00A884;
+            padding: 10px 20px;
+            display: block;
+            text-decoration: none;
+        }
+        nav ul li ul li a:hover {
+            background-color: #F7F7F7;
+        }
+        nav ul li:hover ul {
+            display: block;
+        }
+        .login {
+            background-color: white;
+            color: #00A884;
+            padding: 5px 10px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+        }

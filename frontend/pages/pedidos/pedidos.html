@@ -1,0 +1,78 @@
+<!-- ========================== -->
+<!-- Gestão de Pedidos Section -->
+<!-- ========================== -->
+<section id="gestao-pedidos" class="gestao-pedidos">
+    <h2>Gestão de Pedidos</h2>
+
+    <!-- Informações do Dentista -->
+    <div class="dentista-info">
+        <p><strong>Dentista:</strong> Dr. João Silva</p>
+    </div>
+
+    <!-- Resumo Geral de Pedidos -->
+    <div id="resumo-pedidos" class="resumo-pedidos">
+        <h3>Resumo Geral de Pedidos</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Paciente</th>
+                    <th>Data</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>Maria Souza</td>
+                    <td>2025-01-20</td>
+                    <td>Em Andamento</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>Carlos Lima</td>
+                    <td>2025-01-18</td>
+                    <td>Concluído</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>Ana Paula</td>
+                    <td>2025-01-22</td>
+                    <td>Cancelado</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Escolher ou Cadastrar Paciente -->
+    <div class="paciente-info">
+        <label for="paciente">Paciente:</label>
+        <select id="paciente" name="paciente">
+            <option value="" disabled selected>Escolha um paciente</option>
+            <option value="1">Maria Souza</option>
+            <option value="2">Carlos Lima</option>
+        </select>
+        <button id="cadastrar-paciente">Cadastrar Paciente</button>
+    </div>
+
+    <!-- Status do Pedido -->
+    <div id="status-pedido" class="status-pedido">
+        <h3>Status do Pedido Atual</h3>
+        <p>Pedido em andamento para <strong>Maria Souza</strong>. <em>(Entrega prevista: 2025-01-25)</em></p>
+        <button id="detalhes-pedido">Ver Detalhes</button>
+    </div>
+
+    <!-- Cadastrar Novo Pedido -->
+    <div id="novo-pedido" class="novo-pedido" style="display: none;">
+        <h3>Cadastrar Novo Pedido</h3>
+        <form>
+            <label for="detalhes">Detalhes do Pedido:</label>
+            <textarea id="detalhes" name="detalhes" rows="4"></textarea>
+
+            <label for="data">Data de Entrega:</label>
+            <input type="date" id="data" name="data">
+
+            <button type="submit">Salvar Pedido</button>
+        </form>
+    </div>
+</section>

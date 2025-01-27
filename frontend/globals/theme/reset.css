@@ -1,0 +1,51 @@
+/* Tema claro (padrão) */
+:root {
+  /* Cores base */
+  --background-color: #ffffff; /* Fundo principal */
+  --foreground-color: #f9f9f9; /* Fundo secundário */
+  --primary-color: #007acc; /* Cor primária */
+  --secondary-color: #004d99; /* Cor secundária */
+  --text-color: #333333; /* Texto principal */
+  --text-secondary-color: #555555; /* Texto secundário */
+  --border-color: #dddddd; /* Cor das bordas */
+  --link-color: #0066cc; /* Cor dos links */
+  --hover-color: #005299; /* Cor ao passar o mouse */
+
+  /* Cores de destaque */
+  --accent-color: #ff9800; /* Cor de destaque */
+  --highlight-color: #ffe082; /* Destaque suave */
+
+  /* Sombras */
+  --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra padrão */
+  --box-shadow-hover: 0 6px 10px rgba(0, 0, 0, 0.15); /* Sombra ao passar o mouse */
+
+  /* Gradientes */
+  --gradient-primary: linear-gradient(45deg, #007acc, #005299); /* Gradiente primário */
+  --gradient-secondary: linear-gradient(45deg, #004d99, #003366); /* Gradiente secundário */
+}
+
+/* Tema escuro */
+[data-theme='dark'] {
+  /* Cores base */
+  --background-color: #1e1e1e; /* Fundo principal */
+  --foreground-color: #2a2a2a; /* Fundo secundário */
+  --primary-color: #1a73e8; /* Cor primária */
+  --secondary-color: #003366; /* Cor secundária */
+  --text-color: #e5e5e5; /* Texto principal */
+  --text-secondary-color: #bbbbbb; /* Texto secundário */
+  --border-color: #444444; /* Cor das bordas */
+  --link-color: #4e9eff; /* Cor dos links */
+  --hover-color: #3b82f6; /* Cor ao passar o mouse */
+
+  /* Cores de destaque */
+  --accent-color: #ff9800; /* Cor de destaque */
+  --highlight-color: #ffcc80; /* Destaque suave */
+
+  /* Sombras */
+  --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); /* Sombra padrão */
+  --box-shadow-hover: 0 6px 10px rgba(0, 0, 0, 0.4); /* Sombra ao passar o mouse */
+
+  /* Gradientes */
+  --gradient-primary: linear-gradient(45deg, #1a73e8, #3b82f6); /* Gradiente primário */
+  --gradient-secondary: linear-gradient(45deg, #003366, #1a73e8); /* Gradiente secundário */
+}

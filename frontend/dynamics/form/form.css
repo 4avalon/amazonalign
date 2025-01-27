@@ -1,0 +1,96 @@
+/* Estilos para a seção Form */
+#contact-form-section {
+  min-height: 100vh; /* Ocupa pelo menos uma altura de viewport */
+  background-color: var(--foreground-color); /* Fundo dinâmico */
+  padding: 50px;
+  text-align: center;
+  font-family: 'Arial', sans-serif; /* Fonte padrão */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Sombra para destaque */
+  border-radius: 10px;
+}
+
+/* Título da seção */
+#contact-form-section h2 {
+  font-size: 2.5em;
+  color: var(--primary-color); /* Cor dinâmica */
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.1); /* Sombra suave */
+}
+
+/* Subtítulo */
+#contact-form-section p {
+  font-size: 1.2em;
+  color: var(--text-color);
+  margin-bottom: 20px;
+}
+
+/* Formulário */
+#contact-form {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: var(--background-color); /* Fundo do formulário */
+  border-radius: 10px; /* Bordas arredondadas */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Leve sombra */
+}
+
+/* Estilos dos campos de entrada */
+#contact-form input,
+#contact-form textarea {
+  width: 100%;
+  padding: 15px;
+  margin-bottom: 15px;
+  font-size: 1em;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  background-color: var(--foreground-color); /* Fundo dinâmico */
+  color: var(--text-color); /* Texto dinâmico */
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1); /* Sombra interna */
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Efeitos ao focar nos campos */
+#contact-form input:focus,
+#contact-form textarea:focus {
+  outline: none;
+  border-color: var(--primary-color); /* Borda destacada */
+  box-shadow: 0 0 5px var(--primary-color); /* Efeito de foco */
+}
+
+/* Botão de envio */
+#contact-form button {
+  display: block;
+  width: 100%;
+  padding: 15px;
+  font-size: 1.2em;
+  font-weight: bold;
+  background-color: var(--primary-color); /* Fundo dinâmico */
+  color: var(--background-color); /* Cor do texto */
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+/* Efeitos no botão ao passar o mouse */
+#contact-form button:hover {
+  background-color: var(--hover-color); /* Cor de hover dinâmica */
+  transform: scale(1.05); /* Leve efeito de zoom */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Sombra ao hover */
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  #contact-form-section h2 {
+    font-size: 2em;
+  }
+
+  #contact-form {
+    padding: 15px;
+  }
+
+  #contact-form button {
+    font-size: 1em;
+  }
+}

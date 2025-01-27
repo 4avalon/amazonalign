@@ -1,0 +1,67 @@
+
+
+/* Tema Moderno e Clean */
+:root {
+  /* Cores base */
+  --background-color: #f4f4f9; /* Fundo claro sutil */
+  --foreground-color: #ffffff; /* Fundo secundário branco puro */
+  --primary-color: #4CAF50; /* Verde suave para botões e destaques */
+  --secondary-color: #2196F3; /* Azul claro e moderno */
+  --text-color: #333333; /* Preto suave para texto principal */
+  --text-secondary-color: #777777; /* Cinza claro para texto secundário */
+  --border-color: #e0e0e0; /* Cinza para bordas */
+  --link-color: #3f51b5; /* Azul vibrante para links */
+  --hover-color: #009688; /* Verde-água ao passar o mouse */
+
+  /* Cores de destaque */
+  --accent-color: #FFC107; /* Amarelo para destaque */
+  --highlight-color: #E91E63; /* Rosa vivo para ações críticas */
+
+  /* Sombras */
+  --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra padrão */
+  --box-shadow-hover: 0 6px 12px rgba(0, 0, 0, 0.15); /* Sombra ao passar o mouse */
+
+  /* Gradientes */
+  --gradient-primary: linear-gradient(45deg, #4CAF50, #81C784); /* Gradiente primário verde suave */
+  --gradient-secondary: linear-gradient(45deg, #2196F3, #64B5F6); /* Gradiente secundário azul suave */
+
+  /* Ajuste para texto sobre fundo colorido */
+  --text-on-primary: #ffffff; /* Texto branco sobre cores primárias */
+  --text-on-secondary: #000000; /* Texto preto sobre cores secundárias */
+
+  /* nav e footer */
+  --header-footer-background: #00A884; /* Azul-escuro para menu e rodapé */
+  --header-footer-text-color: #ffffff; /* Cor do texto no rodapé/menu */
+  --header-footer-link-hover: #1abc9c; /* Verde-água ao passar o mouse nos links */
+  --header-footer-border: #455A64; /* Cinza-escuro para bordas no rodapé/menu */
+}
+
+/* Tema Escuro */
+[data-theme='dark'] {
+  /* Cores base */
+  --background-color: #121212; /* Fundo preto */
+  --foreground-color: #1E1E1E; /* Fundo secundário escuro */
+  --primary-color: #BB86FC; /* Roxo brilhante */
+  --secondary-color: #03DAC6; /* Verde-água brilhante */
+  --text-color: #E0E0E0; /* Texto principal branco acinzentado */
+  --text-secondary-color: #B0B0B0; /* Texto secundário cinza claro */
+  --border-color: #333333; /* Cinza-escuro para bordas */
+  --link-color: #81D4FA; /* Azul claro vibrante */
+  --hover-color: #FF8A65; /* Laranja suave ao passar o mouse */
+
+  /* Cores de destaque */
+  --accent-color: #FF4081; /* Rosa neon para destaque */
+  --highlight-color: #FFD54F; /* Amarelo brilhante para destaque crítico */
+
+  /* Sombras */
+  --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Sombra padrão */
+  --box-shadow-hover: 0 6px 10px rgba(0, 0, 0, 0.3); /* Sombra ao passar o mouse */
+
+  /* Gradientes */
+  --gradient-primary: linear-gradient(45deg, #BB86FC, #3700B3); /* Gradiente primário roxo */
+  --gradient-secondary: linear-gradient(45deg, #03DAC6, #018786); /* Gradiente secundário verde-água */
+
+  /* Ajuste para texto sobre fundo colorido */
+  --text-on-primary: #ffffff; /* Texto branco sobre cores primárias */
+  --text-on-secondary: #ffffff; /* Texto branco sobre cores secundárias */
+}

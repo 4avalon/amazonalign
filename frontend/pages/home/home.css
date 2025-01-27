@@ -1,0 +1,72 @@
+    /* ==========================
+           Hero Section
+        ========================== */
+        .hero {
+            background: linear-gradient(to right, #00A884, #005C89);
+            color: white;
+            text-align: center;
+            padding: 100px 20px;
+        }
+        .hero h1 {
+            font-size: 2.8em;
+            margin-bottom: 10px;
+        }
+        .hero p {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+        .hero .cta {
+            margin-top: 20px;
+        }
+        .hero .cta a {
+            background-color: #FFFFFF;
+            color: #00A884;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 1em;
+            margin: 0 10px;
+        }
+
+        /* ==========================
+           Section Styles
+        ========================== */
+        section {
+            padding: 50px 20px;
+            text-align: center;
+        }
+        .como-funciona, .beneficios, .depoimentos, .contato {
+            background-color: #F7F7F7;
+            margin-bottom: 20px;
+        }
+        .como-funciona h2, .beneficios h2, .depoimentos h2, .contato h2 {
+            color: #005C89;
+            margin-bottom: 15px;
+        }
+        .como-funciona p, .beneficios p, .depoimentos p, .contato p {
+            font-size: 1.1em;
+        }
+        .beneficios .item {
+            display: inline-block;
+            width: 30%;
+            text-align: center;
+            margin: 20px 1%;
+        }
+        .beneficios .item img {
+            width: 50px;
+            margin-bottom: 10px;
+        }
+        .depoimentos blockquote {
+            font-style: italic;
+            color: #333;
+        }
+        .contato a {
+            display: inline-block;
+            background-color: #00A884;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 1em;
+        }

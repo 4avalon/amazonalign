@@ -1,0 +1,112 @@
+cd /d "C:\4Avalon\Projetos\amazonalign"
+
+REM Lista os arquivos apenas no diretório raiz do projeto
+Lista de Arquivos no Diretório Principal:
+.gitignore
+backend.txt
+frontend.txt
+index.html
+index2.html
+map.cjs
+package-lock.json
+package.json
+README.txt
+tree.txt
+backend
+frontend
+
+REM Lista os arquivos na pasta frontend
+Lista de Arquivos na Pasta "frontend":
+├── assets
+│   └── icons
+│       └── avamap.ico
+├── core
+│   ├── config.js
+│   ├── dynamics.js
+│   ├── index.js
+│   ├── loader.js
+│   └── path.js
+├── dynamics
+│   ├── carousel
+│   │   ├── carousel.css
+│   │   ├── carousel.html
+│   │   ├── carouselHandler.js
+│   │   └── img
+│   │       ├── img1.jpg
+│   │       ├── img2.jpg
+│   │       ├── img3.jpg
+│   │       ├── img4.jpg
+│   │       ├── img5.jpg
+│   │       └── img6.jpg
+│   ├── form
+│   │   ├── form.css
+│   │   ├── form.html
+│   │   └── formHandler.js
+│   ├── login
+│   │   ├── login.css
+│   │   ├── login.html
+│   │   ├── loginHandler.js
+│   │   └── loginPanel.html
+│   └── search
+│       ├── dropDown.html
+│       ├── search.css
+│       ├── search.html
+│       └── searchHandler.js
+├── globals
+│   ├── footer
+│   │   ├── footer.css
+│   │   ├── footer.html
+│   │   └── footerHandler.js
+│   ├── nav
+│   │   ├── nav.css
+│   │   ├── nav.html
+│   │   └── navHandler.js
+│   └── theme
+│       ├── reset.css
+│       ├── styles.css
+│       ├── theme.css
+│       └── themeHandler.js
+└── pages
+    ├── about
+    │   ├── about.css
+    │   └── about.html
+    ├── credenciamento
+    │   ├── credenciamento.css
+    │   └── credenciamento.html
+    ├── home
+    │   ├── home.css
+    │   └── home.html
+    ├── login
+    ├── pedidos
+    │   ├── cadastroPaciente.html
+    │   ├── criarPedido.html
+    │   ├── detalhesPedido.html
+    │   ├── listarPedidos.html
+    │   ├── pedidos.css
+    │   └── pedidos.html
+    ├── sustentabilidade
+    └── theme
+        ├── theme.css
+        └── theme.html
+
+REM Lista os arquivos na pasta backend
+Lista de Arquivos na Pasta "backend":
+├── config
+│   └── db.js
+├── controllers
+│   ├── dentistaController.js
+│   ├── pacienteController.js
+│   └── pedidoController.js
+├── middlewares
+│   ├── errorHandler.js
+│   └── validate.js
+├── models
+│   ├── dentista.js
+│   ├── paciente.js
+│   └── pedido.js
+├── routes
+│   ├── dentistas.js
+│   ├── pacientes.js
+│   └── pedidos.js
+└── server.js
+

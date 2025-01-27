@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ficha Clínica - Amazon Align</title>
+       <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .form-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .form-container h1 {
+            text-align: center;
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .form-section {
+            margin-bottom: 20px;
+        }
+
+        .form-section h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 5px;
+            color: #555;
+        }
+
+        .dental-grid {
+            display: grid;
+            grid-template-columns: repeat(16, 1fr);
+            gap: 0px;
+            margin: 5px;
+            justify-items: center;
+        }
+
+        .dental-grid input[type="checkbox"] {
+            display: none;
+        }
+
+        .dental-grid label {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 40px;
+            height: 40px;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        .dental-grid input[type="checkbox"]:checked + label {
+            background-color: #007BFF;
+            border-color: #007BFF;
+            color: #fff;
+        }
+
+        .form-actions {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .btn {
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        @media (max-width: 768px) {
+            .form-container {
+                padding: 15px;
+            }
+
+            .dental-grid label {
+                width: 35px;
+                height: 35px;
+                font-size: 12px;
+            }
+
+            .btn {
+                font-size: 14px;
+                padding: 10px;
+            }
+        }
+.chips-container {
+    border: 1px solid #ccc; /* Borda discreta */
+    border-radius: 5px; /* Bordas arredondadas */
+    background-color: #f9f9f9; /* Fundo destacado */
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.linha {
+    display: flex; /* Layout flexível */
+    flex-wrap: wrap; /* Permite quebra de linha se necessário */
+    gap: 10px; /* Espaço entre os chips */
+    margin-bottom: 10px; /* Espaço entre linhas */
+}
+
+.linha:last-child {
+    margin-bottom: 0; /* Remove o espaço da última linha */
+}
+
+.chip {
+    background-color: #007BFF; /* Cor de fundo dos chips */
+    color: #fff; /* Cor do texto */
+    padding: 5px 10px; /* Espaçamento interno */
+    border-radius: 20px; /* Bordas arredondadas */
+    font-size: 14px; /* Tamanho do texto */
+    font-weight: bold; /* Texto em negrito */
+    white-space: nowrap; /* Evita quebra de texto nos chips */
+    display: inline-block; /* Mantém o layout flexível */
+}
+
+.expansion-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.expansion-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.expansion-slider {
+    width: 200px;
+    margin: 0 20px;
+}
+
+.expansion-status {
+    font-weight: bold;
+    color: #555;
+}
+
+.expansion-status.active {
+    color: #007BFF;
+}
+
+.form-section {
+    margin-bottom: 20px;
+}
+
+.form-section h3 {
+    font-size: 20px;
+    margin-bottom: 10px;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 5px;
+    color: #555;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #555;
+    cursor: pointer;
+}
+
+.form-group input[type="radio"], 
+.form-group input[type="checkbox"] {
+    margin-right: 10px;
+    transform: scale(1.2); /* Para facilitar o clique */
+    vertical-align: middle;
+}
+
+.form-group input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-top: 5px;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input[type="text"]:focus {
+    border-color: #007BFF;
+    outline: none;
+    background-color: #f9f9f9;
+}
+
+.form-group p {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+table th, table td {
+    border: 1px solid #ddd;
+    text-align: center;
+    padding: 10px;
+}
+
+table th {
+    background-color: #f9f9f9;
+    font-weight: bold;
+}
+
+.form-actions {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.btn {
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn:hover {
+    background-color: #0056b3;
+}
+
+@media (max-width: 768px) {
+    .form-container {
+        padding: 15px;
+    }
+
+    .form-group label {
+        font-size: 14px;
+    }
+
+    .form-group input[type="text"] {
+        font-size: 14px;
+        padding: 8px;
+    }
+
+    table th, table td {
+        font-size: 14px;
+        padding: 8px;
+    }
+
+    .btn {
+        font-size: 14px;
+        padding: 10px;
+    }
+}
+ .form-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .form-container h1 {
+            text-align: center;
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .form-section {
+            margin-bottom: 20px;
+        }
+
+        .form-section h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 5px;
+            color: #555;
+        }
+
+        .checkbox-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .checkbox-table th, .checkbox-table td {
+            text-align: center;
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+
+        .checkbox-table th {
+            background-color: #f9f9f9;
+            font-weight: bold;
+        }
+
+        .textarea-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #007BFF;
+            background-color: #f9f9f9;
+        }
+
+        .form-actions {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .btn {
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        @media (max-width: 768px) {
+            .form-container {
+                padding: 15px;
+            }
+
+            .btn {
+                font-size: 14px;
+                padding: 10px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h1>Ficha Clínica - Amazon Align</h1>
+        <form action="/submit-ficha-clinica" method="POST">
+            <!-- Local da documentação -->
+            <div class="form-section">
+                <h3>Local da Documentação</h3>
+                <div class="form-group">
+                    <select id="local_documentacao" name="local_documentacao" required>
+                        <option value="">Selecione uma opção</option>
+                        <option value="Oi Digital">Oi Digital</option>
+                        <option value="Odonto I">Odonto I</option>
+                        <option value="Uni3D">Uni3D</option>
+                        <option value="Outro">Outro</option>
+                    </select>
+                </div>
+                <div class="form-group" id="outro-nome" style="display: none;">
+                    <label for="nome_outro">Se selecionado "Outro", especifique:</label>
+                    <input type="text" id="nome_outro" name="nome_outro" placeholder="Digite o nome do local">
+                </div>
+            </div>
+
+            <!-- Arcos tratados -->
+            <div class="form-section">
+                <h3>Arcos para serem tratados</h3>
+                <div class="form-group">
+                    <select id="arcos_tratados" name="arcos_tratados" required>
+                        <option value="">Selecione uma opção</option>
+                        <option value="Superior">Superior</option>
+                        <option value="Inferior">Inferior</option>
+                        <option value="Ambos">Ambos</option>
+                    </select>
+                </div>
+            </div>
+
+      <!-- Quais dentes possuem restrição de movimento -->
+            <div class="form-section">
+                <h3>Quais dentes possuem restrição de movimento?</h3>
+                <div class="dental-grid">
+                    <!-- Top row: 18 to 28 -->
+                    <input type="checkbox" id="dente-18" name="restricao_movimento[]" value="18">
+                    <label for="dente-18">18</label>
+                    <input type="checkbox" id="dente-17" name="restricao_movimento[]" value="17">
+                    <label for="dente-17">17</label>
+                    <input type="checkbox" id="dente-16" name="restricao_movimento[]" value="16">
+                    <label for="dente-16">16</label>
+                    <input type="checkbox" id="dente-15" name="restricao_movimento[]" value="15">
+                    <label for="dente-15">15</label>
+                    <input type="checkbox" id="dente-14" name="restricao_movimento[]" value="14">
+                    <label for="dente-14">14</label>
+                    <input type="checkbox" id="dente-13" name="restricao_movimento[]" value="13">
+                    <label for="dente-13">13</label>
+                    <input type="checkbox" id="dente-12" name="restricao_movimento[]" value="12">
+                    <label for="dente-12">12</label>
+                    <input type="checkbox" id="dente-11" name="restricao_movimento[]" value="11">
+                    <label for="dente-11">11</label>
+                    <input type="checkbox" id="dente-21" name="restricao_movimento[]" value="21">
+                    <label for="dente-21">21</label>
+                    <input type="checkbox" id="dente-22" name="restricao_movimento[]" value="22">
+                    <label for="dente-22">22</label>
+                    <input type="checkbox" id="dente-23" name="restricao_movimento[]" value="23">
+                    <label for="dente-23">23</label>
+                    <input type="checkbox" id="dente-24" name="restricao_movimento[]" value="24">
+                    <label for="dente-24">24</label>
+                    <input type="checkbox" id="dente-25" name="restricao_movimento[]" value="25">
+                    <label for="dente-25">25</label>
+                    <input type="checkbox" id="dente-26" name="restricao_movimento[]" value="26">
+                    <label for="dente-26">26</label>
+                    <input type="checkbox" id="dente-27" name="restricao_movimento[]" value="27">
+                    <label for="dente-27">27</label>
+                    <input type="checkbox" id="dente-28" name="restricao_movimento[]" value="28">
+                    <label for="dente-28">28</label>
+                </div>
+
+                <div class="gap-row"></div>
+
+                <div class="dental-grid">
+                    <!-- Bottom row: 48 to 38 -->
+                    <input type="checkbox" id="dente-48" name="restricao_movimento[]" value="48">
+                    <label for="dente-48">48</label>
+                    <input type="checkbox" id="dente-47" name="restricao_movimento[]" value="47">
+                    <label for="dente-47">47</label>
+                    <input type="checkbox" id="dente-46" name="restricao_movimento[]" value="46">
+                    <label for="dente-46">46</label>
+                    <input type="checkbox" id="dente-45" name="restricao_movimento[]" value="45">
+                    <label for="dente-45">45</label>
+                    <input type="checkbox" id="dente-44" name="restricao_movimento[]" value="44">
+                    <label for="dente-44">44</label>
+                    <input type="checkbox" id="dente-43" name="restricao_movimento[]" value="43">
+                    <label for="dente-43">43</label>
+                    <input type="checkbox" id="dente-42" name="restricao_movimento[]" value="42">
+                    <label for="dente-42">42</label>
+                    <input type="checkbox" id="dente-41" name="restricao_movimento[]" value="41">
+                    <label for="dente-41">41</label>
+                    <input type="checkbox" id="dente-31" name="restricao_movimento[]" value="31">
+                    <label for="dente-31">31</label>
+                    <input type="checkbox" id="dente-32" name="restricao_movimento[]" value="32">
+                    <label for="dente-32">32</label>
+                    <input type="checkbox" id="dente-33" name="restricao_movimento[]" value="33">
+                    <label for="dente-33">33</label>
+                    <input type="checkbox" id="dente-34" name="restricao_movimento[]" value="34">
+                    <label for="dente-34">34</label>
+                    <input type="checkbox" id="dente-35" name="restricao_movimento[]" value="35">
+                    <label for="dente-35">35</label>
+                    <input type="checkbox" id="dente-36" name="restricao_movimento[]" value="36">
+                    <label for="dente-36">36</label>
+                    <input type="checkbox" id="dente-37" name="restricao_movimento[]" value="37">
+                    <label for="dente-37">37</label>
+                    <input type="checkbox" id="dente-38" name="restricao_movimento[]" value="38">
+                    <label for="dente-38">38</label>
+                </div>
+<!-- Campo para exibir os números selecionados -->
+<div class="form-group">
+    <label for="selected-dentes">Números Selecionados:</label>
+    <div class="chips-container">
+        <div id="linha-superior" class="linha">Linha Superior:</div>
+        <div id="linha-inferior" class="linha">Linha Inferior:</div>
+    </div>
+</div>
+
+
+            </div>
+
+
+            <!-- Expansão dos arcos -->
+<div class="form-section">
+    <h3>Arcos que permitem expansão</h3>
+    <div class="expansion-container">
+        <div class="expansion-row">
+            <span>Superior</span>
+            <input type="range" min="0" max="1" value="0" id="expansao-superior" class="expansion-slider">
+            <span class="expansion-status" id="status-superior">Não</span>
+        </div>
+        <div class="expansion-row">
+            <span>Inferior</span>
+            <input type="range" min="0" max="1" value="0" id="expansao-inferior" class="expansion-slider">
+            <span class="expansion-status" id="status-inferior">Não</span>
+        </div>
+        <div class="expansion-row">
+            <span>Ambos</span>
+            <input type="range" min="0" max="1" value="0" id="expansao-ambos" class="expansion-slider">
+            <span class="expansion-status" id="status-ambos">Não</span>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+<div class="form-section">
+    <h3>Linha Média</h3>
+    <div class="form-group">
+        <label>
+            <input type="radio" name="linha_media" value="Correcao Superior" required>
+            Correção pela superior
+        </label>
+        <label>
+            <input type="radio" name="linha_media" value="Correcao Inferior">
+            Correção pela inferior
+        </label>
+    </div>
+</div>
+
+<div class="form-section">
+    <h3>Mordida Profunda</h3>
+    <div class="form-group">
+        <p>Selecione as opções aplicáveis:</p>
+        <label>
+            <input type="checkbox" name="mordida_profunda_maxila_extrusao">
+            Extrusão de superior (Maxila)
+        </label>
+        <label>
+            <input type="checkbox" name="mordida_profunda_maxila_intrusao">
+            Intrusão de incisivos (Maxila)
+        </label>
+        <label>
+            <input type="checkbox" name="mordida_profunda_mandibula_extrusao">
+            Extrusão de superior (Mandíbula)
+        </label>
+        <label>
+            <input type="checkbox" name="mordida_profunda_mandibula_intrusao">
+            Intrusão de incisivos (Mandíbula)
+        </label>
+    </div>
+</div>
+
+<div class="form-section">
+    <h3>Mordida Aberta</h3>
+    <div class="form-group">
+        <p>Selecione as opções aplicáveis:</p>
+        <label>
+            <input type="checkbox" name="mordida_aberta_maxila_extrusao">
+            Extrusão de incisivos (Maxila)
+        </label>
+        <label>
+            <input type="checkbox" name="mordida_aberta_mandibula_extrusao">
+            Extrusão de incisivos (Mandíbula)
+        </label>
+    </div>
+</div>
+
+<div class="form-section">
+    <h3>Distalização - Mesialização</h3>
+    <div class="form-group">
+        <label>
+            <input type="checkbox" name="distalizacao_bloco">
+            Bloco
+        </label>
+        <label>
+            <input type="checkbox" name="distalizacao_sequencial">
+            Sequencial
+        </label>
+        <label>
+            <input type="checkbox" name="distalizacao_mantem_malocl">
+            Manter a má inclusão
+        </label>
+        <label>
+            Outro:
+            <input type="text" name="distalizacao_outro" placeholder="Descreva">
+        </label>
+    </div>
+</div>
+
+<div class="form-section">
+    <h3>Diastemas</h3>
+    <div class="form-group">
+        <label>
+            <input type="radio" name="diastemas" value="Fechar" required>
+            Fechar
+        </label>
+        <label>
+            <input type="radio" name="diastemas" value="Manter">
+            Manter
+        </label>
+        <label>
+            Outro:
+            <input type="text" name="diastemas_outro" placeholder="Descreva">
+        </label>
+    </div>
+</div>
+
+
+
+
+
+
+
+  <!-- Última seção: Mecânicas Auxiliares -->
+            <div class="form-section">
+                <h3>Mecânicas Auxiliares</h3>
+                <table class="checkbox-table">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Sim</th>
+                            <th>Não</th>
+                            <th>Quando Necessárias</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Attachments</td>
+                            <td><input type="radio" name="attachments" value="sim"></td>
+                            <td><input type="radio" name="attachments" value="nao"></td>
+                            <td><input type="radio" name="attachments" value="necessarias"></td>
+                        </tr>
+                        <tr>
+                            <td>IPR (Slice)</td>
+                            <td><input type="radio" name="ipr_slice" value="sim"></td>
+                            <td><input type="radio" name="ipr_slice" value="nao"></td>
+                            <td><input type="radio" name="ipr_slice" value="necessarias"></td>
+                        </tr>
+                        <tr>
+                            <td>Botões</td>
+                            <td><input type="radio" name="botoes" value="sim"></td>
+                            <td><input type="radio" name="botoes" value="nao"></td>
+                            <td><input type="radio" name="botoes" value="necessarias"></td>
+                        </tr>
+                        <tr>
+                            <td>Levante de mordida anterior</td>
+                            <td><input type="radio" name="levante_mordida" value="sim"></td>
+                            <td><input type="radio" name="levante_mordida" value="nao"></td>
+                            <td><input type="radio" name="levante_mordida" value="necessarias"></td>
+                        </tr>
+                        <tr>
+                            <td>Dispositivo de ancoragem</td>
+                            <td><input type="radio" name="dispositivo_ancoragem" value="sim"></td>
+                            <td><input type="radio" name="dispositivo_ancoragem" value="nao"></td>
+                            <td><input type="radio" name="dispositivo_ancoragem" value="necessarias"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Descrição dos Objetivos de Tratamento -->
+            <div class="form-section">
+                <h3>Descreva seus principais objetivos de tratamento</h3>
+                <p>(Em tópicos e de forma simples e direta)</p>
+                <div class="textarea-container">
+                    <textarea name="objetivos_tratamento" rows="6" placeholder="Escreva aqui..."></textarea>
+                </div>
+            </div>
+
+
+
+
+
+
+            <!-- Botão de envio -->
+            <div class="form-actions">
+                <button type="submit" class="btn">Salvar Ficha Clínica</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Exibe o campo de "Outro" se a opção for selecionada
+        document.getElementById('local_documentacao').addEventListener('change', function() {
+            const outroField = document.getElementById('outro-nome');
+            if (this.value === 'Outro') {
+                outroField.style.display = 'block';
+            } else {
+                outroField.style.display = 'none';
+                document.getElementById('nome_outro').value = '';
+            }
+        });
+    </script>
+
+<script>
+// Atualiza os chips com os números selecionados
+// Seleciona os checkboxes e os contêineres das linhas
+const checkboxes = document.querySelectorAll('.dental-grid input[type="checkbox"]');
+const linhaSuperior = document.getElementById('linha-superior');
+const linhaInferior = document.getElementById('linha-inferior');
+
+checkboxes.forEach(checkbox => {
+    checkbox.addEventListener('change', () => {
+        // Limpa os chips das linhas
+        linhaSuperior.innerHTML = 'Linha Superior:';
+        linhaInferior.innerHTML = 'Linha Inferior:';
+
+        // Atualiza os chips conforme o dente selecionado
+        Array.from(checkboxes)
+            .filter(checkbox => checkbox.checked)
+            .forEach(checkbox => {
+                const chip = document.createElement('span');
+                chip.classList.add('chip');
+                chip.textContent = checkbox.value;
+
+                // Determina em qual linha o chip será adicionado
+                if (checkbox.value >= 11 && checkbox.value <= 28) {
+                    linhaSuperior.appendChild(chip);
+                } else if (checkbox.value >= 31 && checkbox.value <= 48) {
+                    linhaInferior.appendChild(chip);
+                }
+            });
+    });
+});
+
+
+</script>
+
+<script>
+document.querySelectorAll('.expansion-slider').forEach(slider => {
+    slider.addEventListener('input', () => {
+        const status = slider.nextElementSibling;
+        status.textContent = slider.value === "1" ? "Sim" : "Não";
+        status.classList.toggle('active', slider.value === "1");
+
+        // Atualiza automaticamente o status de "Ambos"
+        const superior = document.getElementById('expansao-superior').value === "1";
+        const inferior = document.getElementById('expansao-inferior').value === "1";
+        const ambosSlider = document.getElementById('expansao-ambos');
+        const ambosStatus = document.getElementById('status-ambos');
+
+        if (superior && inferior) {
+            ambosSlider.value = "1";
+            ambosStatus.textContent = "Sim";
+            ambosStatus.classList.add('active');
+        } else {
+            ambosSlider.value = "0";
+            ambosStatus.textContent = "Não";
+            ambosStatus.classList.remove('active');
+        }
+    });
+});
+
+
+</script>
+</body>
+</html>

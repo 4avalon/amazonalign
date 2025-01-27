@@ -1,0 +1,107 @@
+/* Contêiner principal do carrossel */
+.carousel-container {
+  position: relative;
+  width: 100%;
+  max-width: 1000px;
+  height: 500px; /* Altura ajustada para maior impacto */
+  margin: 30px auto; /* Espaçamento ao redor */
+  overflow: hidden;
+  border-radius: 20px; /* Bordas mais arredondadas */
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3); /* Sombra mais intensa */
+  background-color: var(--foreground-color); /* Fundo dinâmico */
+  display: flex;
+  align-items: center;
+}
+
+/* Faixa do carrossel */
+.carousel-track {
+  display: flex;
+  transition: transform 0.6s ease-in-out; /* Transição mais fluida */
+}
+
+/* Cada slide do carrossel */
+.carousel-slide {
+  min-width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Imagens dentro do slide */
+.carousel-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 15px; /* Bordas arredondadas */
+  transition: transform 0.5s ease; /* Transição ao passar o mouse */
+}
+
+.carousel-slide img:hover {
+  transform: scale(1.01); /* Zoom suave ao passar o mouse */
+}
+
+/* Botões de navegação */
+.carousel-prev,
+.carousel-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(0, 0, 0, 0.6); /* Fundo semi-transparente */
+  color: white;
+  border: none;
+  padding: 15px;
+  cursor: pointer;
+  border-radius: 50%;
+  z-index: 10;
+  font-size: 2rem; /* Aumentei o tamanho da seta */
+  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.carousel-prev:hover,
+.carousel-next:hover {
+  background-color: var(--primary-color);
+  box-shadow: 0 0 15px var(--primary-color); /* Sombra ao passar o mouse */
+}
+
+.carousel-prev {
+  left: 15px;
+}
+
+.carousel-next {
+  right: 15px;
+}
+
+/* Indicadores */
+.carousel-indicators {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 15px; /* Maior espaçamento entre as bolinhas */
+  z-index: 5;
+}
+
+.carousel-indicator {
+  width: 16px;
+  height: 16px;
+  background-color: var(--border-color); /* Fundo padrão */
+  border: 2px solid var(--primary-color); /* Borda destacada */
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.carousel-indicator:hover {
+  transform: scale(1.3); /* Zoom ao passar o mouse */
+  background-color: var(--primary-color); /* Cor de fundo ao hover */
+  border-color: var(--hover-color); /* Destaque na borda */
+  box-shadow: 0 0 12px var(--primary-color); /* Sombra visível no hover */
+}
+
+.carousel-indicator.active {
+  background-color: var(--primary-color); /* Fundo para indicador ativo */
+  border-color: var(--hover-color); /* Borda destacada */
+  transform: scale(1.8); /* Maior destaque para indicador ativo */
+  box-shadow: 0 0 20px var(--primary-color); /* Sombra mais forte para o ativo */
+}

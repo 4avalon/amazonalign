@@ -1,0 +1,2772 @@
+// frontend\core\config.js
+
+//config.js
+console.log(`[Config] carregado.`);
+const config = {
+    globals: {
+        nav: { name: "nav", hasJs: true },        // Navbar, tem JS
+        footer: { name: "footer", hasJs: false }, // Footer, sem JS
+    },
+    pages: {
+
+
+        home: { name: "home", hasJs: false },
+        credenciamento: { name: "credenciamento", hasJs: false },
+        pedidos: { name: "pedidos", hasJs: false },
+        about: { name: "about", hasJs: false },
+        sustentabilidade: { name: "sustentabilidade", hasJs: false },
+        theme: { name: "theme", hasJs: false },
+        login: { name: "login", hasJs: false },
+    },
+    dynamics: {
+        form: { name: "form", hasJs: true }, // Componente "carousel", tem JS
+        search: { name: "search", hasJs: true }, // Componente "carousel", tem JS
+        login: { name: "login", hasJs: true },                
+        // Outros dinamics podem ser adicionados aqui
+    },
+};
+
+// Exportar configuração para outros módulos (se necessário)
+export { config };
+
+
+// frontend\core\dynamics.js
+
+    // dynamics.js
+    console.log(`[Dynamics] carregado.`);
+
+    import { config } from './config.js';
+    import { loadComponent } from './loader.js';
+
+    async function injectDynamics() {
+        console.log("[Dynamics] Injetando componentes dinâmicos...");
+
+        for (const dynamicKey of Object.keys(config.dynamics)) {
+            const placeholders = document.querySelectorAll(`#${dynamicKey}-placeholder`);
+
+            if (placeholders.length > 0) {
+                console.log(`[Dynamics] ${placeholders.length} placeholders encontrados para "${dynamicKey}".`);
+
+                for (const placeholder of placeholders) {
+                    try {
+                        console.log(`[Dynamics] Carregando componente "${dynamicKey}" no placeholder:`, placeholder);
+                        await loadComponent("dynamics", dynamicKey);
+                        console.log(`[Dynamics] Componente "${dynamicKey}" carregado com sucesso no placeholder.`);
+                    } catch (error) {
+                        console.error(`[Dynamics] Erro ao carregar componente "${dynamicKey}": ${error.message}`);
+                    }
+                }
+            } else {
+                console.log(`[Dynamics] Nenhum placeholder encontrado para "${dynamicKey}".`);
+            }
+        }
+
+        console.log("[Dynamics] Finalizado o carregamento dos componentes dinâmicos.");
+        
+    }
+    export { injectDynamics };
+
+
+// frontend\core\index.js
+
+//index.js
+import { loadComponent } from './loader.js';
+import { injectDynamics } from './dynamics.js';
+
+// Função de inicialização do aplicativo
+async function init() {
+    console.log("[Init] Inicializando aplicação...");
+
+    try {
+        // Carregar Navbar e Footer
+        await loadComponent("globals", "nav");
+        await loadComponent("globals", "footer");
+
+        // Carregar página inicial
+        await loadComponent("pages", "home");
+
+        console.log("[Init] Aplicação inicializada com sucesso.");
+    } catch (error) {
+        console.error(`[Init] Erro durante inicialização: ${error.message}`);
+    }
+        await injectDynamics();
+}
+
+
+init();
+
+
+// frontend\core\loader.js
+
+// loader.js
+console.log(`[loader] carregado.`);
+import { config } from './config.js';
+import { generateFilePaths } from './path.js';
+
+async function loadComponent(type, name) {
+    const entry = config[type]?.[name];
+    if (!entry) throw new Error(`[Loader] Componente "${name}" não encontrado no tipo "${type}".`);
+
+    const { html, css, js, functionName } = generateFilePaths(type, entry);
+    const containerId =
+        type === "globals" ? `${name}-container` :
+        type === "pages" ? "pages-container" :
+        `${name}-placeholder`;
+
+    const container = document.getElementById(containerId);
+    if (!container) throw new Error(`[Loader] Container "${containerId}" não encontrado no DOM.`);
+
+    try {
+        const response = await fetch(html);
+        if (!response.ok) throw new Error(`[Loader] Erro ao carregar HTML: ${html}`);
+        container.innerHTML = await response.text();
+        console.log(`[Loader] HTML carregado para "${name}".`);
+
+        if (css) {
+            const link = document.createElement("link");
+            link.rel = "stylesheet";
+            link.href = css;
+            document.head.appendChild(link);
+            console.log(`[Loader] CSS carregado: ${css}`);
+        }
+
+            if (js && functionName) {
+                const module = await import(js);
+                const setupFunction = module[functionName] || window[functionName]; // Adiciona fallback para `window`
+                if (setupFunction) {
+                    setupFunction();
+                    console.log(`[Loader] Função de setup executada para "${name}".`);
+                } else {
+                    console.warn(`[Loader] Função "${functionName}" não encontrada para "${name}".`);
+                }
+            }
+
+    } catch (error) {
+        console.error(`[Loader] Erro ao carregar componente "${name}": ${error.message}`);
+        throw error;
+    }
+}
+
+export { loadComponent };
+
+
+
+// frontend\core\path.js
+
+// path.js
+console.log(`[path] carregado.`);
+// Determina automaticamente a pasta raiz a partir do caminho da URL
+const raiz = `${window.location.origin}/${window.location.pathname.split('/')[1]}`; // Obtém o primeiro segmento após "/"
+const frontend = "frontend"; // Diretório do frontend
+
+function generateFilePaths(type, entry) {
+    const { name, hasJs } = entry;
+    const basePath = `${raiz}/${frontend}/${type}/${name}`; // Caminho base para o componente
+    const capitalizedName = name.charAt(0).toUpperCase() + name.slice(1); // Nome formatado para função
+    return {
+        html: `${basePath}/${name}.html`, // Caminho do arquivo HTML
+        css: `${basePath}/${name}.css`, // Caminho do arquivo CSS
+        js: hasJs ? `${basePath}/${name}Handler.js` : null, // Caminho do arquivo JS, se existir
+        functionName: hasJs ? `setup${capitalizedName}Events` : null, // Nome da função de setup, se houver JS
+    };
+}
+
+export { generateFilePaths };
+
+
+
+// frontend\dynamics\carousel\carousel.css
+
+/* Contêiner principal do carrossel */
+.carousel-container {
+  position: relative;
+  width: 100%;
+  max-width: 1000px;
+  height: 500px; /* Altura ajustada para maior impacto */
+  margin: 30px auto; /* Espaçamento ao redor */
+  overflow: hidden;
+  border-radius: 20px; /* Bordas mais arredondadas */
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3); /* Sombra mais intensa */
+  background-color: var(--foreground-color); /* Fundo dinâmico */
+  display: flex;
+  align-items: center;
+}
+
+/* Faixa do carrossel */
+.carousel-track {
+  display: flex;
+  transition: transform 0.6s ease-in-out; /* Transição mais fluida */
+}
+
+/* Cada slide do carrossel */
+.carousel-slide {
+  min-width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Imagens dentro do slide */
+.carousel-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 15px; /* Bordas arredondadas */
+  transition: transform 0.5s ease; /* Transição ao passar o mouse */
+}
+
+.carousel-slide img:hover {
+  transform: scale(1.01); /* Zoom suave ao passar o mouse */
+}
+
+/* Botões de navegação */
+.carousel-prev,
+.carousel-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(0, 0, 0, 0.6); /* Fundo semi-transparente */
+  color: white;
+  border: none;
+  padding: 15px;
+  cursor: pointer;
+  border-radius: 50%;
+  z-index: 10;
+  font-size: 2rem; /* Aumentei o tamanho da seta */
+  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.carousel-prev:hover,
+.carousel-next:hover {
+  background-color: var(--primary-color);
+  box-shadow: 0 0 15px var(--primary-color); /* Sombra ao passar o mouse */
+}
+
+.carousel-prev {
+  left: 15px;
+}
+
+.carousel-next {
+  right: 15px;
+}
+
+/* Indicadores */
+.carousel-indicators {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 15px; /* Maior espaçamento entre as bolinhas */
+  z-index: 5;
+}
+
+.carousel-indicator {
+  width: 16px;
+  height: 16px;
+  background-color: var(--border-color); /* Fundo padrão */
+  border: 2px solid var(--primary-color); /* Borda destacada */
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.carousel-indicator:hover {
+  transform: scale(1.3); /* Zoom ao passar o mouse */
+  background-color: var(--primary-color); /* Cor de fundo ao hover */
+  border-color: var(--hover-color); /* Destaque na borda */
+  box-shadow: 0 0 12px var(--primary-color); /* Sombra visível no hover */
+}
+
+.carousel-indicator.active {
+  background-color: var(--primary-color); /* Fundo para indicador ativo */
+  border-color: var(--hover-color); /* Borda destacada */
+  transform: scale(1.8); /* Maior destaque para indicador ativo */
+  box-shadow: 0 0 20px var(--primary-color); /* Sombra mais forte para o ativo */
+}
+
+
+
+// frontend\dynamics\carousel\carousel.html
+
+<section id="carousel-section">
+  <main class="container">
+    <div class="carousel-container">
+      <div class="carousel-track">
+        <div class="carousel-slide">
+          <img src="frontend/dynamics/carousel/img/img1.jpg" alt="Imagem 1">
+        </div>
+        <div class="carousel-slide">
+          <img src="frontend/dynamics/carousel/img/img2.jpg" alt="Imagem 2">
+        </div>
+        <div class="carousel-slide">
+          <img src="frontend/dynamics/carousel/img/img3.jpg" alt="Imagem 3">
+        </div>
+        <div class="carousel-slide">
+          <img src="frontend/dynamics/carousel/img/img4.jpg" alt="Imagem 4">
+        </div>
+        <div class="carousel-slide">
+          <img src="frontend/dynamics/carousel/img/img5.jpg" alt="Imagem 5">
+        </div>
+        <div class="carousel-slide">
+          <img src="frontend/dynamics/carousel/img/img6.jpg" alt="Imagem 6">
+        </div>
+      </div>
+      <button class="carousel-prev" aria-label="Anterior">&lt;</button>
+      <button class="carousel-next" aria-label="Próximo">&gt;</button>
+      <div class="carousel-indicators"></div>
+    </div>
+  </main>
+</section>
+
+
+
+// frontend\dynamics\carousel\carouselHandler.js
+
+// carousel.js
+//console.log(`[carousel] carregado. Puxou o js.`);
+
+function setupCarouselEvents() {
+   //console.log('[CarouselHandler] Inicializando o carrossel...');
+
+  const track = document.querySelector('.carousel-track');
+  const slides = Array.from(track.children);
+  const nextButton = document.querySelector('.carousel-next');
+  const prevButton = document.querySelector('.carousel-prev');
+  const indicatorsContainer = document.querySelector('.carousel-indicators');
+
+  if (!track || !slides.length || !nextButton || !prevButton || !indicatorsContainer) {
+    ////console.error('[CarouselHandler] Elementos necessários não foram encontrados.');
+    return;
+  }
+
+  let currentIndex = 0;
+
+  // Cria indicadores
+  slides.forEach((_, index) => {
+    const indicator = document.createElement('div');
+    indicator.classList.add('carousel-indicator');
+    if (index === 0) indicator.classList.add('active');
+    indicator.dataset.index = index;
+    indicatorsContainer.appendChild(indicator);
+  });
+
+  const indicators = Array.from(indicatorsContainer.children);
+
+  const updateIndicators = (index) => {
+    indicators.forEach((indicator) => indicator.classList.remove('active'));
+    indicators[index].classList.add('active');
+  };
+
+  const moveToSlide = (index) => {
+    const targetSlide = slides[index];
+    track.style.transform = `translateX(-${targetSlide.offsetLeft}px)`;
+    updateIndicators(index);
+    currentIndex = index;
+  };
+
+  // Eventos dos botões
+  nextButton.addEventListener('click', () => {
+    const nextIndex = (currentIndex + 1) % slides.length;
+    moveToSlide(nextIndex);
+  });
+
+  prevButton.addEventListener('click', () => {
+    const prevIndex = (currentIndex - 1 + slides.length) % slides.length;
+    moveToSlide(prevIndex);
+  });
+
+  // Eventos dos indicadores
+  indicators.forEach((indicator) => {
+    indicator.addEventListener('click', () => {
+      const index = Number(indicator.dataset.index);
+      moveToSlide(index);
+    });
+  });
+
+  //console.log('[CarouselHandler] Eventos configurados com sucesso.');
+}
+
+// Torna a função acessível globalmente
+window.setupCarouselEvents = setupCarouselEvents;
+
+
+
+// frontend\dynamics\form\form.css
+
+/* Estilos para a seção Form */
+#contact-form-section {
+  min-height: 100vh; /* Ocupa pelo menos uma altura de viewport */
+  background-color: var(--foreground-color); /* Fundo dinâmico */
+  padding: 50px;
+  text-align: center;
+  font-family: 'Arial', sans-serif; /* Fonte padrão */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Sombra para destaque */
+  border-radius: 10px;
+}
+
+/* Título da seção */
+#contact-form-section h2 {
+  font-size: 2.5em;
+  color: var(--primary-color); /* Cor dinâmica */
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.1); /* Sombra suave */
+}
+
+/* Subtítulo */
+#contact-form-section p {
+  font-size: 1.2em;
+  color: var(--text-color);
+  margin-bottom: 20px;
+}
+
+/* Formulário */
+#contact-form {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: var(--background-color); /* Fundo do formulário */
+  border-radius: 10px; /* Bordas arredondadas */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Leve sombra */
+}
+
+/* Estilos dos campos de entrada */
+#contact-form input,
+#contact-form textarea {
+  width: 100%;
+  padding: 15px;
+  margin-bottom: 15px;
+  font-size: 1em;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  background-color: var(--foreground-color); /* Fundo dinâmico */
+  color: var(--text-color); /* Texto dinâmico */
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1); /* Sombra interna */
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Efeitos ao focar nos campos */
+#contact-form input:focus,
+#contact-form textarea:focus {
+  outline: none;
+  border-color: var(--primary-color); /* Borda destacada */
+  box-shadow: 0 0 5px var(--primary-color); /* Efeito de foco */
+}
+
+/* Botão de envio */
+#contact-form button {
+  display: block;
+  width: 100%;
+  padding: 15px;
+  font-size: 1.2em;
+  font-weight: bold;
+  background-color: var(--primary-color); /* Fundo dinâmico */
+  color: var(--background-color); /* Cor do texto */
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+/* Efeitos no botão ao passar o mouse */
+#contact-form button:hover {
+  background-color: var(--hover-color); /* Cor de hover dinâmica */
+  transform: scale(1.05); /* Leve efeito de zoom */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Sombra ao hover */
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  #contact-form-section h2 {
+    font-size: 2em;
+  }
+
+  #contact-form {
+    padding: 15px;
+  }
+
+  #contact-form button {
+    font-size: 1em;
+  }
+}
+
+
+
+// frontend\dynamics\form\form.html
+
+<section id="contact-form-section">
+  <main class="container">
+    <form id="contact-form">
+      <label for="name">Nome:</label>
+      <input type="text" id="name" name="name" placeholder="Digite seu nome">
+
+      <label for="email">E-mail:</label>
+      <input type="email" id="email" name="email" placeholder="Digite seu e-mail">
+
+      <label for="message">Mensagem:</label>
+      <textarea id="message" name="message" placeholder="Digite sua mensagem"></textarea>
+
+      <button type="submit">Enviar</button>
+    </form>
+  </main>
+</section>
+
+
+
+// frontend\dynamics\form\formHandler.js
+
+function setupFormEvents() {
+  //console.log('[FormHandler] Configurando eventos do formulário...');
+
+  const form = document.getElementById('contact-form-section');
+  if (form) {
+    form.addEventListener('submit', (event) => {
+      // Impede o comportamento padrão do formulário (reload da página)
+      event.preventDefault();
+      //console.log('[FormHandler] Evento de submit capturado.');
+
+      // Captura os valores dos campos
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const message = document.getElementById('message').value.trim();
+
+      //console.log('[FormHandler] Valores capturados:', { name, email, message });
+
+      // Validação simples
+      if (!name || !email || !message) {
+        alert('Preencha todos os campos antes de enviar.');
+        //console.warn('[FormHandler] Validação falhou. Campos vazios detectados.');
+        return;
+      }
+
+      // Formatação da mensagem para o WhatsApp
+      const whatsappNumber = '5511933360108'; // Número de WhatsApp
+      const textMessage = `Nome: ${name}\nE-mail: ${email}\nMensagem: ${message}`;
+      const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(textMessage)}`;
+
+      //console.log('[FormHandler] URL do WhatsApp gerada:', whatsappURL);
+
+      // Redireciona para o WhatsApp
+      window.open(whatsappURL, '_blank');
+      //console.log('[FormHandler] Redirecionamento para o WhatsApp iniciado.');
+    });
+  } else {
+    //console.error('[FormHandler] Formulário não encontrado!');
+  }
+}
+
+// Expõe a função globalmente
+window.setupFormEvents = setupFormEvents;
+
+
+
+// frontend\dynamics\login\login.css
+
+/* Estilos compartilhados */
+#login-panel, #login-form-container {
+  background: var(--theme-card-bg-color);
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-width: 300px;
+  margin: auto;
+  text-align: center;
+}
+
+#login-panel p {
+  font-size: 1rem;
+  margin-bottom: 10px;
+  color: var(--theme-text-color);
+}
+
+#login-panel button, #login-form button {
+  padding: 10px 15px;
+  background-color: var(--primary-color);
+  color: var(--text-on-primary);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#login-panel button:hover, #login-form button:hover {
+  background-color: var(--hover-color);
+}
+
+#login-form label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+#login-form input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 15px;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+}
+
+
+
+// frontend\dynamics\login\login.html
+
+<div id="login-panel" style="display: true;"> <!-- Painel de boas-vindas inicialmente oculto -->
+  <p>Bem-vindo, <span id="user-name">Tem que Logar</span></p>
+  <button id="logout-button">Sair</button>
+</div>
+
+<div id="login-form-container">
+  <form id="loginForm"> <!-- Corrigido o ID para corresponder ao JavaScript -->
+    <label for="username">Usuário:</label>
+    <input type="text" id="username" name="username" placeholder="Digite seu usuário..." required />
+    
+    <label for="password">Senha:</label>
+    <input type="password" id="password" name="password" placeholder="Digite sua senha..." required />
+    
+    <button type="submit">Entrar</button>
+    <p id="loginMessage" style="color: red;"></p> <!-- Adicionado um espaço para exibir mensagens -->
+  </form>
+</div>
+
+
+
+// frontend\dynamics\login\loginHandler.js
+
+// frontend/pages/login/loginHandler.js
+function setupLoginEvents() {
+    console.log("[setupLoginEvents] Configurando eventos de login...");
+
+    // Captura os elementos necessários no DOM
+    const loginForm = document.getElementById("loginForm");
+    const userNameElement = document.getElementById("user-name");
+    const loginPanel = document.getElementById("login-panel");
+
+    if (!loginForm || !userNameElement || !loginPanel) {
+        console.error("[LoginHandler] Elementos necessários não encontrados no DOM.");
+        return;
+    }
+
+    // Adiciona evento de envio ao formulário
+    loginForm.addEventListener("submit", async (event) => {
+        event.preventDefault(); // Evita o reload da página
+
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+
+        try {
+            console.log("[LoginHandler] Tentando logar com o backend...");
+            const response = await fetch("http://localhost:3000/auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ username, password }),
+            });
+
+            if (!response.ok) {
+                const errorMessage = await response.text();
+                console.error("[LoginHandler] Erro do servidor:", errorMessage);
+                userNameElement.textContent = "Erro: Login inválido";
+                userNameElement.style.color = "red";
+                return;
+            }
+
+            const data = await response.json();
+            console.log("[LoginHandler] Login bem-sucedido:", data);
+
+            // Atualiza o painel de boas-vindas com o nome do usuário
+            userNameElement.textContent = data.message || "Usuário";
+            userNameElement.style.color = "green"; // Define a cor verde para sucesso
+            loginPanel.style.display = "block"; // Garante que o painel fique visível
+        } catch (error) {
+            console.error("[LoginHandler] Erro ao conectar ao backend:", error);
+            userNameElement.textContent = "Erro ao conectar ao servidor";
+            userNameElement.style.color = "red";
+        }
+    });
+}
+
+// Exporta a função para ser usada no Loader
+window.setupLoginEvents = setupLoginEvents;
+export { setupLoginEvents };
+
+
+
+// frontend\dynamics\login\loginPanel.html
+
+<div id="login-panel">
+  <p>Bem-vindo, <span id="user-name">Usuário</span></p>
+  <button id="logout-button">Sair</button>
+</div>
+
+
+
+// frontend\dynamics\search\dropDown.html
+
+<div id="search-results-container" style="display: none;">
+    <button id="close-search-dropdown">×</button>
+    <div id="search-results"></div>
+  </div>
+
+
+// frontend\dynamics\search\search.css
+
+/* Estilo geral do container de busca */
+#search-container {
+  display: flex;
+  align-items: center;
+  margin-left: auto; /* Move para o lado direito do menu */
+  gap: 8px; /* Espaçamento entre input e botão */
+}
+
+/* Estilo para o input */
+#search-input {
+  width: 200px;
+  padding: 8px;
+  font-size: 1rem;
+  border: 2px solid #ff5722; /* Substitua pela cor correspondente */
+
+  border-radius: 5px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  background-color: var(--foreground-color);
+  color: var(--text-color);
+}
+
+
+#search-input:focus {
+  outline: none;
+  border-color: var(--hover-color);
+  box-shadow: var(--box-shadow-hover);
+}
+
+/* Estilo para o botão de busca */
+#search-button {
+  padding: 8px 16px;
+  font-size: 1rem;
+  background-color: var(--primary-color);
+  color: var(--foreground-color);
+  border: 2px solid #ff5722; /* Substitua pela cor correspondente */
+
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+#search-button:hover {
+  background-color: var(--hover-color);
+  border-color: var(--hover-color);
+  color: var(--foreground-color);
+}
+
+
+/* Dropdown de resultados */
+#search-results-container {
+  width: 100%;
+  background-color: var(--background-color);
+  border: 1px solid var(--secondary-color);
+  border-radius: 5px;
+  padding: 10px;
+  z-index: 1000;
+  box-shadow: var(--box-shadow);
+}
+
+/* Botão de fechar no dropdown */
+#close-search-dropdown {
+  float: right;
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  color: var(--accent-color);
+  transition: color 0.3s ease;
+}
+
+#close-search-dropdown:hover {
+  color: var(--highlight-color);
+}
+
+/* Estilo dos itens de resultado */
+.search-item {
+  padding: 10px;
+  margin: 5px 0;
+  background-color: var(--secondary-color);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.search-item:hover {
+  background-color: var(--hover-color);
+  color: var(--foreground-color);
+  transform: scale(1.02); /* Efeito de leve zoom */
+}
+
+.search-item h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--text-color);
+}
+
+.search-item p {
+  margin: 5px 0 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary-color);
+}
+
+/* Destaque para as palavras encontradas */
+.search-item-highlight {
+  background-color: var(--accent-color);
+  color: var(--foreground-color);
+  font-weight: bold;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+
+
+// frontend\dynamics\search\search.html
+
+<div id="search-container">
+  <input type="text" id="search-input" placeholder="Digite aqui para buscar..." />
+  <button id="search-button">Buscar</button>
+  <!-- 
+  <div id="search-results-container" style="display: none;">
+    <button id="close-search-dropdown" aria-label="Fechar">&times;</button>
+    <div id="search-results"></div>
+  </div>
+
+  -->
+</div>
+
+
+
+// frontend\dynamics\search\searchHandler.js
+
+console.log("[SearchHandler] carregado. ");
+
+import { generateFilePaths } from "../../core/path.js"; // Certifique-se de que o caminho esteja correto
+import { config } from "../../core/config.js"; // Certifique-se de que o caminho esteja correto
+import { loadComponent } from "../../core/loader.js"; // Ajuste o caminho, se necessário
+
+function setupSearchEvents() {
+    console.log("[SearchHandler] Configurando eventos de busca...");
+
+    // Seleciona os elementos do DOM
+    const searchInput = document.querySelector("#search-input");
+    const searchButton = document.querySelector("#search-button");
+    const resultsContainer = document.querySelector("#search-results-container");
+    const resultsList = document.querySelector("#search-results");
+    const closeDropdownButton = document.querySelector("#close-search-dropdown");
+
+    if (!searchInput || !searchButton || !resultsContainer || !resultsList || !closeDropdownButton) {
+        console.error("[SearchHandler] Elementos de busca não encontrados no DOM.");
+        return;
+    }
+
+    // Fecha o dropdown de resultados
+    closeDropdownButton.addEventListener("click", () => {
+        resultsContainer.style.display = "none";
+    });
+
+    function performSearch() {
+        const query = searchInput.value.trim().toLowerCase();
+        console.log(`[SearchHandler] Query: "${query}"`);
+        if (!query) {
+            console.warn("[SearchHandler] Nenhuma palavra-chave inserida.");
+            return;
+        }
+
+        resultsList.innerHTML = ""; // Limpa os resultados anteriores
+        console.log("[SearchHandler] Limpando resultados antigos.");
+
+        // Obtém as configurações de todas as páginas diretamente
+        const pages = Object.entries(config.pages).map(([pageName, pageConfig]) => {
+            const filePaths = generateFilePaths("pages", pageConfig);
+            console.log(`[SearchHandler] Página detectada: ${pageName}, Paths:`, filePaths);
+            return {
+                name: pageName,
+                ...filePaths,
+            };
+        });
+
+        let foundResults = false;
+
+        // Mapeia todas as páginas para verificar o conteúdo
+        const fetchPromises = pages.map((page) => {
+            console.log(`[SearchHandler] Buscando na página: ${page.name}`);
+            return fetch(page.html)
+                .then((response) => {
+                    if (!response.ok) {
+                        console.warn(`[SearchHandler] Falha ao carregar a página ${page.name}: ${response.status}`);
+                        return "";
+                    }
+                    console.log(`[SearchHandler] Página carregada: ${page.name}`);
+                    return response.text();
+                })
+                .then((html) => {
+                    if (html.toLowerCase().includes(query)) {
+                        console.log(`[SearchHandler] Palavra-chave encontrada na página: ${page.name}`);
+                        const snippet = extractAndHighlightSnippet(html, query, 100);
+                        const resultItem = document.createElement("div");
+                        resultItem.className = "search-item";
+                        resultItem.innerHTML = `
+                            <h3>${page.name.charAt(0).toUpperCase() + page.name.slice(1)}</h3>
+                            <p>${snippet}</p>
+                        `;
+                        resultItem.addEventListener("click", () => {
+                            console.log(`[SearchHandler] Clique detectado para: ${page.name}`);
+                            window.location.hash = page.name; // Atualiza o hash na URL
+                            resultsContainer.style.display = "none"; // Fecha o dropdown
+                            const navEvent = new Event("hashchange");
+                            console.log("[SearchHandler] Disparando evento de hashchange.");
+                            window.dispatchEvent(navEvent);
+                        });
+
+                        resultsList.appendChild(resultItem);
+                        foundResults = true;
+                    } else {
+                        console.log(`[SearchHandler] Palavra-chave não encontrada na página: ${page.name}`);
+                    }
+                })
+                .catch((error) => console.error(`[SearchHandler] Erro ao buscar na página ${page.name}: ${error.message}`));
+        });
+
+        // Processa os resultados
+        Promise.all(fetchPromises).then(() => {
+            if (!foundResults) {
+                console.warn("[SearchHandler] Nenhum resultado encontrado.");
+                const noResultItem = document.createElement("div");
+                noResultItem.className = "search-item";
+                noResultItem.innerHTML = `<p>Nenhum resultado encontrado.</p>`;
+                resultsList.appendChild(noResultItem);
+            }
+            resultsContainer.style.display = "block"; // Mostra o dropdown
+            console.log("[SearchHandler] Resultados exibidos.");
+        });
+    }
+
+    // Função para extrair e destacar os trechos encontrados
+    function extractAndHighlightSnippet(content, keyword, length) {
+        const sanitizedContent = content.replace(/<[^>]*>?/gm, ""); // Remove tags HTML
+        const index = sanitizedContent.toLowerCase().indexOf(keyword);
+        if (index === -1) return "";
+        const start = Math.max(0, index - length / 2);
+        const end = Math.min(sanitizedContent.length, index + length / 2);
+        const snippet = sanitizedContent
+            .substring(start, end)
+            .replace(new RegExp(keyword, "gi"), (match) => `<mark>${match}</mark>`); // Destaca o termo pesquisado
+        console.log(`[SearchHandler] Snippet gerado: "${snippet}"`);
+        return snippet;
+    }
+
+    // Configura eventos para o botão e o input
+    searchButton.addEventListener("click", performSearch);
+    searchInput.addEventListener("keypress", (event) => {
+        if (event.key === "Enter") {
+            performSearch();
+        }
+    });
+
+    
+}
+// Configura o listener para mudanças no hash da URL
+window.addEventListener("hashchange", async () => {
+    const page = window.location.hash.substring(1);
+    console.log(`[Navigation] Hash mudou para: ${page}`);
+    try {
+        await loadComponent("pages", page);
+        console.log(`[Navigation] Página "${page}" carregada com sucesso.`);
+    } catch (error) {
+        console.error(`[Navigation] Erro ao carregar a página "${page}": ${error.message}`);
+    }
+});
+
+// Expõe a função globalmente
+window.setupSearchEvents = setupSearchEvents;
+
+export { setupSearchEvents };
+
+
+
+// frontend\globals\footer\footer.css
+
+footer {
+  background-color: var(--header-footer-background); /* Fundo dinâmico */
+  color: var(--header-footer-text-color); /* Texto dinâmico */
+  text-align: center;
+  padding: 20px 0;
+  font-size: 0.9rem;
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2); /* Sombra padrão */
+  border-top: 3px solid var(--header-footer-border); /* Destaque na borda superior */
+}
+
+footer a {
+  text-decoration: none;
+  color: var(--header-footer-text-color); /* Link com cor de texto padrão */
+  margin: 0 10px;
+  transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+
+footer a:hover {
+  color: var(--header-footer-link-hover); /* Cor ao passar o mouse */
+  text-shadow: 0 1px 4px var(--header-footer-link-hover); /* Efeito de sombra */
+}
+
+
+
+// frontend\globals\footer\footer.html
+
+<footer>
+  <p>&copy; 2024 Avalume. Todos os direitos reservados.</p>
+  <p>
+    <a href="https://twitter.com">Twitter</a> | 
+    <a href="https://facebook.com">Facebook</a> | 
+    <a href="https://instagram.com">Instagram</a>
+  </p>
+ <div id="search-placeholder"></div>
+</footer>
+
+
+
+// frontend\globals\footer\footerHandler.js
+
+console.log("footerHandler carregado com sucesso. FOOOOTER============================");
+
+function setupNavEvents() {
+console.log("setupNavEvents carregado com sucesso. SETUP === FOOOOTER============================");
+	}
+
+export { setupNavEvents };
+
+
+
+// frontend\globals\nav\nav.css
+
+nav {
+  background-color: var(--header-footer-background); /* Fundo dinâmico */
+  color: var(--header-footer-text-color); /* Cor do texto dinâmico */
+  padding: 15px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Sombra padrão */
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+nav.scrolled {
+  background-color: rgba(0, 0, 0, 0.8); /* Fundo mais escuro ao rolar */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); /* Sombra mais forte */
+}
+
+nav .logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--header-footer-text-color); /* Cor primária dinâmica */
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  gap: 20px; /* Espaçamento entre os itens */
+}
+
+nav a {
+  text-decoration: none;
+  color: var(--header-footer-text-color); /* Cor do texto dinâmico */
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 10px 15px;
+  border-radius: 5px;
+  transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
+}
+
+nav a:hover {
+  background-color: var(--header-footer-link-hover); /* Fundo ao passar o mouse */
+  color: var(--header-footer-background); /* Texto ajustado dinamicamente */
+  transform: scale(1.05); /* Efeito de zoom */
+}
+
+nav a.active {
+  background-color: var(--header-footer-border); /* Fundo dinâmico para link ativo */
+  color: var(--header-footer-background); /* Texto branco dinâmico */
+  font-weight: bold;
+  border-bottom: 2px solid var(--header-footer-background); /* Destaque na parte inferior */
+}
+
+
+   header {
+            background-color: #00A884;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        header img {
+            height: 50px;
+        }
+        nav ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+        nav ul li {
+            position: relative;
+            margin: 0 15px;
+        }
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        nav ul li ul {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: #FFFFFF;
+            color: #00A884;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            list-style: none;
+            padding: 10px 0;
+        }
+        nav ul li ul li {
+            margin: 0;
+        }
+        nav ul li ul li a {
+            color: #00A884;
+            padding: 10px 20px;
+            display: block;
+            text-decoration: none;
+        }
+        nav ul li ul li a:hover {
+            background-color: #F7F7F7;
+        }
+        nav ul li:hover ul {
+            display: block;
+        }
+        .login {
+            background-color: white;
+            color: #00A884;
+            padding: 5px 10px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+
+
+// frontend\globals\nav\nav.html
+
+<nav>
+  <div class="logo">Amazon Align</div>
+  <ul id="menu-list">
+        <!-- Os itens do menu serão gerados aqui dinamicamente --> 
+
+  </ul>
+        <div id="search-placeholder"></div>
+
+</nav>
+
+
+// frontend\globals\nav\navHandler.js
+
+// NavHandler.js
+//console.log(`[NavHandler] carregado.`);
+
+import { config } from '../../core/config.js'; // Configuração principal
+import { loadComponent } from '../../core/loader.js'; // Loader para carregar componentes
+import { injectDynamics } from '../../core/dynamics.js'; // Injetar dinâmicos
+
+//console.log('[NavHandler] Iniciando.');
+
+// Função principal para configurar o menu
+function setupNavEvents() {
+    //console.log('[NavHandler] Inicializando menu...');
+
+    // Seleciona o elemento onde os itens do menu serão inseridos
+    const menuList = document.querySelector('#menu-list');
+    if (!menuList) {
+        //console.error('[NavHandler] Elemento "#menu-list" não encontrado no DOM.');
+        return;
+    }
+
+    // Gera itens do menu com base na configuração de páginas
+    //console.log('[NavHandler] Gerando itens do menu...');
+    const pages = Object.values(config.pages); // Obtém as páginas do `config`
+    menuList.innerHTML = ''; // Limpa o menu antes de adicionar novos itens
+
+    pages.forEach((page) => {
+        const listItem = document.createElement('li');
+        listItem.innerHTML = `<a href="#${page.name}" data-page="${page.name}">${page.name.charAt(0).toUpperCase() + page.name.slice(1)}</a>`;
+        menuList.appendChild(listItem);
+    });
+
+    //console.log('[NavHandler] Itens do menu gerados com sucesso.');
+
+    // Adiciona eventos de clique aos links do menu
+    menuList.addEventListener('click', async (event) => {
+        const target = event.target;
+        if (target.tagName === 'A') {
+            event.preventDefault(); // Evita o comportamento padrão de navegação
+            const pageName = target.getAttribute('data-page');
+            if (pageName) {
+                //console.log(`[NavHandler] Página "${pageName}" selecionada.`);
+                try {
+                    // Carrega a página selecionada
+                    await loadComponent("pages", pageName);
+                    //console.log(`[NavHandler] Página "${pageName}" carregada com sucesso.`);
+
+                    // Injeta os componentes dinâmicos presentes na página
+                    await injectDynamics();
+                    //console.log(`[NavHandler] Componentes dinâmicos injetados com sucesso para a página "${pageName}".`);
+                } catch (error) {
+                    //console.error(`[NavHandler] Erro ao carregar a página ou dinâmicos "${pageName}": ${error.message}`);
+                }
+            }
+        }
+    });
+}
+
+// Exporta a função para uso no index.js
+export { setupNavEvents };
+
+
+
+
+// frontend\globals\theme\reset.css
+
+/* Tema claro (padrão) */
+:root {
+  /* Cores base */
+  --background-color: #ffffff; /* Fundo principal */
+  --foreground-color: #f9f9f9; /* Fundo secundário */
+  --primary-color: #007acc; /* Cor primária */
+  --secondary-color: #004d99; /* Cor secundária */
+  --text-color: #333333; /* Texto principal */
+  --text-secondary-color: #555555; /* Texto secundário */
+  --border-color: #dddddd; /* Cor das bordas */
+  --link-color: #0066cc; /* Cor dos links */
+  --hover-color: #005299; /* Cor ao passar o mouse */
+
+  /* Cores de destaque */
+  --accent-color: #ff9800; /* Cor de destaque */
+  --highlight-color: #ffe082; /* Destaque suave */
+
+  /* Sombras */
+  --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra padrão */
+  --box-shadow-hover: 0 6px 10px rgba(0, 0, 0, 0.15); /* Sombra ao passar o mouse */
+
+  /* Gradientes */
+  --gradient-primary: linear-gradient(45deg, #007acc, #005299); /* Gradiente primário */
+  --gradient-secondary: linear-gradient(45deg, #004d99, #003366); /* Gradiente secundário */
+}
+
+/* Tema escuro */
+[data-theme='dark'] {
+  /* Cores base */
+  --background-color: #1e1e1e; /* Fundo principal */
+  --foreground-color: #2a2a2a; /* Fundo secundário */
+  --primary-color: #1a73e8; /* Cor primária */
+  --secondary-color: #003366; /* Cor secundária */
+  --text-color: #e5e5e5; /* Texto principal */
+  --text-secondary-color: #bbbbbb; /* Texto secundário */
+  --border-color: #444444; /* Cor das bordas */
+  --link-color: #4e9eff; /* Cor dos links */
+  --hover-color: #3b82f6; /* Cor ao passar o mouse */
+
+  /* Cores de destaque */
+  --accent-color: #ff9800; /* Cor de destaque */
+  --highlight-color: #ffcc80; /* Destaque suave */
+
+  /* Sombras */
+  --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); /* Sombra padrão */
+  --box-shadow-hover: 0 6px 10px rgba(0, 0, 0, 0.4); /* Sombra ao passar o mouse */
+
+  /* Gradientes */
+  --gradient-primary: linear-gradient(45deg, #1a73e8, #3b82f6); /* Gradiente primário */
+  --gradient-secondary: linear-gradient(45deg, #003366, #1a73e8); /* Gradiente secundário */
+}
+
+
+
+// frontend\globals\theme\styles.css
+
+/* Container pai */
+#header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Espaço entre itens */
+}
+
+/* Search container */
+#search-container {
+  margin-left: auto;
+}
+
+/* Estilo geral do corpo */
+body {
+  font-family: 'Arial', sans-serif; /* Fonte padrão */
+  font-size: 16px; /* Tamanho de fonte base */
+  line-height: 1.6; /* Espaçamento entre linhas */
+  color: var(--text-color); /* Cor do texto principal */
+  background-color: var(--background-color); /* Cor de fundo geral */
+  transition: background-color 0.3s ease, color 0.3s ease; /* Transição suave */
+}
+
+/* Links */
+a {
+  text-decoration: none; /* Remove sublinhado */
+  color: var(--link-color); /* Cor dos links */
+  transition: color 0.3s ease; /* Transição suave */
+}
+
+a:hover {
+  color: var(--hover-color); /* Cor ao passar o mouse */
+  text-decoration: underline; /* Adiciona sublinhado ao passar o mouse */
+}
+
+/* Botões */
+button {
+  background-color: var(--primary-color); /* Fundo */
+  color: var(--text-on-primary); /* Texto com contraste dinâmico */
+  border: none; /* Sem borda */
+  border-radius: 4px; /* Borda arredondada */
+  padding: 10px 15px; /* Espaçamento interno */
+  cursor: pointer; /* Indica que o botão é clicável */
+  font-size: 1em; /* Tamanho do texto */
+  transition: background-color 0.3s ease, color 0.3s ease; /* Transição suave */
+}
+
+button:hover {
+  background-color: var(--hover-color); /* Fundo ao passar o mouse */
+  color: var(--text-on-secondary); /* Ajusta o texto para contraste dinâmico */
+}
+
+/* Layout geral */
+.container {
+  max-width: 1200px; /* Largura máxima */
+  margin: 0 auto; /* Centraliza horizontalmente */
+  padding: 20px; /* Espaçamento interno */
+}
+
+/* Cabeçalhos */
+h1, h2, h3, h4, h5, h6 {
+  margin-bottom: 20px; /* Espaçamento inferior */
+  font-weight: 600; /* Peso da fonte */
+  color: var(--text-color); /* Garante a cor do texto */
+  transition: color 0.3s ease; /* Transição suave */
+}
+
+/* Listas */
+ul {
+  list-style-type: none; /* Remove marcadores de lista */
+  padding: 0;
+}
+
+ul li {
+  margin-bottom: 10px; /* Espaçamento entre itens */
+  color: var(--text-secondary-color); /* Texto secundário */
+  transition: color 0.3s ease; /* Transição suave */
+}
+
+/* Imagens */
+img {
+  max-width: 100%; /* Imagem não excede o tamanho do container */
+  height: auto; /* Mantém a proporção */
+  display: block; /* Remove espaços em branco ao redor */
+}
+
+/* Formulários */
+input, textarea, select {
+  width: 100%; /* Largura total */
+  padding: 10px; /* Espaçamento interno */
+  margin-bottom: 20px; /* Espaçamento inferior */
+  border: 1px solid var(--border-color); /* Borda */
+  border-radius: 4px; /* Bordas arredondadas */
+  font-size: 1em; /* Tamanho do texto */
+  background-color: var(--foreground-color); /* Fundo */
+  color: var(--text-color); /* Texto */
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease; /* Transições suaves */
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none; /* Remove o contorno padrão */
+  border-color: var(--primary-color); /* Realce na borda */
+  box-shadow: 0 0 5px var(--primary-color); /* Adiciona um leve brilho */
+}
+
+
+
+// frontend\globals\theme\theme.css
+
+
+
+/* Tema Moderno e Clean */
+:root {
+  /* Cores base */
+  --background-color: #f4f4f9; /* Fundo claro sutil */
+  --foreground-color: #ffffff; /* Fundo secundário branco puro */
+  --primary-color: #4CAF50; /* Verde suave para botões e destaques */
+  --secondary-color: #2196F3; /* Azul claro e moderno */
+  --text-color: #333333; /* Preto suave para texto principal */
+  --text-secondary-color: #777777; /* Cinza claro para texto secundário */
+  --border-color: #e0e0e0; /* Cinza para bordas */
+  --link-color: #3f51b5; /* Azul vibrante para links */
+  --hover-color: #009688; /* Verde-água ao passar o mouse */
+
+  /* Cores de destaque */
+  --accent-color: #FFC107; /* Amarelo para destaque */
+  --highlight-color: #E91E63; /* Rosa vivo para ações críticas */
+
+  /* Sombras */
+  --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra padrão */
+  --box-shadow-hover: 0 6px 12px rgba(0, 0, 0, 0.15); /* Sombra ao passar o mouse */
+
+  /* Gradientes */
+  --gradient-primary: linear-gradient(45deg, #4CAF50, #81C784); /* Gradiente primário verde suave */
+  --gradient-secondary: linear-gradient(45deg, #2196F3, #64B5F6); /* Gradiente secundário azul suave */
+
+  /* Ajuste para texto sobre fundo colorido */
+  --text-on-primary: #ffffff; /* Texto branco sobre cores primárias */
+  --text-on-secondary: #000000; /* Texto preto sobre cores secundárias */
+
+  /* nav e footer */
+  --header-footer-background: #00A884; /* Azul-escuro para menu e rodapé */
+  --header-footer-text-color: #ffffff; /* Cor do texto no rodapé/menu */
+  --header-footer-link-hover: #1abc9c; /* Verde-água ao passar o mouse nos links */
+  --header-footer-border: #455A64; /* Cinza-escuro para bordas no rodapé/menu */
+}
+
+/* Tema Escuro */
+[data-theme='dark'] {
+  /* Cores base */
+  --background-color: #121212; /* Fundo preto */
+  --foreground-color: #1E1E1E; /* Fundo secundário escuro */
+  --primary-color: #BB86FC; /* Roxo brilhante */
+  --secondary-color: #03DAC6; /* Verde-água brilhante */
+  --text-color: #E0E0E0; /* Texto principal branco acinzentado */
+  --text-secondary-color: #B0B0B0; /* Texto secundário cinza claro */
+  --border-color: #333333; /* Cinza-escuro para bordas */
+  --link-color: #81D4FA; /* Azul claro vibrante */
+  --hover-color: #FF8A65; /* Laranja suave ao passar o mouse */
+
+  /* Cores de destaque */
+  --accent-color: #FF4081; /* Rosa neon para destaque */
+  --highlight-color: #FFD54F; /* Amarelo brilhante para destaque crítico */
+
+  /* Sombras */
+  --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Sombra padrão */
+  --box-shadow-hover: 0 6px 10px rgba(0, 0, 0, 0.3); /* Sombra ao passar o mouse */
+
+  /* Gradientes */
+  --gradient-primary: linear-gradient(45deg, #BB86FC, #3700B3); /* Gradiente primário roxo */
+  --gradient-secondary: linear-gradient(45deg, #03DAC6, #018786); /* Gradiente secundário verde-água */
+
+  /* Ajuste para texto sobre fundo colorido */
+  --text-on-primary: #ffffff; /* Texto branco sobre cores primárias */
+  --text-on-secondary: #ffffff; /* Texto branco sobre cores secundárias */
+}
+
+
+
+// frontend\globals\theme\themeHandler.js
+
+
+    // Adiciona funcionalidade de troca de tema
+    const toggleButton = document.getElementById('theme-toggle');
+    toggleButton.addEventListener('click', () => {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', newTheme);
+    });
+
+
+
+// frontend\pages\about\about.css
+
+/* Estilos para a seção About */
+#about-section {
+  min-height: 100vh; /* Ocupa pelo menos uma altura de viewport */
+  background-color: var(--background-color); /* Fundo dinâmico */
+  padding: 80px 40px; /* Maior espaçamento para melhor layout */
+  text-align: left;
+  font-family: 'Arial', sans-serif; /* Fonte padrão */
+  line-height: 1.8; /* Melhor espaçamento entre as linhas */
+  border-left: 5px solid var(--primary-color); /* Destaque com variável */
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.1); /* Sombra interna */
+  border-radius: 10px; /* Bordas suaves */
+}
+
+/* Títulos */
+#about-section h1,
+#about-section h2 {
+  font-size: 2.5em; /* Tamanho maior para os títulos */
+  color: var(--primary-color); /* Cor dinâmica para títulos */
+  margin-bottom: 20px;
+  text-transform: uppercase; /* Texto em caixa alta */
+  letter-spacing: 1px; /* Espaçamento entre letras */
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2); /* Sombra suave no texto */
+}
+
+/* Parágrafos */
+#about-section p {
+  font-size: 1.2em; /* Texto maior para legibilidade */
+  color: var(--text-color); /* Texto dinâmico */
+  text-align: justify; /* Justifica o texto para maior legibilidade */
+  margin-bottom: 20px;
+  line-height: 1.8; /* Melhor espaçamento entre linhas */
+  letter-spacing: 0.5px; /* Melhora o espaçamento do texto */
+}
+
+/* Lista de itens */
+#about-section ul {
+  list-style-type: disc; /* Marcadores padrão */
+  margin: 20px 0;
+  padding-left: 40px; /* Alinhamento para listas */
+}
+
+#about-section ul li {
+  font-size: 1.1em; /* Tamanho da fonte */
+  color: var(--text-color); /* Cor dinâmica */
+  margin-bottom: 10px;
+}
+
+/* Destaques */
+#about-section strong {
+  color: var(--secondary-color); /* Cor secundária para ênfase */
+  font-weight: bold; /* Destaca o texto */
+}
+
+/* Containers de texto */
+#about-section .container {
+  max-width: 1200px; /* Limita a largura máxima do conteúdo */
+  margin: 0 auto; /* Centraliza o conteúdo */
+}
+
+/* Seções internas */
+#about-section .mission,
+#about-section .history,
+#about-section .call-to-action {
+  margin-top: 40px; /* Espaçamento entre as seções */
+  padding: 20px;
+  background-color: var(--secondary-color); /* Fundo com cor secundária */
+  color: var(--background-color); /* Texto contrastante */
+  border-radius: 8px; /* Bordas suaves */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra para destaque */
+}
+
+/* Botão de chamada para ação */
+#about-section .call-to-action .btn {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 15px 30px;
+  font-size: 1.1em;
+  color: var(--background-color); /* Texto claro */
+  background-color: var(--primary-color); /* Fundo primário */
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  text-transform: uppercase; /* Texto em caixa alta */
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+#about-section .call-to-action .btn:hover {
+  background-color: var(--hover-color); /* Fundo no hover */
+  transform: scale(1.05); /* Efeito de zoom */
+}
+
+/* Equipe */
+#about-section .team {
+  margin-top: 40px;
+  display: flex;
+  gap: 20px; /* Espaçamento entre os membros */
+  flex-wrap: wrap; /* Ajusta o layout em telas menores */
+}
+
+#about-section .team .member {
+  flex: 1 1 30%; /* Cada membro ocupa 30% do espaço */
+  text-align: center;
+  padding: 20px;
+  background-color: var(--background-color); /* Fundo dinâmico */
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra suave */
+}
+
+#about-section .team .member img {
+  width: 100px; /* Tamanho fixo da imagem */
+  height: 100px;
+  border-radius: 50%; /* Forma circular */
+  margin-bottom: 15px;
+  object-fit: cover;
+}
+
+#about-section .team .member h3 {
+  font-size: 1.2em;
+  color: var(--primary-color); /* Cor dinâmica */
+  margin-bottom: 5px;
+}
+
+#about-section .team .member p {
+  font-size: 1em;
+  color: var(--text-color); /* Texto dinâmico */
+}
+
+
+
+// frontend\pages\about\about.html
+
+<section id="about-section">
+  <div class="container">
+    <!-- Título Principal -->
+    <header>
+      <h1>Sobre Nós</h1>
+      <h2>Quem Somos</h2>
+    </header>
+
+    <!-- Introdução -->
+    <div class="introduction">
+      <p>
+        Somos a <strong>Avalume</strong>, uma plataforma dedicada a ajudar programadores de todos os níveis a aprimorar suas habilidades. Nosso objetivo é transformar o aprendizado em uma experiência prática e interativa, com foco em exemplos reais e projetos dinâmicos.
+      </p>
+    </div>
+
+    <!-- Nossa Missão -->
+    <div class="mission">
+      <h2>Nossa Missão</h2>
+      <p>
+        Capacitar indivíduos e equipes a dominar a programação por meio de aprendizado baseado em projetos, desafios interativos e uma abordagem prática que conecta teoria à aplicação.
+      </p>
+    </div>
+
+    <!-- História -->
+    <div class="history">
+      <h2>Um Pouco da Nossa História</h2>
+      <p>
+        Fundada em 2024, a Avalume começou como uma ideia simples: tornar o aprendizado de programação mais acessível e divertido. Desde então, crescemos para incluir exemplos práticos, ferramentas inovadoras e uma comunidade ativa de entusiastas da tecnologia.
+      </p>
+    </div>
+
+    <!-- Chamada para Ação -->
+    <div class="call-to-action">
+      <h2>Por Que Escolher a Avalume?</h2>
+      <p>
+        Oferecemos mais do que teoria. Aqui você encontra:
+      </p>
+      <ul>
+        <li>Exemplos práticos e focados em problemas reais.</li>
+        <li>Desafios interativos para testar suas habilidades.</li>
+        <li>Uma comunidade que apoia seu crescimento.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+
+// frontend\pages\credenciamento\credenciamento.css
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f7;
+        }
+        header {
+            background-color: #00A884;
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 1.8em;
+        }
+        section {
+            padding: 40px 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #005C89;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        form label {
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+        form input, form select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        form button {
+            background-color: #00A884;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        form button:hover {
+            background-color: #005C89;
+        }
+        .info-section {
+            margin-top: 20px;
+            font-size: 1em;
+            color: #333;
+        }
+
+
+// frontend\pages\credenciamento\credenciamento.html
+
+
+    <header>
+        <h1>Credenciamento</h1>
+    </header>
+    <section>
+        <h2>Seja um Parceiro Amazon Align</h2>
+        <p>Preencha o formulário abaixo para se tornar um profissional credenciado e fazer parte da nossa rede de inovação e qualidade.</p>
+
+        <form id="credenciamento-form">
+            <label for="nome">Nome Completo</label>
+            <input type="text" id="nome" name="nome" placeholder="Digite seu nome completo" required>
+
+            <label for="cpf">CPF</label>
+            <input type="text" id="cpf" name="cpf" placeholder="Digite seu CPF" required>
+
+            <label for="cro">CRO (se aplicável)</label>
+            <input type="text" id="cro" name="cro" placeholder="Digite seu número do CRO">
+
+            <label for="email">E-mail</label>
+            <input type="email" id="email" name="email" placeholder="Digite seu e-mail" required>
+
+            <label for="telefone">Telefone</label>
+            <input type="tel" id="telefone" name="telefone" placeholder="Digite seu telefone" required>
+
+            <label for="senha">Criar Senha</label>
+            <input type="password" id="senha" name="senha" placeholder="Crie uma senha" required>
+
+            <button type="submit">Enviar Credenciamento</button>
+        </form>
+
+        <div class="info-section">
+            <p>Após o envio do formulário, nossa equipe entrará em contato para validar suas informações e liberar o acesso ao painel de profissionais.</p>
+        </div>
+    </section>
+
+
+
+
+// frontend\pages\home\home.css
+
+    /* ==========================
+           Hero Section
+        ========================== */
+        .hero {
+            background: linear-gradient(to right, #00A884, #005C89);
+            color: white;
+            text-align: center;
+            padding: 100px 20px;
+        }
+        .hero h1 {
+            font-size: 2.8em;
+            margin-bottom: 10px;
+        }
+        .hero p {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+        .hero .cta {
+            margin-top: 20px;
+        }
+        .hero .cta a {
+            background-color: #FFFFFF;
+            color: #00A884;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 1em;
+            margin: 0 10px;
+        }
+
+        /* ==========================
+           Section Styles
+        ========================== */
+        section {
+            padding: 50px 20px;
+            text-align: center;
+        }
+        .como-funciona, .beneficios, .depoimentos, .contato {
+            background-color: #F7F7F7;
+            margin-bottom: 20px;
+        }
+        .como-funciona h2, .beneficios h2, .depoimentos h2, .contato h2 {
+            color: #005C89;
+            margin-bottom: 15px;
+        }
+        .como-funciona p, .beneficios p, .depoimentos p, .contato p {
+            font-size: 1.1em;
+        }
+        .beneficios .item {
+            display: inline-block;
+            width: 30%;
+            text-align: center;
+            margin: 20px 1%;
+        }
+        .beneficios .item img {
+            width: 50px;
+            margin-bottom: 10px;
+        }
+        .depoimentos blockquote {
+            font-style: italic;
+            color: #333;
+        }
+        .contato a {
+            display: inline-block;
+            background-color: #00A884;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 1em;
+        }
+
+
+// frontend\pages\home\home.html
+
+  <!-- ==========================
+         Hero Section
+    ========================== -->
+    <main>
+        <section class="hero">
+            <h1>Amazon Align - Alinhadores Invisíveis e Credenciamentos</h1>
+            <p>Transformando sorrisos com tecnologia avançada e respeito à natureza.</p>
+            <div class="cta">
+                <a href="#Torne-se-um-Parceiro">Credencie-se Agora</a>
+                <a href="#pedidos">Faça seu Pedido</a>
+            </div>
+        </section>
+
+        <!-- ==========================
+             Como Funciona Section
+        ========================== -->
+        <section id="como-funciona" class="como-funciona">
+            <h2>Como Funciona</h2>
+            <p>Nosso processo é simples e eficiente:</p>
+            <div class="steps">
+                <p><strong>Passo 1:</strong> Credenciamento. <a href="#credenciamento">Saiba mais</a></p>
+                <p><strong>Passo 2:</strong> Envie os modelos (escaneamento ou moldes).</p>
+                <p><strong>Passo 3:</strong> Receba os alinhadores em até 7 dias úteis.</p>
+            </div>
+        </section>
+
+        <!-- ==========================
+             Benefícios Section
+        ========================== -->
+        <section id="beneficios" class="beneficios">
+            <h2>Benefícios para Dentistas</h2>
+            <div class="item">
+                <img src="lucro.png" alt="Lucro">
+                <p><strong>Alta Margem de Lucro</strong></p>
+                <p>Retorno financeiro com o primeiro caso fechado.</p>
+            </div>
+            <div class="item">
+                <img src="rapidez.png" alt="Rapidez">
+                <p><strong>Rapidez</strong></p>
+                <p>Entrega em até 7 dias úteis.</p>
+            </div>
+            <div class="item">
+                <img src="suporte.png" alt="Suporte">
+                <p><strong>Suporte Completo</strong></p>
+                <p>Atendimento técnico e materiais promocionais.</p>
+            </div>
+        </section>
+
+        <!-- ==========================
+             Depoimentos Section
+        ========================== -->
+        <section id="depoimentos" class="depoimentos">
+            <h2>Depoimentos</h2>
+            <blockquote>"Os alinhadores da Amazon Align transformaram minha clínica. Agilidade e qualidade incríveis!"</blockquote>
+            <blockquote>"Um suporte técnico impecável e resultados excelentes para meus pacientes!"</blockquote>
+        </section>
+
+        <!-- ==========================
+             Contato Section
+        ========================== -->
+        <section id="contato" class="contato">
+            <h2>Contato Rápido</h2>
+            <p>Fale conosco diretamente:</p>
+            <a href="https://wa.me/123456789" target="_blank">Fale com um consultor</a>
+        </section>
+    </main>
+
+
+// frontend\pages\pedidos\cadastroPaciente.html
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon Align - Fazer Pedido</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f7;
+        }
+        header {
+            background-color: #00A884;
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 1.8em;
+        }
+        section {
+            padding: 40px 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #005C89;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        form label {
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+        form input, form select, form textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        form button {
+            background-color: #00A884;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        form button:hover {
+            background-color: #005C89;
+        }
+        .status-info {
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Pedido Page -->
+    <header>
+        <h1>Fazer Pedido</h1>
+    </header>
+    <section>
+        <h2>Solicitação de Alinhadores</h2>
+        <p>Preencha os detalhes abaixo para realizar a solicitação de planejamento ortodôntico e produção de alinhadores.</p>
+        <form id="pedido-form">
+            <label for="paciente-nome">Nome do Paciente</label>
+            <input type="text" id="paciente-nome" name="paciente-nome" placeholder="Digite o nome do paciente" required>
+
+            <label for="idade">Idade do Paciente</label>
+            <input type="number" id="idade" name="idade" placeholder="Digite a idade do paciente" required>
+
+            <label for="dados-clinicos">Dados Clínicos</label>
+            <textarea id="dados-clinicos" name="dados-clinicos" placeholder="Descreva o caso clínico" rows="4" required></textarea>
+
+            <label for="arquivos">Upload de Arquivos (STL ou OBJ)</label>
+            <input type="file" id="arquivos" name="arquivos" accept=".stl,.obj" required>
+
+            <label for="preferencia-planejamento">Preferência de Planejamento</label>
+            <select id="preferencia-planejamento" name="preferencia-planejamento" required>
+                <option value="videoconferencia">Planejamento por Videoconferência</option>
+                <option value="interno">Planejamento Interno (envio para aprovação)</option>
+            </select>
+
+            <label for="informacoes-adicionais">Informações Adicionais</label>
+            <textarea id="informacoes-adicionais" name="informacoes-adicionais" placeholder="Adicione informações adicionais, se necessário" rows="4"></textarea>
+
+            <button type="submit">Enviar Pedido</button>
+        </form>
+
+        <div class="status-info">
+            <p>Após o envio, você poderá acompanhar o status do seu pedido diretamente no painel do profissional credenciado.</p>
+        </div>
+    </section>
+
+</body>
+</html>
+
+
+
+// frontend\pages\pedidos\criarPedido.html
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon Align - Fazer Pedido</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f7;
+        }
+        header {
+            background-color: #00A884;
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 1.8em;
+        }
+        section {
+            padding: 40px 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #005C89;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        form label {
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+        form input, form select, form textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        form button {
+            background-color: #00A884;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        form button:hover {
+            background-color: #005C89;
+        }
+        .status-info {
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Pedido Page -->
+    <header>
+        <h1>Fazer Pedido</h1>
+    </header>
+    <section>
+        <h2>Solicitação de Alinhadores</h2>
+        <p>Preencha os detalhes abaixo para realizar a solicitação de planejamento ortodôntico e produção de alinhadores.</p>
+        <form id="pedido-form">
+            <label for="paciente-nome">Nome do Paciente</label>
+            <input type="text" id="paciente-nome" name="paciente-nome" placeholder="Digite o nome do paciente" required>
+
+            <label for="idade">Idade do Paciente</label>
+            <input type="number" id="idade" name="idade" placeholder="Digite a idade do paciente" required>
+
+            <label for="dados-clinicos">Dados Clínicos</label>
+            <textarea id="dados-clinicos" name="dados-clinicos" placeholder="Descreva o caso clínico" rows="4" required></textarea>
+
+            <label for="arquivos">Upload de Arquivos (STL ou OBJ)</label>
+            <input type="file" id="arquivos" name="arquivos" accept=".stl,.obj" required>
+
+            <label for="preferencia-planejamento">Preferência de Planejamento</label>
+            <select id="preferencia-planejamento" name="preferencia-planejamento" required>
+                <option value="videoconferencia">Planejamento por Videoconferência</option>
+                <option value="interno">Planejamento Interno (envio para aprovação)</option>
+            </select>
+
+            <label for="informacoes-adicionais">Informações Adicionais</label>
+            <textarea id="informacoes-adicionais" name="informacoes-adicionais" placeholder="Adicione informações adicionais, se necessário" rows="4"></textarea>
+
+            <button type="submit">Enviar Pedido</button>
+        </form>
+
+        <div class="status-info">
+            <p>Após o envio, você poderá acompanhar o status do seu pedido diretamente no painel do profissional credenciado.</p>
+        </div>
+    </section>
+
+</body>
+</html>
+
+
+
+// frontend\pages\pedidos\detalhesPedido.html
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon Align - Fazer Pedido</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f7;
+        }
+        header {
+            background-color: #00A884;
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 1.8em;
+        }
+        section {
+            padding: 40px 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #005C89;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        form label {
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+        form input, form select, form textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        form button {
+            background-color: #00A884;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        form button:hover {
+            background-color: #005C89;
+        }
+        .status-info {
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Pedido Page -->
+    <header>
+        <h1>Fazer Pedido</h1>
+    </header>
+    <section>
+        <h2>Solicitação de Alinhadores</h2>
+        <p>Preencha os detalhes abaixo para realizar a solicitação de planejamento ortodôntico e produção de alinhadores.</p>
+        <form id="pedido-form">
+            <label for="paciente-nome">Nome do Paciente</label>
+            <input type="text" id="paciente-nome" name="paciente-nome" placeholder="Digite o nome do paciente" required>
+
+            <label for="idade">Idade do Paciente</label>
+            <input type="number" id="idade" name="idade" placeholder="Digite a idade do paciente" required>
+
+            <label for="dados-clinicos">Dados Clínicos</label>
+            <textarea id="dados-clinicos" name="dados-clinicos" placeholder="Descreva o caso clínico" rows="4" required></textarea>
+
+            <label for="arquivos">Upload de Arquivos (STL ou OBJ)</label>
+            <input type="file" id="arquivos" name="arquivos" accept=".stl,.obj" required>
+
+            <label for="preferencia-planejamento">Preferência de Planejamento</label>
+            <select id="preferencia-planejamento" name="preferencia-planejamento" required>
+                <option value="videoconferencia">Planejamento por Videoconferência</option>
+                <option value="interno">Planejamento Interno (envio para aprovação)</option>
+            </select>
+
+            <label for="informacoes-adicionais">Informações Adicionais</label>
+            <textarea id="informacoes-adicionais" name="informacoes-adicionais" placeholder="Adicione informações adicionais, se necessário" rows="4"></textarea>
+
+            <button type="submit">Enviar Pedido</button>
+        </form>
+
+        <div class="status-info">
+            <p>Após o envio, você poderá acompanhar o status do seu pedido diretamente no painel do profissional credenciado.</p>
+        </div>
+    </section>
+
+</body>
+</html>
+
+
+
+// frontend\pages\pedidos\listarPedidos.html
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon Align - Fazer Pedido</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f7;
+        }
+        header {
+            background-color: #00A884;
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 1.8em;
+        }
+        section {
+            padding: 40px 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #005C89;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        form label {
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+        form input, form select, form textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        form button {
+            background-color: #00A884;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        form button:hover {
+            background-color: #005C89;
+        }
+        .status-info {
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Pedido Page -->
+    <header>
+        <h1>Fazer Pedido</h1>
+    </header>
+    <section>
+        <h2>Solicitação de Alinhadores</h2>
+        <p>Preencha os detalhes abaixo para realizar a solicitação de planejamento ortodôntico e produção de alinhadores.</p>
+        <form id="pedido-form">
+            <label for="paciente-nome">Nome do Paciente</label>
+            <input type="text" id="paciente-nome" name="paciente-nome" placeholder="Digite o nome do paciente" required>
+
+            <label for="idade">Idade do Paciente</label>
+            <input type="number" id="idade" name="idade" placeholder="Digite a idade do paciente" required>
+
+            <label for="dados-clinicos">Dados Clínicos</label>
+            <textarea id="dados-clinicos" name="dados-clinicos" placeholder="Descreva o caso clínico" rows="4" required></textarea>
+
+            <label for="arquivos">Upload de Arquivos (STL ou OBJ)</label>
+            <input type="file" id="arquivos" name="arquivos" accept=".stl,.obj" required>
+
+            <label for="preferencia-planejamento">Preferência de Planejamento</label>
+            <select id="preferencia-planejamento" name="preferencia-planejamento" required>
+                <option value="videoconferencia">Planejamento por Videoconferência</option>
+                <option value="interno">Planejamento Interno (envio para aprovação)</option>
+            </select>
+
+            <label for="informacoes-adicionais">Informações Adicionais</label>
+            <textarea id="informacoes-adicionais" name="informacoes-adicionais" placeholder="Adicione informações adicionais, se necessário" rows="4"></textarea>
+
+            <button type="submit">Enviar Pedido</button>
+        </form>
+
+        <div class="status-info">
+            <p>Após o envio, você poderá acompanhar o status do seu pedido diretamente no painel do profissional credenciado.</p>
+        </div>
+    </section>
+
+</body>
+</html>
+
+
+
+// frontend\pages\pedidos\pedidos.css
+
+
+.resumo-pedidos table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.resumo-pedidos th, .resumo-pedidos td {
+    text-align: left;
+    padding: 10px;
+    border: 1px solid #ddd;
+}
+
+.resumo-pedidos th {
+    background-color: #007bff;
+    color: white;
+}
+
+.resumo-pedidos td {
+    background-color: #f9f9f9;
+}
+
+/* Informações do Dentista */
+.dentista-info p {
+    font-size: 16px;
+    color: #555;
+}
+
+/* Escolha/Cadastro de Paciente */
+.paciente-info {
+    margin-top: 20px;
+}
+
+.paciente-info label {
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.paciente-info select {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.paciente-info button {
+    margin-left: 10px;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 5px;
+    background-color: #28a745; /* Verde para cadastro */
+    color: white;
+    cursor: pointer;
+}
+
+.paciente-info button:hover {
+    opacity: 0.9;
+}
+
+/* Status do Pedido */
+.status-pedido {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #f1f1f1;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+.status-pedido p {
+    margin: 5px 0;
+    font-size: 16px;
+    color: #555;
+}
+
+.status-pedido button {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+}
+
+.status-pedido button:hover {
+    background-color: #0056b3;
+}
+
+/* Formulário de Novo Pedido */
+.novo-pedido form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.novo-pedido label {
+    font-weight: bold;
+}
+
+.novo-pedido input, .novo-pedido textarea {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+    width: 100%;
+}
+
+.novo-pedido textarea {
+    resize: none;
+}
+
+.novo-pedido button[type="submit"] {
+    align-self: flex-start;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.novo-pedido button[type="submit"]:hover {
+    background-color: #0056b3;
+}
+
+
+
+// frontend\pages\pedidos\pedidos.html
+
+<!-- ========================== -->
+<!-- Gestão de Pedidos Section -->
+<!-- ========================== -->
+<section id="gestao-pedidos" class="gestao-pedidos">
+    <h2>Gestão de Pedidos</h2>
+
+    <!-- Informações do Dentista -->
+    <div class="dentista-info">
+        <p><strong>Dentista:</strong> Dr. João Silva</p>
+    </div>
+
+    <!-- Resumo Geral de Pedidos -->
+    <div id="resumo-pedidos" class="resumo-pedidos">
+        <h3>Resumo Geral de Pedidos</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Paciente</th>
+                    <th>Data</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>Maria Souza</td>
+                    <td>2025-01-20</td>
+                    <td>Em Andamento</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>Carlos Lima</td>
+                    <td>2025-01-18</td>
+                    <td>Concluído</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>Ana Paula</td>
+                    <td>2025-01-22</td>
+                    <td>Cancelado</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Escolher ou Cadastrar Paciente -->
+    <div class="paciente-info">
+        <label for="paciente">Paciente:</label>
+        <select id="paciente" name="paciente">
+            <option value="" disabled selected>Escolha um paciente</option>
+            <option value="1">Maria Souza</option>
+            <option value="2">Carlos Lima</option>
+        </select>
+        <button id="cadastrar-paciente">Cadastrar Paciente</button>
+    </div>
+
+    <!-- Status do Pedido -->
+    <div id="status-pedido" class="status-pedido">
+        <h3>Status do Pedido Atual</h3>
+        <p>Pedido em andamento para <strong>Maria Souza</strong>. <em>(Entrega prevista: 2025-01-25)</em></p>
+        <button id="detalhes-pedido">Ver Detalhes</button>
+    </div>
+
+    <!-- Cadastrar Novo Pedido -->
+    <div id="novo-pedido" class="novo-pedido" style="display: none;">
+        <h3>Cadastrar Novo Pedido</h3>
+        <form>
+            <label for="detalhes">Detalhes do Pedido:</label>
+            <textarea id="detalhes" name="detalhes" rows="4"></textarea>
+
+            <label for="data">Data de Entrega:</label>
+            <input type="date" id="data" name="data">
+
+            <button type="submit">Salvar Pedido</button>
+        </form>
+    </div>
+</section>
+
+
+
+// frontend\pages\theme\theme.css
+
+.theme-gallery {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.theme-gallery header h1 {
+  color: var(--text-color);
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.theme-gallery header p {
+  color: var(--text-secondary-color);
+  margin-bottom: 2rem;
+}
+
+.color-palette, .gradient-palette, .components-simulation {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.color-box, .gradient-box {
+  flex: 1;
+  padding: 2rem;
+  color: var(--text-on-primary);
+  text-transform: uppercase;
+  font-weight: bold;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: var(--box-shadow);
+}
+
+.color-box.primary {
+  background-color: var(--primary-color);
+}
+
+.color-box.secondary {
+  background-color: var(--secondary-color);
+}
+
+.color-box.accent {
+  background-color: var(--accent-color);
+}
+
+.color-box.neutral {
+  background-color: var(--foreground-color);
+  color: var(--text-color);
+}
+
+.gradient-box.primary-gradient {
+  background: var(--gradient-primary);
+}
+
+.gradient-box.secondary-gradient {
+  background: var(--gradient-secondary);
+}
+
+.primary-text {
+  font-size: 1.2rem;
+  color: var(--text-color);
+  margin-bottom: 0.5rem;
+}
+
+.secondary-text {
+  font-size: 1rem;
+  color: var(--text-secondary-color);
+}
+
+.btn-primary, .btn-secondary {
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  text-transform: uppercase;
+  box-shadow: var(--box-shadow);
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: var(--text-on-primary);
+}
+
+.btn-secondary {
+  background-color: var(--secondary-color);
+  color: var(--text-on-primary);
+}
+
+.card {
+  padding: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background-color: var(--foreground-color);
+  box-shadow: var(--box-shadow);
+  text-align: left;
+}
+
+.card h3 {
+  margin-top: 0;
+  color: var(--text-color);
+}
+
+.card p {
+  margin: 0.5rem 0 0;
+  color: var(--text-secondary-color);
+}
+
+
+
+// frontend\pages\theme\theme.html
+
+<section class="theme-gallery">
+  <header>
+    <h1>Galeria de Temas</h1>
+    <p>Explore os temas disponíveis e veja como as cores e estilos são aplicados.</p>
+  </header>
+
+  <!-- Paleta de Cores -->
+  <section>
+    <h2>Paleta de Cores</h2>
+    <div class="color-palette">
+      <div class="color-box primary">PRIMÁRIA</div>
+      <div class="color-box secondary">SECUNDÁRIA</div>
+      <div class="color-box accent">DESTAQUE</div>
+      <div class="color-box neutral">NEUTRA</div>
+    </div>
+  </section>
+
+  <!-- Gradientes -->
+  <section>
+    <h2>Exemplos de Gradientes</h2>
+    <div class="gradient-palette">
+      <div class="gradient-box primary-gradient">GRADIENTE PRIMÁRIO</div>
+      <div class="gradient-box secondary-gradient">GRADIENTE SECUNDÁRIO</div>
+    </div>
+  </section>
+
+  <!-- Fontes -->
+  <section>
+    <h2>Aplicação de Fontes</h2>
+    <p class="primary-text">Esta é uma fonte primária usada em textos principais.</p>
+    <p class="secondary-text">Esta é uma fonte secundária usada em textos de destaque.</p>
+  </section>
+
+  <!-- Simulação em Componentes -->
+  <section>
+    <h2>Simulação em Componentes</h2>
+    <div class="components-simulation">
+      <button class="btn-primary">BOTÃO PRIMÁRIO</button>
+      <button class="btn-secondary">BOTÃO SECUNDÁRIO</button>
+      <div class="card">
+        <h3>Título do Card</h3>
+        <p>Este é um exemplo de card utilizando as cores e estilos do tema.</p>
+      </div>
+    </div>
+  </section>
+</section>
+

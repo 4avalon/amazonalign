@@ -1,0 +1,110 @@
+.theme-gallery {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.theme-gallery header h1 {
+  color: var(--text-color);
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.theme-gallery header p {
+  color: var(--text-secondary-color);
+  margin-bottom: 2rem;
+}
+
+.color-palette, .gradient-palette, .components-simulation {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.color-box, .gradient-box {
+  flex: 1;
+  padding: 2rem;
+  color: var(--text-on-primary);
+  text-transform: uppercase;
+  font-weight: bold;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: var(--box-shadow);
+}
+
+.color-box.primary {
+  background-color: var(--primary-color);
+}
+
+.color-box.secondary {
+  background-color: var(--secondary-color);
+}
+
+.color-box.accent {
+  background-color: var(--accent-color);
+}
+
+.color-box.neutral {
+  background-color: var(--foreground-color);
+  color: var(--text-color);
+}
+
+.gradient-box.primary-gradient {
+  background: var(--gradient-primary);
+}
+
+.gradient-box.secondary-gradient {
+  background: var(--gradient-secondary);
+}
+
+.primary-text {
+  font-size: 1.2rem;
+  color: var(--text-color);
+  margin-bottom: 0.5rem;
+}
+
+.secondary-text {
+  font-size: 1rem;
+  color: var(--text-secondary-color);
+}
+
+.btn-primary, .btn-secondary {
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  text-transform: uppercase;
+  box-shadow: var(--box-shadow);
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: var(--text-on-primary);
+}
+
+.btn-secondary {
+  background-color: var(--secondary-color);
+  color: var(--text-on-primary);
+}
+
+.card {
+  padding: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background-color: var(--foreground-color);
+  box-shadow: var(--box-shadow);
+  text-align: left;
+}
+
+.card h3 {
+  margin-top: 0;
+  color: var(--text-color);
+}
+
+.card p {
+  margin: 0.5rem 0 0;
+  color: var(--text-secondary-color);
+}

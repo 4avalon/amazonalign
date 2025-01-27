@@ -1,0 +1,43 @@
+/* Estilos compartilhados */
+#login-panel, #login-form-container {
+  background: var(--theme-card-bg-color);
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-width: 300px;
+  margin: auto;
+  text-align: center;
+}
+
+#login-panel p {
+  font-size: 1rem;
+  margin-bottom: 10px;
+  color: var(--theme-text-color);
+}
+
+#login-panel button, #login-form button {
+  padding: 10px 15px;
+  background-color: var(--primary-color);
+  color: var(--text-on-primary);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#login-panel button:hover, #login-form button:hover {
+  background-color: var(--hover-color);
+}
+
+#login-form label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+#login-form input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 15px;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+}
