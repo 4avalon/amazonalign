@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Painel - Pedidos</title>
+</head>
+<body>
+
+  <!-- Seção de Pedidos -->
+  <section id="pedidos-dentista">
+    <h3>📋 Meus Pedidos</h3>
+
+    <!-- Cabeçalho com botão para criar novo pedido -->
+    <div class="cabecalho-pedidos">
+      <button id="btn-novo-pedido" class="btn-primario">+ Novo Pedido</button>
+    </div>
+
+    <!-- Mensagem de Carregamento -->
+    <div id="carregando-pedidos" class="carregando">Carregando pedidos...</div>
+
+    <!-- Tabela de Pedidos -->
+    <table id="tabela-pedidos-dentista">
+      <thead>
+        <tr>
+          <th>ID Pedido</th>
+          <th>Paciente</th>
+          <th>Data do Pedido</th>
+          <th>Status</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Pedidos carregados via JS -->
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Script (Carregar no Final para Evitar Erros do DOM) -->
+  <script src="dashboard/dentista/modules/pedidos_dentista.js"></script>
+
+</body>
+</html>

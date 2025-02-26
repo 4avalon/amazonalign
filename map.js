@@ -12,7 +12,7 @@ const treeOutputFile = path.join(projectDir, 'tree.txt');
 // Extensões permitidas
 const allowedExtensions = ['.html', '.css', '.js'];
 // Diretórios a serem ignorados
-const ignoredDirs = ['node_modules', '.git', '.env', "docs"];
+const ignoredDirs = ['node_modules', '.git', '.env'];
 
 // Função para listar arquivos, ignorando diretórios especificados
 function listFiles(dir, fileList = []) {

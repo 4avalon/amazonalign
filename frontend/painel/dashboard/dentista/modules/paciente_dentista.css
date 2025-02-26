@@ -1,0 +1,128 @@
+/* Estilos gerais do módulo de pacientes */
+#paciente-dentista {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+#paciente-dentista h2 {
+  font-size: 24px;
+  margin-bottom: 15px;
+  color: #007BFF;
+}
+
+/* Seleção do paciente ativo */
+.selecao-paciente {
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.selecao-paciente label {
+  font-weight: bold;
+}
+#paciente-ativo {
+  padding: 8px;
+  font-size: 16px;
+}
+
+/* Resumo do paciente */
+#resumo-paciente {
+  margin-bottom: 30px;
+  border: 1px solid #ddd;
+  padding: 15px;
+  border-radius: 6px;
+  background-color: #f9f9f9;
+}
+#resumo-paciente h3 {
+  font-size: 20px;
+  margin-bottom: 5px;
+}
+#resumo-paciente p {
+  margin: 3px 0;
+}
+#resumo-paciente h4 {
+  margin-top: 15px;
+  font-size: 18px;
+  margin-bottom: 5px;
+}
+#tabela-pedidos-paciente {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 5px;
+}
+#tabela-pedidos-paciente th,
+#tabela-pedidos-paciente td {
+  padding: 8px;
+  border: 1px solid #ddd;
+  text-align: center;
+}
+#tabela-pedidos-paciente th {
+  background-color: #007BFF;
+  color: #fff;
+}
+#btn-criar-pedido {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background-color: #007BFF;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  border-radius: 4px;
+}
+#btn-criar-pedido:hover {
+  background-color: #0056b3;
+}
+
+/* Lista de pacientes */
+#lista-pacientes {
+  margin-top: 20px;
+}
+#lista-pacientes h3 {
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+#tabela-pacientes {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 10px;
+}
+#tabela-pacientes th,
+#tabela-pacientes td {
+  padding: 10px;
+  border: 1px solid #ddd;
+  text-align: center;
+}
+#tabela-pacientes th {
+  background-color: #007BFF;
+  color: #fff;
+}
+
+/* Botões da tabela */
+.btn-ver {
+  padding: 6px 10px;
+  margin-right: 5px;
+  background-color: #007BFF;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.btn-ver:hover {
+  background-color: #0056b3;
+}
+
+/* Botões de paciente */
+.botoes-paciente {
+  margin-top: 10px;
+}
+#btn-novo-paciente {
+  padding: 8px 12px;
+  background-color: #007BFF;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  border-radius: 4px;
+}
+#btn-novo-paciente:hover {
+  background-color: #0056b3;
+}

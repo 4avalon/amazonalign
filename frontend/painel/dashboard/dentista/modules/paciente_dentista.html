@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Painel - Pacientes</title>
+</head>
+<body>
+
+  <section id="info-dentista">
+  <h2>Olá, <span id="dentista-nome">Carregando...</span> <span id="dentista-id"></span></h2>
+
+  </section>
+
+  <section id="selecao-paciente">
+    <label for="paciente-ativo">Selecione o Paciente:</label>
+    <select id="paciente-ativo">
+      <option value="">Escolha...</option>
+      <!-- Opções carregadas via JS -->
+    </select>
+  </section>
+
+  <section id="resumo-paciente">
+    <h3>Resumo do Paciente: <span id="nome-paciente-selecionado">---</span></h3>
+    <p>Contato: <span id="contato-paciente">---</span></p>
+    <p>Data de Nascimento: <span id="data-paciente">---</span></p>
+    <p>Sexo: <span id="sexo-paciente">---</span></p>
+
+    <h4>Pedidos do Paciente</h4>
+    <table id="tabela-pedidos-paciente">
+      <thead>
+        <tr>
+          <th>ID Pedido</th>
+          <th>Ficha Técnica</th>
+          <th>Arquivo 3D</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Pedidos carregados via JS -->
+      </tbody>
+    </table>
+    <button id="btn-criar-pedido">+ Criar Pedido</button>
+  </section>
+
+  <section id="lista-pacientes">
+    <h3>Lista de Pacientes</h3>
+    <table id="tabela-pacientes">
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Data de Nascimento</th>
+          <th>Sexo</th>
+          <th>Pedidos em Aberto</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Pacientes carregados via JS -->
+      </tbody>
+    </table>
+    <button id="btn-novo-paciente">+ Novo Paciente</button>
+  </section>
+
+</body>
+</html>

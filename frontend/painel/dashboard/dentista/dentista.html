@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dentista Dashboard</title>
+  <style>
+    /* HEADER - Cabeçalho Fixo (caso queira incluir) */
+    header {
+      width: 100%;
+      background: linear-gradient(to right, #0056b3, #007BFF);
+      color: white;
+      padding: 15px 20px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 60px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+    }
+
+    /* Ajuste para evitar que o conteúdo fique escondido abaixo do header */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #eef2f7;
+      margin: 0;
+      padding-top: 70px; /* Espaço para o header */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Conteúdo principal */
+    main {
+      width: 90%;
+      max-width: 1200px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Estilo dos containers */
+    .container {
+      background: white;
+      width: 100%;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+      min-height: 180px;
+      overflow-x: auto;
+    }
+
+    /* Responsividade */
+    @media (max-width: 768px) {
+      main {
+        width: 95%;
+      }
+      .container {
+        min-height: 150px;
+      }
+    }
+
+    /* Estilo das Tabelas */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      background: white;
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+
+    th {
+      background: #007BFF;
+      color: white;
+    }
+
+    .tabela-container {
+      max-height: 500px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <!-- Seção de Pedidos do Dentista -->
+    <section id="pedidos-container" class="container">
+      <h2>📋 Meus Pedidos</h2>
+           <div id="pedidos-content">Carregando pedidos...</div>
+    </section>
+  </main>
+ <!-- -->
+      <!-- Seção de pacientes do Dentista -->
+<section id="paciente-container" class="container">
+  <!-- Conteúdo injetado dinamicamente -->
+</section>
+
+  </main>
+
+  <!-- Carrega o script principal do Dentista Dashboard -->
+  <script src="dentista.js"></script>
+</body>
+</html>

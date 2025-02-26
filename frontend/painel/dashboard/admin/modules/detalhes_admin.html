@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes do Dentista</title>
+    <style>
+        
+        /* Estilos específicos para a página de detalhes do dentista */
+.detalhes-dentista-page {
+    background-color: #f4f4f4;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+/* Container principal */
+.detalhes-dentista-page .container {
+    max-width: 500px;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+/* Título */
+.detalhes-dentista-page h2 {
+    font-size: 22px;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+/* Seleção de dentista */
+.detalhes-dentista-page .dentista-selecao {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.detalhes-dentista-page label {
+    font-weight: bold;
+}
+
+.detalhes-dentista-page select {
+    padding: 8px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    width: 100%;
+    text-align: center;
+}
+
+/* Botões */
+.detalhes-dentista-page .btn {
+    padding: 8px 15px;
+    background: #007BFF;
+    color: #fff;
+    font-size: 14px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.detalhes-dentista-page .btn:hover {
+    background: #0056b3;
+}
+
+/* Card de detalhes */
+.detalhes-dentista-page .detalhes-card {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: left;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+    margin-top: 15px;
+}
+
+.detalhes-dentista-page .detalhes-card p {
+    font-size: 16px;
+    margin: 5px 0;
+}
+
+/* Modificação de credenciais */
+.detalhes-dentista-page .modificar-credenciais {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.detalhes-dentista-page .modificar-credenciais button {
+    background: #28a745;
+}
+
+.detalhes-dentista-page .modificar-credenciais button:hover {
+    background: #218838;
+}
+
+/* Marcador de rolagem */
+.detalhes-dentista-page .marcador-detalhes {
+    position: absolute;
+    top: -50px;
+}
+
+    </style>
+</head>
+<body class="detalhes-dentista-page">
+    <div class="container">
+        <!-- Marcador de rolagem invisível -->
+        <div id="marcador-detalhes" class="marcador-detalhes"></div>
+        <h2>🔍 <strong>Detalhes do Dentista</strong></h2>
+
+        <!-- Seleção do Dentista -->
+        <div class="dentista-selecao">
+            <label for="dentista-select">Escolha um dentista:</label>
+            <select id="dentista-select">
+                <option value="">Selecione...</option>
+            </select>
+            <button id="carregar-detalhes" class="btn">📄 Carregar Detalhes</button>
+        </div>
+
+        <!-- Exibição dos Detalhes -->
+        <div id="detalhes-dentista" class="detalhes-card" style="display: none;">
+            <p><strong>Nome:</strong> <span id="dentista-nome"></span></p>
+            <p><strong>Email:</strong> <span id="dentista-email"></span></p>
+            <p><strong>Telefone:</strong> <span id="dentista-telefone"></span></p>
+            <p><strong>Total de Pedidos:</strong> <span id="dentista-total-pedidos"></span></p>
+            <p><strong>Pedidos Abertos:</strong> <span id="dentista-pedidos-abertos"></span></p>
+            <p><strong>É Administrador?</strong> <span id="dentista-admin"></span></p>
+            <p><strong>É Credenciado?</strong> <span id="dentista-credenciado"></span></p>
+        </div>
+
+        <!-- Botões de Modificação -->
+        <h3>⚙️ Modificar Credenciais</h3>
+        <div class="modificar-credenciais" style="display: none;">
+            <button id="toggle-admin" class="btn">🔄 Alternar Admin</button>
+            <button id="toggle-credenciado" class="btn">🔄 Alternar Credenciamento</button>
+        </div>
+    </div>
+
+    <!-- --> <script src="detalhes_admin.js"></script><!-- -->
+</body>
+</html>

@@ -1,0 +1,45 @@
+    /* Estilos para a seção de pedidos do dentista */
+      .cabecalho-pedidos {
+      margin-bottom: 15px;
+      text-align: right;
+    }
+
+    #btn-novo-pedido {
+      padding: 8px 12px;
+      background-color: #007BFF;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    #btn-novo-pedido:hover {
+      background-color: #0056b3;
+    }
+
+    #tabela-pedidos-dentista {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+    }
+    #tabela-pedidos-dentista th,
+    #tabela-pedidos-dentista td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+    #tabela-pedidos-dentista th {
+      background-color: #007BFF;
+      color: #fff;
+    }
+
+    .btn-ver {
+      padding: 6px 10px;
+      background-color: #007BFF;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .btn-ver:hover {
+      background-color: #0056b3;
+    }

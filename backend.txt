@@ -1,11 +1,9 @@
-// backend\config\db.js
+// ..\backend\config\db.js
 
-// backend/config/db.js
-import pkg from 'pg';
-const { Client } = pkg;
+const { Client } = require('pg'); // Importação do PostgreSQL
+const dotenv = require('dotenv');
 
-import dotenv from 'dotenv';
-
+// Carregar variáveis de ambiente
 dotenv.config();
 
 const client = new Client({
@@ -13,149 +11,599 @@ const client = new Client({
 });
 
 client.connect()
-  .then(() => console.log('Conectado ao PostgreSQL com sucesso!'))
-  .catch(err => console.error('Erro ao conectar ao PostgreSQL:', err));
+  .then(() => console.log('✅ Conectado ao PostgreSQL com sucesso!'))
+  .catch(err => console.error('❌ Erro ao conectar ao PostgreSQL:', err));
 
-export default client;
+module.exports = client;
 
 
 
-// backend\controllers\dentistaController.js
+// ..\backend\controllers\dashboardAdminController.js
 
-import { listarDentistas, adicionarDentista, removerDentista } from '../models/dentista.js';
+const client = require("../config/db");
+// 📌 1️⃣ **TABELA PRINCIPAL** - Lista geral de dentistas com pedidos vinculados
+const listarDentistasDashboard = async (req, res) => {
+    console.log("📋 Requisição: Listar dentistas para o Dashboard Admin");
 
-// Listar todos os dentistas
-export const listarDentistasController = async (req, res) => {
-  try {
-    const dentistas = await listarDentistas();
-    res.status(200).json(dentistas);
-  } catch (err) {
-    res.status(500).send('Erro ao listar dentistas');
-  }
-};
+    try {
+        const result = await client.query(`
+            SELECT 
+                d.id, 
+                d.nome, 
+                d.is_admin::BOOLEAN AS is_admin, -- 🔥 Converte para booleano
+                d.is_verified::BOOLEAN AS is_verified, -- 🔥 Converte para booleano
+                COALESCE(COUNT(p.id), 0) AS total_pedidos,
+                COALESCE(SUM(CASE WHEN p.status NOT IN ('Concluído', 'Cancelado') THEN 1 ELSE 0 END), 0) AS pedidos_abertos
+            FROM dentistas d
+            LEFT JOIN pedidos p ON d.id = p.dentista_id
+            GROUP BY d.id
+            ORDER BY d.id ASC
+        `);
 
-// Adicionar um dentista
-export const adicionarDentistaController = async (req, res) => {
-  const { nome, email, telefone, senha } = req.body;
-  try {
-    const dentista = await adicionarDentista(nome, email, telefone, senha);
-    res.status(201).json(dentista);
-  } catch (err) {
-    res.status(500).send('Erro ao adicionar dentista');
-  }
-};
-
-// Remover um dentista
-export const removerDentistaController = async (req, res) => {
-  const { id } = req.params;
-  try {
-    const dentista = await removerDentista(id);
-    if (!dentista) {
-      return res.status(404).send('Dentista não encontrado');
+        console.log("✅ Dados retornados do banco:", JSON.stringify(result.rows, null, 2));
+        res.status(200).json(result.rows);
+    } catch (err) {
+        console.error("❌ Erro ao listar dentistas para o dashboard:", err);
+        res.status(500).json({ message: "Erro interno no servidor." });
     }
-    res.status(200).json({ message: 'Dentista removido com sucesso' });
-  } catch (err) {
-    res.status(500).send('Erro ao remover dentista');
-  }
+};
+
+
+// 📌 2️⃣ **DETALHES** - Exibe informações detalhadas de um dentista específico e possibilita toggles
+const obterDetalhesDentista = async (req, res) => {
+    const { id } = req.params;
+    console.log(`🔍 Buscando detalhes do dentista ID=${id}`);
+
+    try {
+        const result = await client.query(`
+            SELECT d.id, d.nome, d.email, d.telefone, d.is_admin, d.is_verified, 
+                COUNT(p.id) AS total_pedidos,
+                COUNT(CASE WHEN p.status NOT IN ('Concluído', 'Cancelado') THEN 1 END) AS pedidos_abertos
+            FROM dentistas d
+            LEFT JOIN pedidos p ON d.id = p.dentista_id
+            WHERE d.id = $1
+            GROUP BY d.id
+        `, [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: "Dentista não encontrado." });
+        }
+
+        res.status(200).json(result.rows[0]);
+    } catch (error) {
+        console.error("❌ Erro ao buscar detalhes do dentista:", error);
+        res.status(500).json({ message: "Erro ao buscar detalhes do dentista." });
+    }
+};
+
+// ✅ **Alternar Status de Administrador**
+const alternarAdmin = async (req, res) => {
+    const { id } = req.params;
+    console.log(`🔄 Alternando status de Admin para dentista ID=${id}`);
+
+    try {
+        const result = await client.query("SELECT is_admin FROM dentistas WHERE id = $1", [id]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: "Dentista não encontrado." });
+        }
+
+        const novoStatus = !result.rows[0].is_admin;
+        const updateResult = await client.query(
+            "UPDATE dentistas SET is_admin = $1 WHERE id = $2 RETURNING is_admin",
+            [novoStatus, id]
+        );
+
+        res.status(200).json({ message: "Status de Administrador atualizado com sucesso!", is_admin: updateResult.rows[0].is_admin });
+    } catch (err) {
+        console.error("❌ Erro ao alternar status de Admin:", err);
+        res.status(500).json({ message: "Erro ao atualizar status de administrador." });
+    }
+};
+
+// ✅ **Alternar Status de Credenciado**
+const alternarCredenciado = async (req, res) => {
+    const { id } = req.params;
+    console.log(`🔄 Alternando status de Credenciado para dentista ID=${id}`);
+
+    try {
+        const result = await client.query("SELECT is_verified FROM dentistas WHERE id = $1", [id]);
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: "Dentista não encontrado." });
+        }
+
+        const novoStatus = !result.rows[0].is_verified;
+        const updateResult = await client.query(
+            "UPDATE dentistas SET is_verified = $1 WHERE id = $2 RETURNING is_verified",
+            [novoStatus, id]
+        );
+
+        res.status(200).json({ message: "Status de Credenciado atualizado com sucesso!", is_verified: updateResult.rows[0].is_verified });
+    } catch (err) {
+        console.error("❌ Erro ao alternar status de Credenciado:", err);
+        res.status(500).json({ message: "Erro ao atualizar status de credenciamento." });
+    }
+};
+
+// 📌 3️⃣ **TABELA DE PEDIDOS** - Exibe todos os pedidos cadastrados
+const listarPedidosDashboard = async (req, res) => {
+    console.log("📦 Requisição: Listar pedidos para o Dashboard Admin");
+
+    try {
+        const result = await client.query(`
+            SELECT 
+                p.id, 
+                p.paciente_id, 
+                CONCAT(pa.nome, ' (ID: ', pa.id, ')') AS paciente_nome, 
+                p.dentista_id, 
+                CONCAT(d.nome, ' (ID: ', d.id, ')') AS dentista_nome, 
+                p.data_pagamento, 
+                p.video_conferencia, 
+                p.arquivo_3d, 
+                p.ficha_tecnica, 
+                p.status, 
+                p.created_at
+            FROM pedidos p
+            JOIN dentistas d ON p.dentista_id = d.id
+            JOIN pacientes pa ON p.paciente_id = pa.id -- 🔥 Puxando os pacientes corretamente
+            ORDER BY p.created_at DESC
+        `);
+
+        console.log("✅ Dados retornados do banco:", result.rows);
+        res.status(200).json(result.rows);
+    } catch (err) {
+        console.error("❌ Erro ao listar pedidos para o dashboard:", err);
+        res.status(500).json({ message: "Erro interno no servidor." });
+    }
+};
+
+
+// 📌 **Alterar Status de um Pedido**
+const alterarStatusPedido = async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    console.log(`🔄 Atualizando status do pedido ID=${id} para '${status}'`);
+
+    // Lista de status permitidos
+    const statusPermitidos = ["Pendente", "Em andamento", "Aprovado", "Concluído", "Cancelado"];
+
+    // Verifica se o status informado é válido
+    if (!statusPermitidos.includes(status)) {
+        return res.status(400).json({ message: `Status inválido. Os status permitidos são: ${statusPermitidos.join(", ")}` });
+    }
+
+    try {
+        // Verifica se o pedido existe
+        const pedidoExiste = await client.query("SELECT id FROM pedidos WHERE id = $1", [id]);
+        if (pedidoExiste.rows.length === 0) {
+            return res.status(404).json({ message: "Pedido não encontrado." });
+        }
+
+        // Atualiza o status do pedido
+        await client.query(
+            "UPDATE pedidos SET status = $1 WHERE id = $2 RETURNING id, dentista_id, paciente_id, status",
+            [status, id]
+        );
+
+        console.log(`✅ Status do pedido ID=${id} atualizado para '${status}'`);
+        res.status(200).json({ message: "Status do pedido atualizado com sucesso!", pedido: { id, status } });
+
+    } catch (error) {
+        console.error("❌ Erro ao atualizar status do pedido:", error);
+        res.status(500).json({ message: "Erro interno no servidor." });
+    }
+};
+
+
+// 📌 4️⃣ **ESTATÍSTICAS** - Dados agregados do sistema para visão geral do Admin
+const obterEstatisticasAdmin = async (req, res) => {
+    console.log("📊 Obtendo estatísticas do dashboard Admin...");
+    try {
+        const result = await client.query(`
+            SELECT 
+                (SELECT COUNT(*) FROM dentistas) AS total_dentistas,
+                (SELECT COUNT(*) FROM pacientes) AS total_pacientes,
+                (SELECT COUNT(*) FROM pedidos) AS total_pedidos,
+                (SELECT COUNT(*) FROM pedidos WHERE status NOT IN ('Concluído', 'Cancelado')) AS pedidos_abertos,
+                (SELECT COUNT(*) FROM pedidos WHERE status = 'Concluído') AS pedidos_finalizados,
+                (SELECT COUNT(*) FROM pedidos WHERE status = 'Cancelado') AS pedidos_cancelados,
+                (SELECT COUNT(*) FROM dentistas WHERE is_verified = TRUE) AS total_dentistas_credenciados,
+                (SELECT COUNT(*) FROM pedidos WHERE created_at >= NOW() - INTERVAL '7 days') AS pedidos_ultimos_7_dias,
+                (SELECT COUNT(*) FROM dentistas WHERE is_verified = TRUE AND created_at >= NOW() - INTERVAL '7 days') AS dentistas_credenciados_7_dias,
+                (SELECT COUNT(*) FROM pedidos WHERE DATE_TRUNC('month', created_at) = DATE_TRUNC('month', CURRENT_DATE)) AS pedidos_mes_atual,
+                (SELECT COUNT(*) FROM dentistas WHERE is_verified = TRUE AND DATE_TRUNC('month', created_at) = DATE_TRUNC('month', CURRENT_DATE)) AS dentistas_credenciados_mes_atual
+        `);
+
+        res.status(200).json(result.rows[0]);
+    } catch (error) {
+        console.error("❌ Erro ao buscar estatísticas do Admin:", error);
+        res.status(500).json({ message: "Erro ao buscar estatísticas do Admin." });
+    }
+};
+
+// ✅ **EXPORTANDO TODOS OS MÓDULOS**
+module.exports = {
+    listarDentistasDashboard,
+    obterDetalhesDentista,
+    listarPedidosDashboard,
+    alterarStatusPedido,
+    obterEstatisticasAdmin,
+    alternarAdmin,
+    alternarCredenciado
 };
 
 
 
-// backend\controllers\pacienteController.js
 
-import { listarPacientes, adicionarPaciente, removerPaciente } from '../models/paciente.js';
+
+// ..\backend\controllers\dashboardDentistasController.js
+
+
+
+
+// ..\backend\controllers\dentistaController.js
+
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const client = require("../config/db");
+
+const SECRET_KEY = process.env.SECRET_KEY;
+
+// 🔹 Listar todos os dentistas (Apenas ADMIN)
+const listarDentistas = async (req, res) => {
+    console.log("📋 Requisição: Listar todos os dentistas.");
+    try {
+        if (!req.usuario.is_admin) {
+            return res.status(403).json({ message: "Acesso negado. Apenas administradores podem visualizar dentistas." });
+        }
+
+        const result = await client.query("SELECT id, nome, email, telefone, is_admin, is_verified FROM dentistas");
+        res.status(200).json(result.rows);
+    } catch (err) {
+        console.error("❌ Erro ao listar dentistas:", err);
+        res.status(500).json({ message: "Erro interno no servidor." });
+    }
+};
+
+// 🔹 Visualizar detalhes de um dentista (ADMIN)
+const visualizarDentista = async (req, res) => {
+    const { id } = req.params;
+    console.log(`🔍 Buscando detalhes do dentista ID=${id}`);
+
+    try {
+        const result = await client.query(
+            `SELECT d.id, d.nome, d.email, d.telefone, d.is_verified, 
+            COUNT(p.id) AS total_pedidos,
+            COUNT(CASE WHEN p.status NOT IN ('Concluído', 'Cancelado') THEN 1 END) AS pedidos_abertos
+            FROM dentistas d
+            LEFT JOIN pedidos p ON d.id = p.dentista_id
+            WHERE d.id = $1
+            GROUP BY d.id`,
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: "Dentista não encontrado." });
+        }
+
+        res.status(200).json(result.rows[0]);
+    } catch (error) {
+        console.error("❌ Erro ao buscar dentista:", error);
+        res.status(500).json({ message: "Erro ao buscar dentista." });
+    }
+};
+
+// 🔹 Adicionar um novo dentista (ADMIN)
+const adicionarDentista = async (req, res) => {
+    const { nome, email, telefone, senha } = req.body;
+    console.log("➕ Requisição: Adicionar dentista.", req.body);
+
+    try {
+        // 🔹 Hash da senha (mantendo comentado para testes rápidos)
+        const senhaHash = await bcrypt.hash(senha, 10);
+
+        const result = await client.query(
+            "INSERT INTO dentistas (nome, email, telefone, senha, is_verified) VALUES ($1, $2, $3, $4, $5) RETURNING id, nome, email, telefone, is_verified",
+            [nome, email, telefone, senhaHash, false]
+        );
+
+        res.status(201).json({ message: "Dentista cadastrado com sucesso!", dentista: result.rows[0] });
+    } catch (err) {
+        console.error("❌ Erro ao adicionar dentista:", err);
+        res.status(500).json({ message: "Erro interno no servidor." });
+    }
+};
+
+// 🔹 Alterar dados do dentista (ADMIN)
+const alterarDentista = async (req, res) => {
+    const { id } = req.params;
+    const { nome, telefone, email, senha } = req.body;
+    console.log(`✏️ Requisição: Alterar dentista com ID=${id}`);
+
+    try {
+        let senhaHash = senha ? await bcrypt.hash(senha, 10) : undefined;
+
+        const result = await client.query(
+            "UPDATE dentistas SET nome = $1, telefone = $2, email = $3, senha = COALESCE($4, senha) WHERE id = $5 RETURNING id, nome, email, telefone, is_admin",
+            [nome, telefone, email, senhaHash, id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: "Dentista não encontrado." });
+        }
+
+        res.status(200).json({ message: "Dentista atualizado com sucesso.", dentista: result.rows[0] });
+    } catch (err) {
+        console.error("❌ Erro ao alterar dentista:", err);
+        res.status(500).json({ message: "Erro interno no servidor." });
+    }
+};
+
+// 🔹 Remover um dentista (Apenas ADMIN)
+const removerDentista = async (req, res) => {
+    if (!req.usuario.is_admin) {
+        return res.status(403).json({ message: "Acesso negado. Apenas administradores podem remover dentistas." });
+    }
+    const { id } = req.params;
+    console.log(`🗑️ Requisição: Remover dentista com ID=${id}`);
+
+    try {
+        const result = await client.query("DELETE FROM dentistas WHERE id = $1 RETURNING id, nome, email", [id]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: "Dentista não encontrado." });
+        }
+
+        res.status(200).json({ message: "Dentista removido com sucesso.", dentista: result.rows[0] });
+    } catch (err) {
+        console.error("❌ Erro ao remover dentista:", err);
+        res.status(500).json({ message: "Erro interno no servidor." });
+    }
+};
+
+/// 🔹 Login do dentista (ADMIN)
+const loginDentista = async (req, res) => {
+    const { email, senha } = req.body;
+    console.log(`🔑 Requisição: Login com email: ${email}`);
+
+    try {
+        const result = await client.query("SELECT * FROM dentistas WHERE LOWER(email) = LOWER($1)", [email.toLowerCase()]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: "Email ou senha incorretos." });
+        }
+
+        const dentista = result.rows[0];
+
+        // 🔽 Comparação sem bcrypt (Apenas para testes)
+        if (senha !== dentista.senha) {
+            return res.status(401).json({ message: "Email ou senha incorretos." });
+        }
+
+        /**
+        // 🔒 Comparação segura com bcrypt (Descomente quando for usar senhas criptografadas)
+        const senhaValida = await bcrypt.compare(senha, dentista.senha);
+        if (!senhaValida) {
+            return res.status(401).json({ message: "Email ou senha incorretos." });
+        }
+        **/
+
+        const token = jwt.sign(
+            { id: dentista.id, email: dentista.email, is_admin: dentista.is_admin, is_verified: dentista.is_verified },
+            SECRET_KEY,
+            { expiresIn: "2h", algorithm: "HS256" }
+        );
+
+        res.status(200).json({ message: "Login bem-sucedido", token, dentista });
+    } catch (err) {
+        console.error("❌ Erro ao realizar login:", err);
+        res.status(500).json({ message: "Erro interno no servidor." });
+    }
+};
+
+
+module.exports = {
+    listarDentistas,
+    visualizarDentista,
+    adicionarDentista,
+    alterarDentista,
+    removerDentista,
+    loginDentista,
+};
+
+
+
+// ..\backend\controllers\pacienteController.js
+
+const client = require('../config/db'); // Conexão com o banco de dados
 
 // Listar todos os pacientes
-export const listarPacientesController = async (req, res) => {
+const listarPacientes = async (req, res) => {
+  console.log('📋 Requisição: Listar todos os pacientes.');
   try {
-    const pacientes = await listarPacientes();
-    res.status(200).json(pacientes);
+    const result = await client.query('SELECT * FROM pacientes');
+    res.status(200).json(result.rows);
   } catch (err) {
-    res.status(500).send('Erro ao listar pacientes');
+    console.error('❌ Erro ao listar pacientes:', err);
+    res.status(500).json({ message: 'Erro interno no servidor.' });
   }
 };
 
-// Adicionar um paciente
-export const adicionarPacienteController = async (req, res) => {
-  const { nome, email, telefone, dentista_id } = req.body;
+// Adicionar um novo paciente
+const adicionarPaciente = async (req, res) => {
+  const { nome, email, telefone, endereco } = req.body;
+  console.log('➕ Requisição: Adicionar paciente.', req.body);
+
   try {
-    const paciente = await adicionarPaciente(nome, email, telefone, dentista_id);
-    res.status(201).json(paciente);
+    const result = await client.query(
+      'INSERT INTO pacientes (nome, email, telefone, endereco) VALUES ($1, $2, $3, $4) RETURNING *',
+      [nome, email, telefone, endereco]
+    );
+    res.status(201).json(result.rows[0]);
   } catch (err) {
-    res.status(500).send('Erro ao adicionar paciente');
+    console.error('❌ Erro ao adicionar paciente:', err);
+    res.status(500).json({ message: 'Erro interno no servidor.' });
   }
 };
 
 // Remover um paciente
-export const removerPacienteController = async (req, res) => {
+const removerPaciente = async (req, res) => {
   const { id } = req.params;
+  console.log(`🗑️ Requisição: Remover paciente com ID=${id}`);
+
   try {
-    const paciente = await removerPaciente(id);
-    if (!paciente) {
-      return res.status(404).send('Paciente não encontrado');
+    const result = await client.query('DELETE FROM pacientes WHERE id = $1 RETURNING *', [id]);
+    if (result.rows.length === 0) {
+      console.log('❌ Paciente não encontrado.');
+      return res.status(404).json({ message: 'Paciente não encontrado.' });
     }
-    res.status(200).json({ message: 'Paciente removido com sucesso' });
+    res.status(200).json({ message: 'Paciente removido com sucesso.', paciente: result.rows[0] });
   } catch (err) {
-    res.status(500).send('Erro ao remover paciente');
+    console.error('❌ Erro ao remover paciente:', err);
+    res.status(500).json({ message: 'Erro interno no servidor.' });
   }
+};
+
+module.exports = {
+  listarPacientes,
+  adicionarPaciente,
+  removerPaciente,
 };
 
 
 
-// backend\controllers\pedidoController.js
+// ..\backend\controllers\pedidoController.js
 
-import { listarPedidos, adicionarPedido, removerPedido } from '../models/pedido.js';
+const client = require('../config/db'); // Conexão com o banco de dados
 
 // Listar todos os pedidos
-export const listarPedidosController = async (req, res) => {
+const listarPedidos = async (req, res) => {
+  console.log('📋 Requisição: Listar todos os pedidos.');
   try {
-    const pedidos = await listarPedidos();
-    res.status(200).json(pedidos);
+    const result = await client.query('SELECT * FROM pedidos');
+    res.status(200).json(result.rows);
   } catch (err) {
-    res.status(500).send('Erro ao listar pedidos');
+    console.error('❌ Erro ao listar pedidos:', err);
+    res.status(500).json({ message: 'Erro interno no servidor.' });
   }
 };
 
-// Adicionar um pedido
-export const adicionarPedidoController = async (req, res) => {
-  const { paciente_id, pedido_details } = req.body;
+const listarPedidosEmAberto = async (req, res) => {
+  console.log("📋 Requisição: Listar apenas pedidos em aberto.");
   try {
-    const pedido = await adicionarPedido(paciente_id, pedido_details);
-    res.status(201).json(pedido);
+    const result = await client.query(
+      "SELECT * FROM pedidos WHERE status NOT IN ('Concluído', 'Cancelado') ORDER BY data_pagamento DESC"
+    );
+    res.status(200).json(result.rows);
   } catch (err) {
-    res.status(500).send('Erro ao adicionar pedido');
+    console.error("❌ Erro ao listar pedidos em aberto:", err);
+    res.status(500).json({ message: "Erro interno no servidor." });
+  }
+};
+
+
+// Adicionar um novo pedido
+const adicionarPedido = async (req, res) => {
+  const { paciente_id, descricao, status } = req.body;
+  console.log('➕ Requisição: Adicionar pedido.', req.body);
+
+  try {
+    const result = await client.query(
+      'INSERT INTO pedidos (paciente_id, descricao, status) VALUES ($1, $2, $3) RETURNING *',
+      [paciente_id, descricao, status]
+    );
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error('❌ Erro ao adicionar pedido:', err);
+    res.status(500).json({ message: 'Erro interno no servidor.' });
   }
 };
 
 // Remover um pedido
-export const removerPedidoController = async (req, res) => {
+const removerPedido = async (req, res) => {
   const { id } = req.params;
+  console.log(`🗑️ Requisição: Remover pedido com ID=${id}`);
+
   try {
-    const pedido = await removerPedido(id);
-    if (!pedido) {
-      return res.status(404).send('Pedido não encontrado');
+    const result = await client.query('DELETE FROM pedidos WHERE id = $1 RETURNING *', [id]);
+    if (result.rows.length === 0) {
+      console.log('❌ Pedido não encontrado.');
+      return res.status(404).json({ message: 'Pedido não encontrado.' });
     }
-    res.status(200).json({ message: 'Pedido removido com sucesso' });
+    res.status(200).json({ message: 'Pedido removido com sucesso.', pedido: result.rows[0] });
   } catch (err) {
-    res.status(500).send('Erro ao remover pedido');
+    console.error('❌ Erro ao remover pedido:', err);
+    res.status(500).json({ message: 'Erro interno no servidor.' });
   }
 };
 
-
-
-// backend\middlewares\errorHandler.js
-
-// backend/middlewares/errorHandler.js
-export const errorHandler = (err, req, res, next) => {
-  console.error('Erro inesperado:', err);
-  res.status(500).send({ message: 'Erro interno do servidor. Tente novamente mais tarde.' });
+module.exports = {
+  listarPedidos,
+  listarPedidosEmAberto,  
+  adicionarPedido,
+  removerPedido,
 };
 
 
 
-// backend\middlewares\validate.js
 
-// backend/middlewares/validate.js
+// ..\backend\middlewares\auth.js
+
+const jwt = require("jsonwebtoken");
+const SECRET_KEY = process.env.SECRET_KEY;
+
+// 🔹 Middleware para autenticar qualquer usuário logado
+const autenticarToken = (req, res, next) => {
+    const token = req.headers["authorization"];
+    if (!token) {
+        return res.status(403).json({ message: "Acesso negado. Token ausente." });
+    }
+
+    try {
+        const decoded = jwt.verify(token.replace("Bearer ", ""), SECRET_KEY);
+        req.usuario = decoded;
+        next();
+    } catch (err) {
+        return res.status(401).json({ message: "Token inválido." });
+    }
+};
+
+// 🔹 Middleware para verificar se o usuário é ADMIN
+const autenticarAdmin = (req, res, next) => {
+    if (!req.usuario || !req.usuario.is_admin) {
+        return res.status(403).json({ message: "Acesso negado. Apenas administradores podem realizar esta ação." });
+    }
+    next();
+};
+
+// 🔹 Middleware para verificar se o usuário é um dentista autenticado
+const autenticarDentista = (req, res, next) => {
+    if (!req.usuario) {
+        return res.status(403).json({ message: "Acesso negado. Apenas dentistas autenticados podem realizar esta ação." });
+    }
+    next();
+};
+
+module.exports = { autenticarToken, autenticarAdmin, autenticarDentista };
+
+
+
+// ..\backend\middlewares\errorHandler.js
+
+// src/middlewares/errorHandler.js
+export const errorHandler = (err, req, res, next) => {
+  console.error(`❌ Erro no servidor: ${err.message}`);
+  res.status(err.status || 500).json({
+    message: err.message || 'Erro interno no servidor.',
+    stack: process.env.NODE_ENV === 'production' ? null : err.stack, // Esconde stack em produção
+  });
+};
+
+
+
+// ..\backend\middlewares\validate.js
+
+// src/middlewares/validate.js
 import { check, validationResult } from 'express-validator';
 
 // Validação para adicionar ou atualizar dentistas
@@ -191,164 +639,158 @@ export const handleValidationErrors = (req, res, next) => {
 
 
 
-// backend\models\dentista.js
+// ..\backend\routes\dashboardAdmin.js
 
-import client from '../config/db.js';
+const express = require("express");
+const { 
+    listarDentistasDashboard,
+    obterDetalhesDentista,
+    listarPedidosDashboard,
+    alterarStatusPedido,
+    obterEstatisticasAdmin,
+    alternarAdmin,
+    alternarCredenciado
+} = require("../controllers/dashboardAdminController");
 
-// Listar dentistas
-export const listarDentistas = async () => {
-  const result = await client.query('SELECT * FROM dentistas');
-  return result.rows;
-};
-
-// Adicionar dentista
-export const adicionarDentista = async (nome, email, telefone, senha) => {
-  const result = await client.query(
-    'INSERT INTO dentistas (nome, email, telefone, senha) VALUES ($1, $2, $3, $4) RETURNING *',
-    [nome, email, telefone, senha]
-  );
-  return result.rows[0];
-};
-
-// Remover dentista
-export const removerDentista = async (id) => {
-  const result = await client.query('DELETE FROM dentistas WHERE id = $1 RETURNING *', [id]);
-  return result.rows[0];
-};
-
-
-
-// backend\models\paciente.js
-
-import client from '../config/db.js';
-
-// Listar pacientes
-export const listarPacientes = async () => {
-  const result = await client.query('SELECT * FROM pacientes');
-  return result.rows;
-};
-
-// Adicionar paciente
-export const adicionarPaciente = async (nome, email, telefone, dentista_id) => {
-  const result = await client.query(
-    'INSERT INTO pacientes (nome, email, telefone, dentista_id) VALUES ($1, $2, $3, $4) RETURNING *',
-    [nome, email, telefone, dentista_id]
-  );
-  return result.rows[0];
-};
-
-// Remover paciente
-export const removerPaciente = async (id) => {
-  const result = await client.query('DELETE FROM pacientes WHERE id = $1 RETURNING *', [id]);
-  return result.rows[0];
-};
-
-
-
-// backend\models\pedido.js
-
-import client from '../config/db.js';
-
-// Listar pedidos
-export const listarPedidos = async () => {
-  const result = await client.query('SELECT * FROM pedidos');
-  return result.rows;
-};
-
-// Adicionar pedido
-export const adicionarPedido = async (paciente_id, pedido_details) => {
-  const result = await client.query(
-    'INSERT INTO pedidos (paciente_id, pedido_details) VALUES ($1, $2) RETURNING *',
-    [paciente_id, pedido_details]
-  );
-  return result.rows[0];
-};
-
-// Remover pedido
-export const removerPedido = async (id) => {
-  const result = await client.query('DELETE FROM pedidos WHERE id = $1 RETURNING *', [id]);
-  return result.rows[0];
-};
-
-
-
-// backend\routes\dentistas.js
-
-import express from 'express';
-import { listarDentistasController, adicionarDentistaController, removerDentistaController } from '../controllers/dentistaController.js';
-import { validateDentista, handleValidationErrors } from '../middlewares/validate.js';
+const { autenticarToken, autenticarAdmin } = require("../middlewares/auth");
 
 const router = express.Router();
 
-router.get('/', listarDentistasController);
-router.post('/', validateDentista, handleValidationErrors, adicionarDentistaController);
-router.put('/:id', validateDentista, handleValidationErrors, adicionarDentistaController);
-router.delete('/:id', removerDentistaController);
+// 📌 1️⃣ **TABELA PRINCIPAL** - Lista geral de dentistas com pedidos vinculados
+router.get("/dentistas/dashboard", autenticarToken, autenticarAdmin, listarDentistasDashboard);  
 
-export default router;
+// 📌 2️⃣ **DETALHES** - Exibe informações detalhadas de um dentista específico e possibilita toggles
+router.get("/dentistas/:id", autenticarToken, autenticarAdmin, obterDetalhesDentista);
+
+// ✅ **Alterações de status (Toggles)**
+router.patch("/dentistas/:id/toggle-is_admin", autenticarToken, autenticarAdmin, alternarAdmin);  
+router.patch("/dentistas/:id/toggle-is_verified", autenticarToken, autenticarAdmin, alternarCredenciado);
+
+// 📌 3️⃣ **TABELA DE PEDIDOS** - Exibe todos os pedidos cadastrados
+router.get("/pedidos/dashboard", autenticarToken, autenticarAdmin, listarPedidosDashboard);
+// 📌 **Rota para alterar status de um pedido**
+router.patch("/pedidos/:id/status", autenticarToken, autenticarAdmin, alterarStatusPedido);
+
+
+// 📌 4️⃣ **ESTATÍSTICAS** - Dados agregados do sistema para visão geral do Admin
+router.get("/estatisticas", autenticarToken, autenticarAdmin, obterEstatisticasAdmin);
+
+module.exports = router;
 
 
 
-// backend\routes\pacientes.js
+// ..\backend\routes\dashboardDentistas.js
 
-import express from 'express';
-import { listarPacientesController, adicionarPacienteController, removerPacienteController } from '../controllers/pacienteController.js';
-import { validatePaciente, handleValidationErrors } from '../middlewares/validate.js';
+
+
+
+// ..\backend\routes\dentistas.js
+
+const express = require("express");
+const {
+    listarDentistas,
+    visualizarDentista,
+    adicionarDentista,
+    alterarDentista,
+    removerDentista,
+    loginDentista
+} = require("../controllers/dentistaController");
+
+const { autenticarToken, autenticarAdmin, autenticarDentista } = require("../middlewares/auth");
 
 const router = express.Router();
 
-router.get('/', listarPacientesController);
-router.post('/', validatePaciente, handleValidationErrors, adicionarPacienteController);
-router.put('/:id', validatePaciente, handleValidationErrors, adicionarPacienteController);
-router.delete('/:id', removerPacienteController);
+// 🔑 Login e Cadastro (Acesso público)
+router.post("/login", loginDentista);  // Qualquer um pode logar
+router.post("/", adicionarDentista);   // Qualquer um pode se cadastrar
 
-export default router;
+// 📋 Rotas de dentistas (Protegidas)
+router.get("/", autenticarToken, autenticarAdmin, listarDentistas);  // Apenas ADMIN pode listar todos
+router.get("/:id", autenticarToken, visualizarDentista);  // Dentistas autenticados podem ver seu próprio perfil
+router.put("/:id", autenticarToken, autenticarDentista, alterarDentista);  // Dentista pode alterar seu próprio cadastro
+router.delete("/:id", autenticarToken, autenticarAdmin, removerDentista);  // Apenas ADMIN pode remover dentistas
+
+module.exports = router;
 
 
 
-// backend\routes\pedidos.js
+// ..\backend\routes\pacientes.js
 
-import express from 'express';
-import { listarPedidosController, adicionarPedidoController, removerPedidoController } from '../controllers/pedidoController.js';
-import { validatePedido, handleValidationErrors } from '../middlewares/validate.js';
+const express = require('express');
+const {
+  listarPacientes,
+  adicionarPaciente,
+  removerPaciente,
+} = require('../controllers/pacienteController');
 
 const router = express.Router();
 
-router.get('/', listarPedidosController);
-router.post('/', validatePedido, handleValidationErrors, adicionarPedidoController);
-router.delete('/:id', removerPedidoController);
+// Rotas de pacientes
+router.get('/', listarPacientes);
+router.post('/', adicionarPaciente);
+router.delete('/:id', removerPaciente);
 
-export default router;
+module.exports = router;
 
 
 
-// backend\server.js
+// ..\backend\routes\pedidos.js
 
-// backend/server.js
-import express from 'express';
-import dotenv from 'dotenv';
-import cors from 'cors';
-import dentistasRoutes from './routes/dentistas.js';
-import pacientesRoutes from './routes/pacientes.js';
-import pedidosRoutes from './routes/pedidos.js';
-import { errorHandler } from './middlewares/errorHandler.js';  // Importando o middleware de erro
+const express = require('express');
+const {
+  listarPedidos,
+  listarPedidosEmAberto,
+  adicionarPedido,
+  removerPedido,
+} = require('../controllers/pedidoController');
 
+const router = express.Router();
+
+// Rotas de pedidos
+router.get('/', listarPedidos);
+router.get('/abertos', listarPedidosEmAberto);
+router.post('/', adicionarPedido);
+router.delete('/:id', removerPedido);
+
+module.exports = router;
+
+
+
+// ..\backend\server.js
+
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
+
+// Carregar variáveis de ambiente
 dotenv.config();
+
+
+const dentistasRoutes = require('./routes/dentistas');
+const pacientesRoutes = require('./routes/pacientes');
+const pedidosRoutes = require('./routes/pedidos');
+//novas rotas
+const dashboardAdminRoutes = require("./routes/dashboardAdmin");
 
 const app = express();
 
-app.use(cors());
+// Configurações básicas
+app.use(cors({ origin: '*' }));
 app.use(express.json());
 
+// Rotas
 app.use('/dentistas', dentistasRoutes);
 app.use('/pacientes', pacientesRoutes);
 app.use('/pedidos', pedidosRoutes);
+// Rotas do Admin Dashboard
+app.use("/admin", dashboardAdminRoutes);
 
-// Middleware para capturar erros
-app.use(errorHandler);
 
+// Inicialização do servidor
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
+  console.log(`✅ 777 Servidor rodando na porta ${PORT}`);
 });
+
+
 
