@@ -9,11 +9,12 @@
 
   <!-- Seção de Pedidos -->
   <section id="pedidos-dentista">
+
     <h3>📋 Meus Pedidos</h3>
 
     <!-- Cabeçalho com botão para criar novo pedido -->
     <div class="cabecalho-pedidos">
-      <button id="btn-novo-pedido" class="btn-primario">+ Novo Pedido</button>
+      <button id="btn-novo-pedido" class="btn-primario" data-form="cadastro-pedido">+ Novo Pedido</button>
     </div>
 
     <!-- Mensagem de Carregamento -->
@@ -25,13 +26,19 @@
         <tr>
           <th>ID Pedido</th>
           <th>Paciente</th>
-          <th>Data do Pedido</th>
-          <th>Status</th>
+ <!-- Pedidos carregados via JS -- >
+          <th>ID Pedido <button class="sort-btn" data-column="id">⇅</button></th>
+          <th>Paciente <button class="sort-btn" data-column="paciente_nome">⇅</button></th>
+          <th>Data do Pedido <button class="sort-btn" data-column="data_pagamento">⇅</button></th>
+          <th>Status <button class="sort-btn" data-column="status">⇅</button></th>
+          <th>Ficha Técnica</th>
+          <th>Arquivo 3D</th>
           <th>Ações</th>
+ <! -- Pedidos carregados via JS -->
         </tr>
       </thead>
       <tbody>
-        <!-- Pedidos carregados via JS -->
+       
       </tbody>
     </table>
   </section>

@@ -1,4 +1,4 @@
-// ..\backend\config\db.js
+// backend\config\db.js
 
 const { Client } = require('pg'); // Importação do PostgreSQL
 const dotenv = require('dotenv');
@@ -18,20 +18,21 @@ module.exports = client;
 
 
 
-// ..\backend\controllers\dashboardAdminController.js
+// backend\controllers\admin\adminDentistaController.js
 
-const client = require("../config/db");
-// 📌 1️⃣ **TABELA PRINCIPAL** - Lista geral de dentistas com pedidos vinculados
-const listarDentistasDashboard = async (req, res) => {
+// controllers/admin/adminDentistaController.js
+const client = require("../../config/db");
+
+// 1) Listar dentistas para o Dashboard Admin
+async function listarDentistasDashboard(req, res) {
     console.log("📋 Requisição: Listar dentistas para o Dashboard Admin");
-
     try {
         const result = await client.query(`
             SELECT 
                 d.id, 
                 d.nome, 
-                d.is_admin::BOOLEAN AS is_admin, -- 🔥 Converte para booleano
-                d.is_verified::BOOLEAN AS is_verified, -- 🔥 Converte para booleano
+                d.is_admin::BOOLEAN AS is_admin,
+                d.is_verified::BOOLEAN AS is_verified,
                 COALESCE(COUNT(p.id), 0) AS total_pedidos,
                 COALESCE(SUM(CASE WHEN p.status NOT IN ('Concluído', 'Cancelado') THEN 1 ELSE 0 END), 0) AS pedidos_abertos
             FROM dentistas d
@@ -39,21 +40,17 @@ const listarDentistasDashboard = async (req, res) => {
             GROUP BY d.id
             ORDER BY d.id ASC
         `);
-
-        console.log("✅ Dados retornados do banco:", JSON.stringify(result.rows, null, 2));
         res.status(200).json(result.rows);
     } catch (err) {
         console.error("❌ Erro ao listar dentistas para o dashboard:", err);
         res.status(500).json({ message: "Erro interno no servidor." });
     }
-};
+}
 
-
-// 📌 2️⃣ **DETALHES** - Exibe informações detalhadas de um dentista específico e possibilita toggles
-const obterDetalhesDentista = async (req, res) => {
+// 2) Detalhes de um dentista específico
+async function obterDetalhesDentista(req, res) {
     const { id } = req.params;
     console.log(`🔍 Buscando detalhes do dentista ID=${id}`);
-
     try {
         const result = await client.query(`
             SELECT d.id, d.nome, d.email, d.telefone, d.is_admin, d.is_verified, 
@@ -68,135 +65,70 @@ const obterDetalhesDentista = async (req, res) => {
         if (result.rows.length === 0) {
             return res.status(404).json({ message: "Dentista não encontrado." });
         }
-
         res.status(200).json(result.rows[0]);
     } catch (error) {
         console.error("❌ Erro ao buscar detalhes do dentista:", error);
         res.status(500).json({ message: "Erro ao buscar detalhes do dentista." });
     }
-};
+}
 
-// ✅ **Alternar Status de Administrador**
-const alternarAdmin = async (req, res) => {
+// 3) Alternar Status de Administrador
+async function alternarAdmin(req, res) {
     const { id } = req.params;
     console.log(`🔄 Alternando status de Admin para dentista ID=${id}`);
-
     try {
         const result = await client.query("SELECT is_admin FROM dentistas WHERE id = $1", [id]);
         if (result.rows.length === 0) {
             return res.status(404).json({ message: "Dentista não encontrado." });
         }
-
         const novoStatus = !result.rows[0].is_admin;
         const updateResult = await client.query(
             "UPDATE dentistas SET is_admin = $1 WHERE id = $2 RETURNING is_admin",
             [novoStatus, id]
         );
-
         res.status(200).json({ message: "Status de Administrador atualizado com sucesso!", is_admin: updateResult.rows[0].is_admin });
     } catch (err) {
         console.error("❌ Erro ao alternar status de Admin:", err);
         res.status(500).json({ message: "Erro ao atualizar status de administrador." });
     }
-};
+}
 
-// ✅ **Alternar Status de Credenciado**
-const alternarCredenciado = async (req, res) => {
+// 4) Alternar Status de Credenciado
+async function alternarCredenciado(req, res) {
     const { id } = req.params;
     console.log(`🔄 Alternando status de Credenciado para dentista ID=${id}`);
-
     try {
         const result = await client.query("SELECT is_verified FROM dentistas WHERE id = $1", [id]);
         if (result.rows.length === 0) {
             return res.status(404).json({ message: "Dentista não encontrado." });
         }
-
         const novoStatus = !result.rows[0].is_verified;
         const updateResult = await client.query(
             "UPDATE dentistas SET is_verified = $1 WHERE id = $2 RETURNING is_verified",
             [novoStatus, id]
         );
-
         res.status(200).json({ message: "Status de Credenciado atualizado com sucesso!", is_verified: updateResult.rows[0].is_verified });
     } catch (err) {
         console.error("❌ Erro ao alternar status de Credenciado:", err);
         res.status(500).json({ message: "Erro ao atualizar status de credenciamento." });
     }
-};
+}
 
-// 📌 3️⃣ **TABELA DE PEDIDOS** - Exibe todos os pedidos cadastrados
-const listarPedidosDashboard = async (req, res) => {
-    console.log("📦 Requisição: Listar pedidos para o Dashboard Admin");
-
-    try {
-        const result = await client.query(`
-            SELECT 
-                p.id, 
-                p.paciente_id, 
-                CONCAT(pa.nome, ' (ID: ', pa.id, ')') AS paciente_nome, 
-                p.dentista_id, 
-                CONCAT(d.nome, ' (ID: ', d.id, ')') AS dentista_nome, 
-                p.data_pagamento, 
-                p.video_conferencia, 
-                p.arquivo_3d, 
-                p.ficha_tecnica, 
-                p.status, 
-                p.created_at
-            FROM pedidos p
-            JOIN dentistas d ON p.dentista_id = d.id
-            JOIN pacientes pa ON p.paciente_id = pa.id -- 🔥 Puxando os pacientes corretamente
-            ORDER BY p.created_at DESC
-        `);
-
-        console.log("✅ Dados retornados do banco:", result.rows);
-        res.status(200).json(result.rows);
-    } catch (err) {
-        console.error("❌ Erro ao listar pedidos para o dashboard:", err);
-        res.status(500).json({ message: "Erro interno no servidor." });
-    }
+module.exports = {
+    listarDentistasDashboard,
+    obterDetalhesDentista,
+    alternarAdmin,
+    alternarCredenciado
 };
 
 
-// 📌 **Alterar Status de um Pedido**
-const alterarStatusPedido = async (req, res) => {
-    const { id } = req.params;
-    const { status } = req.body;
 
-    console.log(`🔄 Atualizando status do pedido ID=${id} para '${status}'`);
+// backend\controllers\admin\adminEstatisticasController.js
 
-    // Lista de status permitidos
-    const statusPermitidos = ["Pendente", "Em andamento", "Aprovado", "Concluído", "Cancelado"];
+// controllers/admin/adminEstatisticasController.js
+const client = require("../../config/db");
 
-    // Verifica se o status informado é válido
-    if (!statusPermitidos.includes(status)) {
-        return res.status(400).json({ message: `Status inválido. Os status permitidos são: ${statusPermitidos.join(", ")}` });
-    }
-
-    try {
-        // Verifica se o pedido existe
-        const pedidoExiste = await client.query("SELECT id FROM pedidos WHERE id = $1", [id]);
-        if (pedidoExiste.rows.length === 0) {
-            return res.status(404).json({ message: "Pedido não encontrado." });
-        }
-
-        // Atualiza o status do pedido
-        await client.query(
-            "UPDATE pedidos SET status = $1 WHERE id = $2 RETURNING id, dentista_id, paciente_id, status",
-            [status, id]
-        );
-
-        console.log(`✅ Status do pedido ID=${id} atualizado para '${status}'`);
-        res.status(200).json({ message: "Status do pedido atualizado com sucesso!", pedido: { id, status } });
-
-    } catch (error) {
-        console.error("❌ Erro ao atualizar status do pedido:", error);
-        res.status(500).json({ message: "Erro interno no servidor." });
-    }
-};
-
-
-// 📌 4️⃣ **ESTATÍSTICAS** - Dados agregados do sistema para visão geral do Admin
-const obterEstatisticasAdmin = async (req, res) => {
+async function obterEstatisticasAdmin(req, res) {
     console.log("📊 Obtendo estatísticas do dashboard Admin...");
     try {
         const result = await client.query(`
@@ -213,35 +145,324 @@ const obterEstatisticasAdmin = async (req, res) => {
                 (SELECT COUNT(*) FROM pedidos WHERE DATE_TRUNC('month', created_at) = DATE_TRUNC('month', CURRENT_DATE)) AS pedidos_mes_atual,
                 (SELECT COUNT(*) FROM dentistas WHERE is_verified = TRUE AND DATE_TRUNC('month', created_at) = DATE_TRUNC('month', CURRENT_DATE)) AS dentistas_credenciados_mes_atual
         `);
-
         res.status(200).json(result.rows[0]);
     } catch (error) {
         console.error("❌ Erro ao buscar estatísticas do Admin:", error);
         res.status(500).json({ message: "Erro ao buscar estatísticas do Admin." });
     }
-};
+}
 
-// ✅ **EXPORTANDO TODOS OS MÓDULOS**
 module.exports = {
-    listarDentistasDashboard,
-    obterDetalhesDentista,
+    obterEstatisticasAdmin
+};
+
+
+
+// backend\controllers\admin\adminPedidoController.js
+
+ console.log(`🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄'`);
+// controllers/admin/adminPedidoController.js
+const client = require("../../config/db");
+
+// Lista todos os pedidos para o Dashboard Admin
+async function listarPedidosDashboard(req, res) {
+    console.log("📦 Requisição: Listar pedidos para o Dashboard Admin");
+    try {
+        const result = await client.query(`
+            SELECT 
+                p.id, 
+                p.paciente_id, 
+                CONCAT(pa.nome, ' (ID: ', pa.id, ')') AS paciente_nome, 
+                p.dentista_id, 
+                CONCAT(d.nome, ' (ID: ', d.id, ')') AS dentista_nome, 
+                p.data_pagamento, 
+                p.video_conferencia, 
+                p.arquivo_3d, 
+                p.ficha_tecnica, 
+                p.status, 
+                p.created_at
+            FROM pedidos p
+            JOIN dentistas d ON p.dentista_id = d.id
+            JOIN pacientes pa ON p.paciente_id = pa.id
+            ORDER BY p.created_at DESC
+        `);
+        res.status(200).json(result.rows);
+    } catch (err) {
+        console.error("❌ Erro ao listar pedidos para o dashboard:", err);
+        res.status(500).json({ message: "Erro interno no servidor." });
+    }
+}
+
+// Alterar Status de um Pedido
+async function alterarStatusPedido(req, res) {
+    const { id } = req.params;
+    const { status } = req.body;
+    console.log(`🔄 Atualizando status do pedido ID=${id} para '${status}'`);
+
+    const statusPermitidos = ["Pendente", "Em andamento", "Aprovado", "Concluído", "Cancelado"];
+    if (!statusPermitidos.includes(status)) {
+        return res.status(400).json({ message: `Status inválido. Os status permitidos são: ${statusPermitidos.join(", ")}` });
+    }
+
+    try {
+        const pedidoExiste = await client.query("SELECT id FROM pedidos WHERE id = $1", [id]);
+        if (pedidoExiste.rows.length === 0) {
+            return res.status(404).json({ message: "Pedido não encontrado." });
+        }
+        await client.query(
+            "UPDATE pedidos SET status = $1 WHERE id = $2 RETURNING id, dentista_id, paciente_id, status",
+            [status, id]
+        );
+        console.log(`✅ Status do pedido ID=${id} atualizado para '${status}'`);
+        res.status(200).json({ message: "Status do pedido atualizado com sucesso!", pedido: { id, status } });
+    } catch (error) {
+        console.error("❌ Erro ao atualizar status do pedido:", error);
+        res.status(500).json({ message: "Erro interno no servidor." });
+    }
+}
+
+module.exports = {
     listarPedidosDashboard,
-    alterarStatusPedido,
-    obterEstatisticasAdmin,
-    alternarAdmin,
-    alternarCredenciado
+    alterarStatusPedido
 };
 
 
 
 
+// backend\controllers\dashboardAdminController.js
 
-// ..\backend\controllers\dashboardDentistasController.js
+// controllers/dashboardAdminController.js
+const {
+  listarDentistasDashboard,
+  obterDetalhesDentista,
+  alternarAdmin,
+  alternarCredenciado
+} = require("./admin/adminDentistaController");
+
+const {
+  listarPedidosDashboard,
+  alterarStatusPedido
+} = require("./admin/adminPedidoController");
+
+const {
+  obterEstatisticasAdmin
+} = require("./admin/adminEstatisticasController");
+
+// Reexporta tudo em um só objeto
+module.exports = {
+  listarDentistasDashboard,
+  obterDetalhesDentista,
+  listarPedidosDashboard,
+  alterarStatusPedido,
+  obterEstatisticasAdmin,
+  alternarAdmin,
+  alternarCredenciado
+};
+
+
+
+// backend\controllers\dashboardDentistaController.js
+
+const { listarPacientesDashboard, obterDetalhesPaciente } = require("./dentista/dentistaPacienteController");
+const { listarPedidosDentista } = require("./dentista/dentistaPedidoController");
+
+module.exports = {
+  listarPacientesDashboard,
+  obterDetalhesPaciente,
+  listarPedidosDentista
+};
+
+
+
+// backend\controllers\dentista\dentistaDentistaController.js
 
 
 
 
-// ..\backend\controllers\dentistaController.js
+// backend\controllers\dentista\dentistaPacienteController.js
+
+const client = require("../../config/db");
+
+// Lista os pacientes vinculados ao dentista logado
+
+async function listarPacientesDashboard(req, res) {
+  console.log("📋 Requisição: Listar pacientes para o Dashboard do Dentista");
+
+  try {
+    // 🔹 1️⃣ Buscar os dados do dentista logado
+    const { rows: [dentista] } = await client.query(
+      `SELECT id, nome, TO_CHAR(data_nascimento, 'DD/MM/YYYY') AS data_nascimento, sexo 
+       FROM dentistas WHERE id = $1`,
+      [req.usuario.id]
+    );
+
+    if (!dentista) {
+      return res.status(403).json({ message: "Dentista não encontrado." });
+    }
+
+    console.log("🦷 Dentista logado:", dentista);
+
+    // 🔹 2️⃣ Buscar pacientes do dentista logado
+    const result = await client.query(
+      `SELECT 
+          p.id, 
+          p.nome, 
+          TO_CHAR(p.data_nascimento, 'DD/MM/YYYY') AS data_nascimento,
+          p.sexo, 
+          COUNT(pe.id) AS pedidos_abertos
+      FROM pacientes p
+      LEFT JOIN pedidos pe 
+          ON p.id = pe.paciente_id 
+          AND pe.status NOT IN ('cancelado', 'entregue')
+      WHERE p.dentista_id = $1
+      GROUP BY p.id, p.nome, p.data_nascimento, p.sexo
+      ORDER BY p.nome ASC;`,
+      [req.usuario.id]
+    );
+
+    console.log("✅ Pacientes do banco:", JSON.stringify(result.rows, null, 2));
+
+    // 🔹 3️⃣ Permitir headers personalizados para o navegador
+    res.set({
+      "Access-Control-Expose-Headers": "X-Dentista-ID, X-Dentista-Nome, X-Dentista-Data-Nascimento, X-Dentista-Sexo",
+      "X-Dentista-ID": dentista.id,
+      "X-Dentista-Nome": dentista.nome,
+      "X-Dentista-Data-Nascimento": dentista.data_nascimento,
+      "X-Dentista-Sexo": dentista.sexo
+    });
+
+    // 🔹 4️⃣ Enviar resposta com os pacientes
+    res.status(200).json(result.rows);
+
+  } catch (err) {
+    console.error("❌ Erro ao listar pacientes:", err);
+    res.status(500).json({ message: "Erro interno no servidor.", error: err.message });
+  }
+}
+
+
+// Obtém os detalhes de um paciente específico
+async function obterDetalhesPaciente(req, res) {
+  const { id } = req.params;
+  console.log(`🔍 Buscando detalhes do paciente ID=${id} para o Dentista`);
+
+  try {
+    // Buscar informações completas do paciente
+    const pacienteResult = await client.query(
+      `SELECT 
+          id, 
+          nome, 
+          telefone, 
+          COALESCE(TO_CHAR(data_nascimento, 'DD/MM/YYYY'), '--') AS data_nascimento, 
+          COALESCE(sexo, '--') AS sexo
+       FROM pacientes 
+       WHERE id = $1 AND dentista_id = $2`,
+      [id, req.usuario.id]
+    );
+
+    if (pacienteResult.rows.length === 0) {
+      return res.status(404).json({ message: "Paciente não encontrado." });
+    }
+
+    const paciente = pacienteResult.rows[0];
+
+    // Buscar os pedidos do paciente
+    const pedidosResult = await client.query(
+      `SELECT 
+          id, 
+          ficha_tecnica::TEXT, 
+          arquivo_3d, 
+          status, 
+          COALESCE(TO_CHAR(data_pagamento, 'DD/MM/YYYY'), '--') AS data_pagamento
+       FROM pedidos 
+       WHERE paciente_id = $1
+       ORDER BY created_at DESC`,
+      [id]
+    );
+
+    // Converte ficha_tecnica de JSON string para um objeto válido
+    const pedidos = pedidosResult.rows.map(pedido => ({
+      id: pedido.id,
+      ficha_tecnica: JSON.parse(pedido.ficha_tecnica || "{}"),
+      arquivo_3d: pedido.arquivo_3d,
+      status: pedido.status,
+      data_pagamento: pedido.data_pagamento
+    }));
+
+    // Retornar paciente + pedidos
+    res.status(200).json({ paciente, pedidos });
+
+  } catch (err) {
+    console.error("❌ Erro ao buscar detalhes do paciente:", err);
+    res.status(500).json({ message: "Erro interno no servidor.", error: err.message });
+  }
+}
+
+
+module.exports = {
+  listarPacientesDashboard,
+  obterDetalhesPaciente
+};
+
+
+
+// backend\controllers\dentista\dentistaPedidoController.js
+
+const client = require("../../config/db");
+
+// Lista os pedidos do dentista logado
+async function listarPedidosDentista(req, res) {
+  console.log("📦 Requisição: Listar pedidos para o Dashboard do Dentista");
+
+  try {
+    const result = await client.query(
+      `
+      SELECT 
+        p.id, 
+        p.paciente_id,
+        COALESCE(pac.nome, 'Paciente Desconhecido') AS paciente_nome,
+        COALESCE(TO_CHAR(p.data_pagamento, 'DD/MM/YYYY'), '--') AS data_pagamento,
+        COALESCE(p.status, 'Indefinido') AS status,
+        COALESCE(p.ficha_tecnica::TEXT, '{}') AS ficha_tecnica,
+        COALESCE(p.arquivo_3d, 'Sem arquivo') AS arquivo_3d,
+        TO_CHAR(p.created_at, 'DD/MM/YYYY') AS data_criacao,
+        COALESCE(d.nome, 'Dentista Desconhecido') AS dentista_nome
+      FROM pedidos p
+      LEFT JOIN pacientes pac ON pac.id = p.paciente_id
+      LEFT JOIN dentistas d ON d.id = p.dentista_id
+      WHERE p.dentista_id = $1
+      ORDER BY p.created_at DESC
+      `,
+      [req.usuario.id]
+    );
+
+    const pedidos = result.rows.map(pedido => ({
+      id: pedido.id,
+      paciente_id: pedido.paciente_id,
+      paciente_nome: pedido.paciente_nome,
+      data_pagamento: pedido.data_pagamento,
+      status: pedido.status,
+      ficha_tecnica: JSON.parse(pedido.ficha_tecnica), // Converter para objeto
+      arquivo_3d: pedido.arquivo_3d,
+      data_criacao: pedido.data_criacao,
+      dentista_nome: pedido.dentista_nome,
+    }));
+
+    console.log("✅ Pedidos retornados:", pedidos);
+    res.status(200).json(pedidos);
+  } catch (err) {
+    console.error("❌ Erro ao listar pedidos:", err);
+    res.status(500).json({ message: "Erro interno no servidor.", error: err.message });
+  }
+}
+
+module.exports = {
+  listarPedidosDentista
+};
+
+
+
+// backend\controllers\dentistaController.js
 
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -413,7 +634,173 @@ module.exports = {
 
 
 
-// ..\backend\controllers\pacienteController.js
+// backend\controllers\filtrosController.js
+
+const client = require("../config/db");
+
+// 📌 1️⃣ Filtro por Nome (apenas pacientes do dentista logado)
+const filtrarPorNome = async (req, res) => {
+    const { query } = req.query;
+    const dentistaId = req.usuario.id; 
+
+    try {
+        const result = await client.query(
+            `SELECT 
+                p.id AS paciente_id, 
+                p.nome, 
+                TO_CHAR(p.data_nascimento, 'DD/MM/YYYY') AS data_nascimento, 
+                p.sexo, 
+                COUNT(pe.id) AS pedidos_abertos
+             FROM pacientes p
+             LEFT JOIN pedidos pe ON p.id = pe.paciente_id
+             WHERE p.dentista_id = $1 
+             AND ($2 = '' OR LOWER(p.nome) LIKE LOWER($2))
+             GROUP BY p.id, p.nome, p.data_nascimento, p.sexo
+             ORDER BY p.nome ASC;`,
+            [dentistaId, query ? `%${query}%` : '']
+        );
+
+        res.status(200).json(result.rows);
+    } catch (err) {
+        console.error("❌ Erro ao buscar pacientes por nome:", err);
+        res.status(500).json({ message: "Erro interno no servidor." });
+    }
+};
+
+// 📌 2️⃣ Filtro por Sexo
+const filtrarPorSexo = async (req, res) => {
+    const { sexo } = req.query;
+    const dentistaId = req.usuario.id;
+
+    if (!sexo || !["M", "F", "O"].includes(sexo.toUpperCase())) {
+        return res.status(400).json({ message: "Parâmetro 'sexo' inválido. Use 'M', 'F' ou 'O'." });
+    }
+
+    try {
+        const result = await client.query(
+            `SELECT 
+                p.id AS paciente_id, 
+                p.nome, 
+                TO_CHAR(p.data_nascimento, 'DD/MM/YYYY') AS data_nascimento, 
+                p.sexo, 
+                COUNT(pe.id) AS pedidos_abertos
+             FROM pacientes p
+             LEFT JOIN pedidos pe ON p.id = pe.paciente_id
+             WHERE p.dentista_id = $1 
+             AND p.sexo = $2
+             GROUP BY p.id, p.nome, p.data_nascimento, p.sexo
+             ORDER BY p.nome ASC;`,
+            [dentistaId, sexo.toUpperCase()]
+        );
+
+        res.status(200).json(result.rows);
+    } catch (err) {
+        console.error("❌ Erro ao buscar pacientes por sexo:", err);
+        res.status(500).json({ message: "Erro interno no servidor." });
+    }
+};
+
+// 📌 3️⃣ Ordenação Alfabética (A-Z ou Z-A)
+const ordenarPorNome = async (req, res) => {
+    const { ordem } = req.query;
+    const dentistaId = req.usuario.id;
+
+    if (!ordem || !["asc", "desc"].includes(ordem.toLowerCase())) {
+        return res.status(400).json({ message: "Parâmetro 'ordem' deve ser 'asc' ou 'desc'." });
+    }
+
+    try {
+        const result = await client.query(
+            `SELECT 
+                p.id AS paciente_id, 
+                p.nome, 
+                TO_CHAR(p.data_nascimento, 'DD/MM/YYYY') AS data_nascimento, 
+                p.sexo, 
+                COUNT(pe.id) AS pedidos_abertos
+             FROM pacientes p
+             LEFT JOIN pedidos pe ON p.id = pe.paciente_id
+             WHERE p.dentista_id = $1
+             GROUP BY p.id, p.nome, p.data_nascimento, p.sexo
+             ORDER BY p.nome ${ordem.toUpperCase()};`,
+            [dentistaId]
+        );
+
+        res.status(200).json(result.rows);
+    } catch (err) {
+        console.error("❌ Erro ao ordenar pacientes por nome:", err);
+        res.status(500).json({ message: "Erro interno no servidor." });
+    }
+};
+
+// 📌 4️⃣ Ordenação por Número de Pedidos Abertos (Maior -> Menor)
+const ordenarPorPedidos = async (req, res) => {
+    const dentistaId = req.usuario.id;
+
+    try {
+        const result = await client.query(
+            `SELECT 
+                p.id AS paciente_id, 
+                p.nome, 
+                TO_CHAR(p.data_nascimento, 'DD/MM/YYYY') AS data_nascimento, 
+                p.sexo, 
+                COUNT(pe.id) AS pedidos_abertos
+             FROM pacientes p
+             LEFT JOIN pedidos pe ON p.id = pe.paciente_id AND pe.status NOT IN ('cancelado', 'entregue')
+             WHERE p.dentista_id = $1
+             GROUP BY p.id, p.nome, p.data_nascimento, p.sexo
+             ORDER BY pedidos_abertos DESC;`,
+            [dentistaId]
+        );
+
+        res.status(200).json(result.rows);
+    } catch (err) {
+        console.error("❌ Erro ao ordenar pacientes por pedidos abertos:", err);
+        res.status(500).json({ message: "Erro interno no servidor." });
+    }
+};
+
+// 📌 5️⃣ Filtro por Status do Pedido
+const filtrarPorStatus = async (req, res) => {
+    const { status } = req.query;
+    const dentistaId = req.usuario.id;
+
+    if (!status) return res.status(400).json({ message: "Parâmetro 'status' obrigatório." });
+
+    try {
+        const result = await client.query(
+            `SELECT 
+                p.id AS paciente_id, 
+                p.nome, 
+                TO_CHAR(p.data_nascimento, 'DD/MM/YYYY') AS data_nascimento, 
+                p.sexo, 
+                COUNT(pe.id) AS pedidos_abertos
+             FROM pacientes p
+             LEFT JOIN pedidos pe ON p.id = pe.paciente_id
+             WHERE p.dentista_id = $1 
+             AND pe.status = $2
+             GROUP BY p.id, p.nome, p.data_nascimento, p.sexo
+             ORDER BY p.nome ASC;`,
+            [dentistaId, status]
+        );
+
+        res.status(200).json(result.rows);
+    } catch (err) {
+        console.error("❌ Erro ao buscar pacientes por status:", err);
+        res.status(500).json({ message: "Erro interno no servidor." });
+    }
+};
+
+module.exports = { 
+    filtrarPorNome,
+    filtrarPorSexo,
+    ordenarPorNome,
+    ordenarPorPedidos,
+    filtrarPorStatus
+};
+
+
+
+// backend\controllers\pacienteController.js
 
 const client = require('../config/db'); // Conexão com o banco de dados
 
@@ -472,7 +859,7 @@ module.exports = {
 
 
 
-// ..\backend\controllers\pedidoController.js
+// backend\controllers\pedidoController.js
 
 const client = require('../config/db'); // Conexão com o banco de dados
 
@@ -547,7 +934,7 @@ module.exports = {
 
 
 
-// ..\backend\middlewares\auth.js
+// backend\middlewares\auth.js
 
 const jwt = require("jsonwebtoken");
 const SECRET_KEY = process.env.SECRET_KEY;
@@ -588,7 +975,7 @@ module.exports = { autenticarToken, autenticarAdmin, autenticarDentista };
 
 
 
-// ..\backend\middlewares\errorHandler.js
+// backend\middlewares\errorHandler.js
 
 // src/middlewares/errorHandler.js
 export const errorHandler = (err, req, res, next) => {
@@ -601,7 +988,7 @@ export const errorHandler = (err, req, res, next) => {
 
 
 
-// ..\backend\middlewares\validate.js
+// backend\middlewares\validate.js
 
 // src/middlewares/validate.js
 import { check, validationResult } from 'express-validator';
@@ -639,7 +1026,7 @@ export const handleValidationErrors = (req, res, next) => {
 
 
 
-// ..\backend\routes\dashboardAdmin.js
+// backend\routes\dashboardAdmin.js
 
 const express = require("express");
 const { 
@@ -679,12 +1066,33 @@ module.exports = router;
 
 
 
-// ..\backend\routes\dashboardDentistas.js
+// backend\routes\dashboardDentista.js
+
+// routes/dashboardDentistaRoutes.js
+const express = require("express");
+const { 
+  listarPacientesDashboard,
+  listarPedidosDentista,
+  obterDetalhesPaciente
+} = require("../controllers/dashboardDentistaController");
+const { autenticarToken, autenticarDentista } = require("../middlewares/auth");
+
+const router = express.Router();
+
+// 📌 1️⃣ Listar pacientes vinculados ao dentista logado
+router.get("/pacientes/dashboard", autenticarToken, autenticarDentista, listarPacientesDashboard);
+
+// 📌 2️⃣ Listar pedidos do dentista logado
+router.get("/pedidos/dashboard", autenticarToken, autenticarDentista, listarPedidosDentista);
+
+// 📌 3️⃣ Obter detalhes de um paciente específico (do dentista logado)
+router.get("/pacientes/:id", autenticarToken, autenticarDentista, obterDetalhesPaciente);
+
+module.exports = router;
 
 
 
-
-// ..\backend\routes\dentistas.js
+// backend\routes\dentistas.js
 
 const express = require("express");
 const {
@@ -714,7 +1122,32 @@ module.exports = router;
 
 
 
-// ..\backend\routes\pacientes.js
+// backend\routes\filtros.js
+
+const express = require("express");
+const { 
+    filtrarPorNome,
+    filtrarPorSexo,
+    ordenarPorNome,
+    ordenarPorPedidos,
+    filtrarPorStatus
+} = require("../controllers/filtrosController");
+const { autenticarToken } = require("../middlewares/auth");
+
+const router = express.Router();
+
+// 📌 Rotas de Filtros (todas protegidas por autenticação)
+router.get("/nome", autenticarToken, filtrarPorNome);
+router.get("/sexo", autenticarToken, filtrarPorSexo);
+router.get("/ordenacao", autenticarToken, ordenarPorNome);
+router.get("/pedidos", autenticarToken, ordenarPorPedidos);
+router.get("/status", autenticarToken, filtrarPorStatus);
+
+module.exports = router;
+
+
+
+// backend\routes\pacientes.js
 
 const express = require('express');
 const {
@@ -734,7 +1167,7 @@ module.exports = router;
 
 
 
-// ..\backend\routes\pedidos.js
+// backend\routes\pedidos.js
 
 const express = require('express');
 const {
@@ -756,7 +1189,7 @@ module.exports = router;
 
 
 
-// ..\backend\server.js
+// backend\server.js
 
 const express = require('express');
 const cors = require('cors');
@@ -771,6 +1204,10 @@ const pacientesRoutes = require('./routes/pacientes');
 const pedidosRoutes = require('./routes/pedidos');
 //novas rotas
 const dashboardAdminRoutes = require("./routes/dashboardAdmin");
+const dashboardDentistaRoutes = require("./routes/dashboardDentista");
+
+const filtrosRoutes = require("./routes/filtros");
+
 
 const app = express();
 
@@ -784,6 +1221,11 @@ app.use('/pacientes', pacientesRoutes);
 app.use('/pedidos', pedidosRoutes);
 // Rotas do Admin Dashboard
 app.use("/admin", dashboardAdminRoutes);
+
+
+app.use("/dentista", dashboardDentistaRoutes);
+app.use("/dentista/filtros", filtrosRoutes);  // 🔹 Agora com namespace separado
+
 
 
 // Inicialização do servidor

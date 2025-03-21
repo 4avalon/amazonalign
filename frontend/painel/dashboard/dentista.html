@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dentista Dashboard</title>
+
+
   <style>
     /* HEADER - Cabeçalho Fixo (caso queira incluir) */
     header {
@@ -95,21 +97,25 @@
 </head>
 <body>
   <main>
-    <!-- Seção de Pedidos do Dentista -->
     <section id="pedidos-container" class="container">
       <h2>📋 Meus Pedidos</h2>
-           <div id="pedidos-content">Carregando pedidos...</div>
+      <div id="pedidos-content">Carregando pedidos...</div>
     </section>
-  </main>
- <!-- -->
-      <!-- Seção de pacientes do Dentista -->
-<section id="paciente-container" class="container">
-  <!-- Conteúdo injetado dinamicamente -->
-</section>
+
+    <section id="paciente-container" class="container"></section>
+
+    
+    <!-- Seção de Formulários -->
+    <section id="form-container" class="container">
+        <h2>📝 Formulário</h2>
+        <div id="form-content"></div>
+    </section>
 
   </main>
 
-  <!-- Carrega o script principal do Dentista Dashboard -->
   <script src="dentista.js"></script>
+
+
+
 </body>
 </html>

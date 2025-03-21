@@ -43,7 +43,7 @@
             color: #555;
         }
 
-        .form-group input, .form-group select, .form-group textarea {
+        .form-group input, .form-group select {
             width: 100%;
             padding: 10px;
             font-size: 16px;
@@ -53,7 +53,7 @@
             background-color: #f9f9f9;
         }
 
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+        .form-group input:focus, .form-group select:focus {
             outline: none;
             border-color: #007BFF;
             background-color: #fff;
@@ -84,7 +84,7 @@
                 font-size: 20px;
             }
 
-            .form-group input, .form-group select, .form-group textarea {
+            .form-group input, .form-group select {
                 font-size: 14px;
                 padding: 8px;
             }
@@ -99,48 +99,46 @@
 <body>
     <div class="form-container">
         <h1>Cadastro de Pacientes</h1>
-        <form action="/submit-paciente" method="POST">
+        <form id="form-cadastro-paciente">
+
             <div class="form-group">
                 <label for="nome">Nome Completo</label>
                 <input type="text" id="nome" name="nome" placeholder="Digite o nome completo" required>
             </div>
-            <div class="form-group">
-                <label for="dentista_id">ID do Dentista</label>
-                <input type="number" id="dentista_id" name="dentista_id" placeholder="Digite o ID do dentista responsável" required>
-            </div>
+            
+            <input type="hidden" id="dentista_id" name="dentista_id"> <!-- Preenchido via JS -->
+            
             <div class="form-group">
                 <label for="email">E-mail</label>
-                <input type="email" id="email" name="email" placeholder="Digite o e-mail" required>
+                <input type="email" id="email" name="email" placeholder="Digite o e-mail">
             </div>
             <div class="form-group">
                 <label for="telefone">Telefone</label>
-                <input type="tel" id="telefone" name="telefone" placeholder="(00) 00000-0000" required>
-            </div>
-            <div class="form-group">
-                <label for="endereco">Endereço</label>
-                <input type="text" id="endereco" name="endereco" placeholder="Digite o endereço completo">
+                <input type="tel" id="telefone" name="telefone" placeholder="(00) 00000-0000">
             </div>
             <div class="form-group">
                 <label for="cpf">CPF</label>
-                <input type="text" id="cpf" name="cpf" placeholder="Digite o CPF" required>
+                <input type="text" id="cpf" name="cpf" placeholder="Digite o CPF">
             </div>
             <div class="form-group">
                 <label for="data_nascimento">Data de Nascimento</label>
-                <input type="date" id="data_nascimento" name="data_nascimento" required>
+                <input type="date" id="data_nascimento" name="data_nascimento">
             </div>
             <div class="form-group">
-                <label for="historico_clinico">Histórico Clínico</label>
-                <textarea id="historico_clinico" name="historico_clinico" rows="4" placeholder="Descreva o histórico clínico do paciente"></textarea>
-            </div>
-            <div class="form-group">
-                <label for="status">Status</label>
-                <select id="status" name="status" required>
-                    <option value="Ativo">Ativo</option>
-                    <option value="Inativo">Inativo</option>
+                <label for="sexo">Sexo</label>
+                <select id="sexo" name="sexo">
+                    <option value="">Selecione...</option>
+                    <option value="M">Masculino</option>
+                    <option value="F">Feminino</option>
+                    <option value="O">Outro</option>
                 </select>
             </div>
-            <button type="submit" class="btn">Cadastrar</button>
+            <button type="submit" class="btn"> Cadastrar </button>
         </form>
     </div>
+
+
+
+
 </body>
 </html>

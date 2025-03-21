@@ -66,7 +66,9 @@ setTimeout(() => {
 
             localStorage.setItem("token", data.token);
             localStorage.setItem("user", JSON.stringify(data.dentista));
-
+            localStorage.setItem("dentista_id", data.dentista.id); // 
+            
+            console.log("🦷 Dentista ID salvo:", data.dentista.id);
             console.log("🔀 Ocultando login e mostrando o dashboard...");
             loginContainer.style.display = "none";  // Esconde o login
             dashboardContainer.style.display = "block"; // Mostra o dashboard

@@ -175,12 +175,12 @@
         transform: scale(1.2);
         vertical-align: middle;
     }
-textarea {
-    width: 100%; /* Largura total do container */
-    height: 200px; /* Altura ajustada conforme necessário */
-    padding: 10px; /* Espaçamento interno */
-    font-size: 16px; /* Tamanho do texto */
-}
+    textarea {
+        width: 100%; /* Largura total do container */
+        height: 200px; /* Altura ajustada conforme necessário */
+        padding: 10px; /* Espaçamento interno */
+        font-size: 16px; /* Tamanho do texto */
+    }
 
 
     .form-group input[type="text"] {
@@ -281,7 +281,6 @@ textarea {
                     <input type="text" id="nome_outro" name="nome_outro" placeholder="Digite o nome do local">
                 </div>
             </div>
-
             <!-- Arcos tratados -->
             <div class="form-section">
                 <h3>Arcos para serem tratados</h3>
@@ -294,7 +293,6 @@ textarea {
                     </select>
                 </div>
             </div>
-
                   <!-- Quais dentes possuem restrição de movimento -->
             <div class="form-section">
                 <h3>Quais dentes possuem restrição de movimento?</h3>
@@ -380,8 +378,6 @@ textarea {
                     </div>
                 </div>
             </div>
-
-
                         <!-- Expansão dos arcos -->
             <div class="form-section">
                 <h3>Arcos que permitem expansão</h3>
@@ -403,8 +399,6 @@ textarea {
                     </div>
                 </div>
             </div>
-
-
             <div class="form-section">
                 <h3>Linha Média</h3>
                 <div class="form-group">
@@ -418,7 +412,6 @@ textarea {
                     </label>
                 </div>
             </div>
-
             <div class="form-section">
                 <h3>Mordida Profunda</h3>
                 <div class="form-group">
@@ -441,7 +434,6 @@ textarea {
                     </label>
                 </div>
             </div>
-
             <div class="form-section">
                 <h3>Mordida Aberta</h3>
                 <div class="form-group">
@@ -456,7 +448,6 @@ textarea {
                     </label>
                 </div>
             </div>
-
             <div class="form-section">
                 <h3>Distalização - Mesialização</h3>
                 <div class="form-group">
@@ -478,7 +469,6 @@ textarea {
                     </label>
                 </div>
             </div>
-
             <div class="form-section">
                 <h3>Diastemas</h3>
                 <div class="form-group">
@@ -496,7 +486,6 @@ textarea {
                     </label>
                 </div>
             </div>
-
                 <!-- Última seção: Mecânicas Auxiliares -->
             <div class="form-section">
                 <h3>Mecânicas Auxiliares</h3>
@@ -543,7 +532,6 @@ textarea {
                     </tbody>
                 </table>
             </div>
-
             <!-- Descrição dos Objetivos de Tratamento -->
             <div class="form-section">
                 <h3>Descreva seus principais objetivos de tratamento</h3>
@@ -552,8 +540,6 @@ textarea {
                     <textarea name="objetivos_tratamento" rows="6" placeholder="Escreva aqui..."></textarea>
                 </div>
             </div>
-
-
             <!-- Botão de envio -->
             <div class="form-actions">
                 <button type="submit" class="btn">Salvar Ficha Clínica</button>
@@ -561,108 +547,5 @@ textarea {
         </form>
     </div>
 
-    <script>
-        // Exibe o campo de "Outro" se a opção for selecionada
-        document.getElementById('local_documentacao').addEventListener('change', function() {
-            const outroField = document.getElementById('outro-nome');
-            if (this.value === 'Outro') {
-                outroField.style.display = 'block';
-            } else {
-                outroField.style.display = 'none';
-                document.getElementById('nome_outro').value = '';
-            }
-        });
-    </script>
-
-<script>
-// Atualiza os chips com os números selecionados
-// Seleciona os checkboxes e os contêineres das linhas
-const checkboxes = document.querySelectorAll('.dental-grid input[type="checkbox"]');
-const linhaSuperior = document.getElementById('linha-superior');
-const linhaInferior = document.getElementById('linha-inferior');
-
-checkboxes.forEach(checkbox => {
-    checkbox.addEventListener('change', () => {
-        // Limpa os chips das linhas
-        linhaSuperior.innerHTML = 'Linha Superior:';
-        linhaInferior.innerHTML = 'Linha Inferior:';
-
-        // Atualiza os chips conforme o dente selecionado
-        Array.from(checkboxes)
-            .filter(checkbox => checkbox.checked)
-            .forEach(checkbox => {
-                const chip = document.createElement('span');
-                chip.classList.add('chip');
-                chip.textContent = checkbox.value;
-
-                // Determina em qual linha o chip será adicionado
-                if (checkbox.value >= 11 && checkbox.value <= 28) {
-                    linhaSuperior.appendChild(chip);
-                } else if (checkbox.value >= 31 && checkbox.value <= 48) {
-                    linhaInferior.appendChild(chip);
-                }
-            });
-    });
-});
-
-
-</script>
-
-<script>
-// Função para atualizar o status visual (Sim/Não) e classe ativa
-function atualizarStatus(slider, status) {
-    status.textContent = slider.value === "1" ? "Sim" : "Não";
-    status.classList.toggle("active", slider.value === "1");
-}
-
-// Função para atualizar "Ambos" baseado nos valores de "Superior" e "Inferior"
-function atualizarAmbos() {
-    const superiorSlider = document.getElementById("expansao-superior");
-    const inferiorSlider = document.getElementById("expansao-inferior");
-    const ambosSlider = document.getElementById("expansao-ambos");
-    const ambosStatus = document.getElementById("status-ambos");
-
-    const superiorSim = superiorSlider.value === "1";
-    const inferiorSim = inferiorSlider.value === "1";
-
-    // Define "Ambos" como "Sim" somente se ambos forem "Sim"
-    ambosSlider.value = (superiorSim && inferiorSim) ? "1" : "0";
-    atualizarStatus(ambosSlider, ambosStatus);
-}
-
-// Função para sincronizar "Superior" e "Inferior" quando "Ambos" for alterado
-function atualizarSuperiorInferior() {
-    const superiorSlider = document.getElementById("expansao-superior");
-    const inferiorSlider = document.getElementById("expansao-inferior");
-    const ambosSlider = document.getElementById("expansao-ambos");
-    const superiorStatus = document.getElementById("status-superior");
-    const inferiorStatus = document.getElementById("status-inferior");
-
-    const ambosSim = ambosSlider.value === "1";
-
-    // Define "Superior" e "Inferior" conforme o valor de "Ambos"
-    superiorSlider.value = ambosSim ? "1" : "0";
-    inferiorSlider.value = ambosSim ? "1" : "0";
-    atualizarStatus(superiorSlider, superiorStatus);
-    atualizarStatus(inferiorSlider, inferiorStatus);
-}
-
-// Adiciona evento para cada slider
-document.querySelectorAll(".expansion-slider").forEach((slider) => {
-    slider.addEventListener("input", () => {
-        const status = slider.nextElementSibling;
-        atualizarStatus(slider, status);
-
-        if (slider.id === "expansao-ambos") {
-            // Atualiza "Superior" e "Inferior" quando "Ambos" for alterado
-            atualizarSuperiorInferior();
-        } else {
-            // Atualiza "Ambos" quando "Superior" ou "Inferior" forem alterados
-            atualizarAmbos();
-        }
-    });
-});
-
-</script>
 </body>
 </html>

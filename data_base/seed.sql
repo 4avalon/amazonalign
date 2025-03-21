@@ -29,32 +29,32 @@ VALUES
 -- 3) INSERIR PEDIDOS (MAIS PEDIDOS POR PACIENTE)
 -- =========================================
 
-  INSERT INTO pedidos (dentista_id, paciente_id, video_conferencia, arquivo_3d, ficha_tecnica, status)
+INSERT INTO pedidos (dentista_id, paciente_id, video_conferencia, arquivo_3d, ficha_tecnica, status, data_pagamento, data_entrega)
 VALUES
-  (2, 3, FALSE, 'link_3d_model_maria1',  '{"procedimento":"Prótese","quantidade":2}',     'finalizado'),
-  (2, 3, TRUE,  'link_3d_model_maria2',  '{"procedimento":"Clareamento","tipo":"laser"}', 'aberto'),
-  (2, 3, FALSE, 'link_3d_model_maria3',  '{"procedimento":"Facetas de Resina","qtd":4}',  'pago'),
-  (2, 3, TRUE,  'link_3d_model_maria4',  '{"procedimento":"Implante","qtd":1}',          'cancelado'),
-  (2, 4, TRUE,  'link_3d_model_carlos1', '{"procedimento":"Aparelho Fixo","qtd":1}',      'cancelado'),
-  (2, 4, FALSE, 'link_3d_model_carlos2', '{"procedimento":"Extração","dente":"siso"}',    'em_producao'),
-  (2, 4, TRUE,  'link_3d_model_carlos3', '{"procedimento":"Restauração","qtd":2}',       'pago'),
+  (2, 3, FALSE, 'link_3d_model_maria1',  '{"procedimento":"Prótese","quantidade":2}',     'finalizado', '2024-02-20', '2024-02-25'),
+  (2, 3, TRUE,  'link_3d_model_maria2',  '{"procedimento":"Clareamento","tipo":"laser"}', 'aberto', NULL, NULL),
+  (2, 3, FALSE, 'link_3d_model_maria3',  '{"procedimento":"Facetas de Resina","qtd":4}',  'pago', '2024-02-15', NULL),
+  (2, 3, TRUE,  'link_3d_model_maria4',  '{"procedimento":"Implante","qtd":1}',          'cancelado', NULL, NULL),
+  (2, 4, TRUE,  'link_3d_model_carlos1', '{"procedimento":"Aparelho Fixo","qtd":1}',      'cancelado', NULL, NULL),
+  (2, 4, FALSE, 'link_3d_model_carlos2', '{"procedimento":"Extração","dente":"siso"}',    'em_producao', NULL, NULL),
+  (2, 4, TRUE,  'link_3d_model_carlos3', '{"procedimento":"Restauração","qtd":2}',       'pago', '2024-03-01', NULL),
 
-  (3, 6, TRUE,  'link_3d_model_fernanda1','{"procedimento":"Lente de Contato","qtd":6}',  'aberto'),
-  (3, 6, FALSE, 'link_3d_model_fernanda2','{"procedimento":"Ortodontia","tipo":"invisível"}', 'pago'),
-  (3, 6, TRUE,  'link_3d_model_fernanda3','{"procedimento":"Alinhador","arco":"superior"}', 'em_producao'),
-  (3, 6, FALSE, 'link_3d_model_fernanda4','{"procedimento":"Facetas de porcelana","qtd":8}', 'finalizado'),
-  (3, 6, TRUE,  'link_3d_model_fernanda5','{"procedimento":"Implante","qtd":2}', 'cancelado'),
-  (3, 7, FALSE, 'link_3d_model_gustavo1', '{"procedimento":"Extração","qtd":2}',          'pago'),
-  (3, 7, TRUE,  'link_3d_model_gustavo2', '{"procedimento":"Facetas de porcelana","qtd":8}', 'aberto'),
-  (3, 7, FALSE, 'link_3d_model_gustavo3', '{"procedimento":"Clareamento","tipo":"químico"}', 'finalizado'),
-  (3, 7, TRUE,  'link_3d_model_gustavo4', '{"procedimento":"Aparelho Fixo","qtd":1}', 'em_producao'),
-  (3, 7, FALSE, 'link_3d_model_gustavo5', '{"procedimento":"Restauração","qtd":3}', 'pago'),
+  (3, 6, TRUE,  'link_3d_model_fernanda1','{"procedimento":"Lente de Contato","qtd":6}',  'aberto', NULL, NULL),
+  (3, 6, FALSE, 'link_3d_model_fernanda2','{"procedimento":"Ortodontia","tipo":"invisível"}', 'pago', '2024-02-28', NULL),
+  (3, 6, TRUE,  'link_3d_model_fernanda3','{"procedimento":"Alinhador","arco":"superior"}', 'em_producao', NULL, NULL),
+  (3, 6, FALSE, 'link_3d_model_fernanda4','{"procedimento":"Facetas de porcelana","qtd":8}', 'finalizado', '2024-02-18', '2024-02-22'),
+  (3, 6, TRUE,  'link_3d_model_fernanda5','{"procedimento":"Implante","qtd":2}', 'cancelado', NULL, NULL),
+  (3, 7, FALSE, 'link_3d_model_gustavo1', '{"procedimento":"Extração","qtd":2}',          'pago', '2024-02-25', NULL),
+  (3, 7, TRUE,  'link_3d_model_gustavo2', '{"procedimento":"Facetas de porcelana","qtd":8}', 'aberto', NULL, NULL),
+  (3, 7, FALSE, 'link_3d_model_gustavo3', '{"procedimento":"Clareamento","tipo":"químico"}', 'finalizado', '2024-03-01', '2024-03-05'),
+  (3, 7, TRUE,  'link_3d_model_gustavo4', '{"procedimento":"Aparelho Fixo","qtd":1}', 'em_producao', NULL, NULL),
+  (3, 7, FALSE, 'link_3d_model_gustavo5', '{"procedimento":"Restauração","qtd":3}', 'pago', '2024-03-03', NULL),
 
-  (4, 8, TRUE,  'link_3d_model_helena1', '{"procedimento":"Alinhador","arco":"inferior"}', 'em_producao'),
-  (4, 8, FALSE, 'link_3d_model_helena2', '{"procedimento":"Restauração","qtd":3}', 'pago'),
-  (4, 8, TRUE,  'link_3d_model_helena3', '{"procedimento":"Implante","qtd":1}', 'finalizado'),
-  (4, 9, TRUE,  'link_3d_model_ricardo1','{"procedimento":"Implante","quantidade":2}',    'pago'),
-  (4, 9, FALSE, 'link_3d_model_ricardo2','{"procedimento":"Clareamento","tipo":"químico"}', 'aberto');
+  (4, 8, TRUE,  'link_3d_model_helena1', '{"procedimento":"Alinhador","arco":"inferior"}', 'em_producao', NULL, NULL),
+  (4, 8, FALSE, 'link_3d_model_helena2', '{"procedimento":"Restauração","qtd":3}', 'pago', '2024-02-27', NULL),
+  (4, 8, TRUE,  'link_3d_model_helena3', '{"procedimento":"Implante","qtd":1}', 'finalizado', '2024-02-22', '2024-02-28'),
+  (4, 9, TRUE,  'link_3d_model_ricardo1','{"procedimento":"Implante","quantidade":2}',    'pago', '2024-02-21', NULL),
+  (4, 9, FALSE, 'link_3d_model_ricardo2','{"procedimento":"Clareamento","tipo":"químico"}', 'aberto', NULL, NULL);
 
 
 -- =========================================

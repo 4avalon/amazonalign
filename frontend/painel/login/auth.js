@@ -30,8 +30,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         console.log("✅ Usuário autenticado:", user);
 
         // Define o caminho do dashboard e do script correspondente
-        const dashboardPath = user.is_admin ? "dashboard/admin/admin.html" : "dashboard/dentista/dentista.html";
-        const scriptPath = user.is_admin ? "dashboard/admin/admin.js" : "dashboard/dentista/dentista.js";
+        const dashboardPath = user.is_admin ? "dashboard/admin.html" : "dashboard/dentista.html";
+        const scriptPath = user.is_admin ? "dashboard/admin.js" : "dashboard/dentista.js";
 
         console.log(`📂 Carregando dashboard: ${dashboardPath}`);
 

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Painel - Formulários</title>
+</head>
+<body>
+
+  <!-- Seção de Formulários -->
+  <section id="formularios-dentista">
+    <h3>📄 Meus Formulários</h3>
+
+    <!-- Cabeçalho com botões para alternar entre formulários -->
+    <div class="cabecalho-formularios">
+      <button id="btn-cadastro-paciente" class="btn-primario">👤 Cadastro de Paciente</button>
+      <button id="btn-cadastro-pedido" class="btn-primario">📋 Cadastro de Pedido</button>
+    </div>
+
+    <!-- Área onde o formulário será carregado -->
+    <section id="form-active"></section>
+  </section>
+
+  <!-- Script (Carregar no Final para Evitar Erros do DOM) -->
+  <script type="module" src="dashboard/dentista/form_dentista.js"></script>
+
+</body>
+</html>

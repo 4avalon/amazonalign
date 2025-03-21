@@ -1,7 +1,6 @@
 # Project-specific folders
 
 /node_modules/
-/backend/
 /docs/
 /.git/
 

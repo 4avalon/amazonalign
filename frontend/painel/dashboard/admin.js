@@ -61,9 +61,9 @@ async function carregarModulo(container, htmlPath, cssPath, scriptPath, nome, ca
 // Carregando Pedidos
 carregarModulo(
     pedidosContainer, 
-    "dashboard/admin/modules/pedidos_admin.html", 
-    "dashboard/admin/modules/pedidos_admin.css", 
-    "dashboard/admin/modules/pedidos_admin.js", 
+    "dashboard/admin/pedidos_admin.html", 
+    "dashboard/admin/pedidos_admin.css", 
+    "dashboard/admin/pedidos_admin.js", 
     "pedidos_admin",
     () => {
         console.log("🚀 Inicializando funcionalidades de pedidos...");
@@ -73,9 +73,9 @@ carregarModulo(
 // Carregando a Tabela (sem filtros)
 carregarModulo(
     tabelaContainer, 
-    "dashboard/admin/modules/tabela_admin.html", 
-    "dashboard/admin/modules/tabela_admin.css", 
-    "dashboard/admin/modules/tabela_admin.js", 
+    "dashboard/admin/tabela_admin.html", 
+    "dashboard/admin/tabela_admin.css", 
+    "dashboard/admin/tabela_admin.js", 
     "tabela_admin",
     () => {
         console.log("🚀 Inicializando funcionalidades da tabela...");
@@ -85,9 +85,9 @@ carregarModulo(
 // Carregando Detalhes
 carregarModulo(
     detalhesContainer, 
-    "dashboard/admin/modules/detalhes_admin.html", 
-    "dashboard/admin/modules/detalhes_admin.css", 
-    "dashboard/admin/modules/detalhes_admin.js", 
+    "dashboard/admin/detalhes_admin.html", 
+    "dashboard/admin/detalhes_admin.css", 
+    "dashboard/admin/detalhes_admin.js", 
     "detalhes_admin",
     () => {
         console.log("🚀 Inicializando funcionalidades de detalhes...");
@@ -119,9 +119,9 @@ carregarModulo(
 // Carregando Estatísticas
 carregarModulo(
     estatisticasContainer, 
-    "dashboard/admin/modules/estatisticas_admin.html", 
-    "dashboard/admin/modules/estatisticas_admin.css", 
-    "dashboard/admin/modules/estatisticas_admin.js", 
+    "dashboard/admin/estatisticas_admin.html", 
+    "dashboard/admin/estatisticas_admin.css", 
+    "dashboard/admin/estatisticas_admin.js", 
     "estatisticas_admin",
     () => {
         console.log("🚀 Inicializando funcionalidades de estatísticas...");

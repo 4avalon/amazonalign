@@ -1,131 +1,3536 @@
-// ..\frontend\painel\dashboard\admin\admin.html
+// frontend\core\config.js
+
+//config.js
+console.log(`[Config] carregado.`);
+const config = {
+    globals: {
+        nav: { name: "nav", hasJs: true },        // Navbar, tem JS
+        footer: { name: "footer", hasJs: false }, // Footer, sem JS
+    },
+    pages: {
+
+
+        home: { name: "home", hasJs: false },
+        credenciamento: { name: "credenciamento", hasJs: false },
+        pedidos: { name: "pedidos", hasJs: false },
+        about: { name: "about", hasJs: false },
+        sustentabilidade: { name: "sustentabilidade", hasJs: false },
+        theme: { name: "theme", hasJs: false },
+        login: { name: "login", hasJs: false },
+    },
+    dynamics: {
+        form: { name: "form", hasJs: true }, // Componente "carousel", tem JS
+        search: { name: "search", hasJs: true }, // Componente "carousel", tem JS
+        login: { name: "login", hasJs: true },                
+        // Outros dinamics podem ser adicionados aqui
+    },
+};
+
+// Exportar configuração para outros módulos (se necessário)
+export { config };
+
+
+// frontend\core\dynamics.js
+
+    // dynamics.js
+    console.log(`[Dynamics] carregado.`);
+
+    import { config } from './config.js';
+    import { loadComponent } from './loader.js';
+
+    async function injectDynamics() {
+        console.log("[Dynamics] Injetando componentes dinâmicos...");
+
+        for (const dynamicKey of Object.keys(config.dynamics)) {
+            const placeholders = document.querySelectorAll(`#${dynamicKey}-placeholder`);
+
+            if (placeholders.length > 0) {
+                console.log(`[Dynamics] ${placeholders.length} placeholders encontrados para "${dynamicKey}".`);
+
+                for (const placeholder of placeholders) {
+                    try {
+                        console.log(`[Dynamics] Carregando componente "${dynamicKey}" no placeholder:`, placeholder);
+                        await loadComponent("dynamics", dynamicKey);
+                        console.log(`[Dynamics] Componente "${dynamicKey}" carregado com sucesso no placeholder.`);
+                    } catch (error) {
+                        console.error(`[Dynamics] Erro ao carregar componente "${dynamicKey}": ${error.message}`);
+                    }
+                }
+            } else {
+                console.log(`[Dynamics] Nenhum placeholder encontrado para "${dynamicKey}".`);
+            }
+        }
+
+        console.log("[Dynamics] Finalizado o carregamento dos componentes dinâmicos.");
+        
+    }
+    export { injectDynamics };
+
+
+// frontend\core\index.js
+
+//index.js
+import { loadComponent } from './loader.js';
+import { injectDynamics } from './dynamics.js';
+
+// Função de inicialização do aplicativo
+async function init() {
+    console.log("[Init] Inicializando aplicação...");
+
+    try {
+        // Carregar Navbar e Footer
+        await loadComponent("globals", "nav");
+        await loadComponent("globals", "footer");
+
+        // Carregar página inicial
+        await loadComponent("pages", "home");
+
+        console.log("[Init] Aplicação inicializada com sucesso.");
+    } catch (error) {
+        console.error(`[Init] Erro durante inicialização: ${error.message}`);
+    }
+        await injectDynamics();
+}
+
+
+init();
+
+
+// frontend\core\loader.js
+
+// loader.js
+console.log(`[loader] carregado.`);
+import { config } from './config.js';
+import { generateFilePaths } from './path.js';
+
+async function loadComponent(type, name) {
+    const entry = config[type]?.[name];
+    if (!entry) throw new Error(`[Loader] Componente "${name}" não encontrado no tipo "${type}".`);
+
+    const { html, css, js, functionName } = generateFilePaths(type, entry);
+    const containerId =
+        type === "globals" ? `${name}-container` :
+        type === "pages" ? "pages-container" :
+        `${name}-placeholder`;
+
+    const container = document.getElementById(containerId);
+    if (!container) throw new Error(`[Loader] Container "${containerId}" não encontrado no DOM.`);
+
+    try {
+        const response = await fetch(html);
+        if (!response.ok) throw new Error(`[Loader] Erro ao carregar HTML: ${html}`);
+        container.innerHTML = await response.text();
+        console.log(`[Loader] HTML carregado para "${name}".`);
+
+        if (css) {
+            const link = document.createElement("link");
+            link.rel = "stylesheet";
+            link.href = css;
+            document.head.appendChild(link);
+            console.log(`[Loader] CSS carregado: ${css}`);
+        }
+
+            if (js && functionName) {
+                const module = await import(js);
+                const setupFunction = module[functionName] || window[functionName]; // Adiciona fallback para `window`
+                if (setupFunction) {
+                    setupFunction();
+                    console.log(`[Loader] Função de setup executada para "${name}".`);
+                } else {
+                    console.warn(`[Loader] Função "${functionName}" não encontrada para "${name}".`);
+                }
+            }
+
+    } catch (error) {
+        console.error(`[Loader] Erro ao carregar componente "${name}": ${error.message}`);
+        throw error;
+    }
+}
+
+export { loadComponent };
+
+
+
+// frontend\core\path.js
+
+// path.js
+console.log(`[path] carregado.`);
+// Determina automaticamente a pasta raiz a partir do caminho da URL
+const raiz = `${window.location.origin}/${window.location.pathname.split('/')[1]}`; // Obtém o primeiro segmento após "/"
+const frontend = "frontend"; // Diretório do frontend
+
+function generateFilePaths(type, entry) {
+    const { name, hasJs } = entry;
+    const basePath = `${raiz}/${frontend}/${type}/${name}`; // Caminho base para o componente
+    const capitalizedName = name.charAt(0).toUpperCase() + name.slice(1); // Nome formatado para função
+    return {
+        html: `${basePath}/${name}.html`, // Caminho do arquivo HTML
+        css: `${basePath}/${name}.css`, // Caminho do arquivo CSS
+        js: hasJs ? `${basePath}/${name}Handler.js` : null, // Caminho do arquivo JS, se existir
+        functionName: hasJs ? `setup${capitalizedName}Events` : null, // Nome da função de setup, se houver JS
+    };
+}
+
+export { generateFilePaths };
+
+
+
+// frontend\dynamics\form\form.css
+
+/* Estilos para a seção Form */
+#contact-form-section {
+  min-height: 100vh; /* Ocupa pelo menos uma altura de viewport */
+  background-color: var(--foreground-color); /* Fundo dinâmico */
+  padding: 50px;
+  text-align: center;
+  font-family: 'Arial', sans-serif; /* Fonte padrão */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Sombra para destaque */
+  border-radius: 10px;
+}
+
+/* Título da seção */
+#contact-form-section h2 {
+  font-size: 2.5em;
+  color: var(--primary-color); /* Cor dinâmica */
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.1); /* Sombra suave */
+}
+
+/* Subtítulo */
+#contact-form-section p {
+  font-size: 1.2em;
+  color: var(--text-color);
+  margin-bottom: 20px;
+}
+
+/* Formulário */
+#contact-form {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: var(--background-color); /* Fundo do formulário */
+  border-radius: 10px; /* Bordas arredondadas */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Leve sombra */
+}
+
+/* Estilos dos campos de entrada */
+#contact-form input,
+#contact-form textarea {
+  width: 100%;
+  padding: 15px;
+  margin-bottom: 15px;
+  font-size: 1em;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  background-color: var(--foreground-color); /* Fundo dinâmico */
+  color: var(--text-color); /* Texto dinâmico */
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1); /* Sombra interna */
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Efeitos ao focar nos campos */
+#contact-form input:focus,
+#contact-form textarea:focus {
+  outline: none;
+  border-color: var(--primary-color); /* Borda destacada */
+  box-shadow: 0 0 5px var(--primary-color); /* Efeito de foco */
+}
+
+/* Botão de envio */
+#contact-form button {
+  display: block;
+  width: 100%;
+  padding: 15px;
+  font-size: 1.2em;
+  font-weight: bold;
+  background-color: var(--primary-color); /* Fundo dinâmico */
+  color: var(--background-color); /* Cor do texto */
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+/* Efeitos no botão ao passar o mouse */
+#contact-form button:hover {
+  background-color: var(--hover-color); /* Cor de hover dinâmica */
+  transform: scale(1.05); /* Leve efeito de zoom */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Sombra ao hover */
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  #contact-form-section h2 {
+    font-size: 2em;
+  }
+
+  #contact-form {
+    padding: 15px;
+  }
+
+  #contact-form button {
+    font-size: 1em;
+  }
+}
+
+
+
+// frontend\dynamics\form\form.html
+
+<section id="contact-form-section">
+  <main class="container">
+    <form id="contact-form">
+      <label for="name">Nome:</label>
+      <input type="text" id="name" name="name" placeholder="Digite seu nome">
+
+      <label for="email">E-mail:</label>
+      <input type="email" id="email" name="email" placeholder="Digite seu e-mail">
+
+      <label for="message">Mensagem:</label>
+      <textarea id="message" name="message" placeholder="Digite sua mensagem"></textarea>
+
+      <button type="submit">Enviar</button>
+    </form>
+  </main>
+</section>
+
+
+
+// frontend\dynamics\form\formHandler.js
+
+function setupFormEvents() {
+  //console.log('[FormHandler] Configurando eventos do formulário...');
+
+  const form = document.getElementById('contact-form-section');
+  if (form) {
+    form.addEventListener('submit', (event) => {
+      // Impede o comportamento padrão do formulário (reload da página)
+      event.preventDefault();
+      //console.log('[FormHandler] Evento de submit capturado.');
+
+      // Captura os valores dos campos
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const message = document.getElementById('message').value.trim();
+
+      //console.log('[FormHandler] Valores capturados:', { name, email, message });
+
+      // Validação simples
+      if (!name || !email || !message) {
+        alert('Preencha todos os campos antes de enviar.');
+        //console.warn('[FormHandler] Validação falhou. Campos vazios detectados.');
+        return;
+      }
+
+      // Formatação da mensagem para o WhatsApp
+      const whatsappNumber = '5511933360108'; // Número de WhatsApp
+      const textMessage = `Nome: ${name}\nE-mail: ${email}\nMensagem: ${message}`;
+      const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(textMessage)}`;
+
+      //console.log('[FormHandler] URL do WhatsApp gerada:', whatsappURL);
+
+      // Redireciona para o WhatsApp
+      window.open(whatsappURL, '_blank');
+      //console.log('[FormHandler] Redirecionamento para o WhatsApp iniciado.');
+    });
+  } else {
+    //console.error('[FormHandler] Formulário não encontrado!');
+  }
+}
+
+// Expõe a função globalmente
+window.setupFormEvents = setupFormEvents;
+
+
+
+// frontend\dynamics\search\dropDown.html
+
+<div id="search-results-container" style="display: none;">
+    <button id="close-search-dropdown">×</button>
+    <div id="search-results"></div>
+  </div>
+
+
+// frontend\dynamics\search\search.css
+
+/* Estilo geral do container de busca */
+#search-container {
+  display: flex;
+  align-items: center;
+  margin-left: auto; /* Move para o lado direito do menu */
+  gap: 8px; /* Espaçamento entre input e botão */
+}
+
+/* Estilo para o input */
+#search-input {
+  width: 200px;
+  padding: 8px;
+  font-size: 1rem;
+  border: 2px solid #ff5722; /* Substitua pela cor correspondente */
+
+  border-radius: 5px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  background-color: var(--foreground-color);
+  color: var(--text-color);
+}
+
+
+#search-input:focus {
+  outline: none;
+  border-color: var(--hover-color);
+  box-shadow: var(--box-shadow-hover);
+}
+
+/* Estilo para o botão de busca */
+#search-button {
+  padding: 8px 16px;
+  font-size: 1rem;
+  background-color: var(--primary-color);
+  color: var(--foreground-color);
+  border: 2px solid #ff5722; /* Substitua pela cor correspondente */
+
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+#search-button:hover {
+  background-color: var(--hover-color);
+  border-color: var(--hover-color);
+  color: var(--foreground-color);
+}
+
+
+/* Dropdown de resultados */
+#search-results-container {
+  width: 100%;
+  background-color: var(--background-color);
+  border: 1px solid var(--secondary-color);
+  border-radius: 5px;
+  padding: 10px;
+  z-index: 1000;
+  box-shadow: var(--box-shadow);
+}
+
+/* Botão de fechar no dropdown */
+#close-search-dropdown {
+  float: right;
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  color: var(--accent-color);
+  transition: color 0.3s ease;
+}
+
+#close-search-dropdown:hover {
+  color: var(--highlight-color);
+}
+
+/* Estilo dos itens de resultado */
+.search-item {
+  padding: 10px;
+  margin: 5px 0;
+  background-color: var(--secondary-color);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.search-item:hover {
+  background-color: var(--hover-color);
+  color: var(--foreground-color);
+  transform: scale(1.02); /* Efeito de leve zoom */
+}
+
+.search-item h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--text-color);
+}
+
+.search-item p {
+  margin: 5px 0 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary-color);
+}
+
+/* Destaque para as palavras encontradas */
+.search-item-highlight {
+  background-color: var(--accent-color);
+  color: var(--foreground-color);
+  font-weight: bold;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+
+
+// frontend\dynamics\search\search.html
+
+<div id="search-container">
+  <input type="text" id="search-input" placeholder="Digite aqui para buscar..." />
+  <button id="search-button">Buscar</button>
+  <!-- 
+  <div id="search-results-container" style="display: none;">
+    <button id="close-search-dropdown" aria-label="Fechar">&times;</button>
+    <div id="search-results"></div>
+  </div>
+
+  -->
+</div>
+
+
+
+// frontend\dynamics\search\searchHandler.js
+
+console.log("[SearchHandler] carregado. ");
+
+import { generateFilePaths } from "../../core/path.js"; // Certifique-se de que o caminho esteja correto
+import { config } from "../../core/config.js"; // Certifique-se de que o caminho esteja correto
+import { loadComponent } from "../../core/loader.js"; // Ajuste o caminho, se necessário
+
+function setupSearchEvents() {
+    console.log("[SearchHandler] Configurando eventos de busca...");
+
+    // Seleciona os elementos do DOM
+    const searchInput = document.querySelector("#search-input");
+    const searchButton = document.querySelector("#search-button");
+    const resultsContainer = document.querySelector("#search-results-container");
+    const resultsList = document.querySelector("#search-results");
+    const closeDropdownButton = document.querySelector("#close-search-dropdown");
+
+    if (!searchInput || !searchButton || !resultsContainer || !resultsList || !closeDropdownButton) {
+        console.error("[SearchHandler] Elementos de busca não encontrados no DOM.");
+        return;
+    }
+
+    // Fecha o dropdown de resultados
+    closeDropdownButton.addEventListener("click", () => {
+        resultsContainer.style.display = "none";
+    });
+
+    function performSearch() {
+        const query = searchInput.value.trim().toLowerCase();
+        console.log(`[SearchHandler] Query: "${query}"`);
+        if (!query) {
+            console.warn("[SearchHandler] Nenhuma palavra-chave inserida.");
+            return;
+        }
+
+        resultsList.innerHTML = ""; // Limpa os resultados anteriores
+        console.log("[SearchHandler] Limpando resultados antigos.");
+
+        // Obtém as configurações de todas as páginas diretamente
+        const pages = Object.entries(config.pages).map(([pageName, pageConfig]) => {
+            const filePaths = generateFilePaths("pages", pageConfig);
+            console.log(`[SearchHandler] Página detectada: ${pageName}, Paths:`, filePaths);
+            return {
+                name: pageName,
+                ...filePaths,
+            };
+        });
+
+        let foundResults = false;
+
+        // Mapeia todas as páginas para verificar o conteúdo
+        const fetchPromises = pages.map((page) => {
+            console.log(`[SearchHandler] Buscando na página: ${page.name}`);
+            return fetch(page.html)
+                .then((response) => {
+                    if (!response.ok) {
+                        console.warn(`[SearchHandler] Falha ao carregar a página ${page.name}: ${response.status}`);
+                        return "";
+                    }
+                    console.log(`[SearchHandler] Página carregada: ${page.name}`);
+                    return response.text();
+                })
+                .then((html) => {
+                    if (html.toLowerCase().includes(query)) {
+                        console.log(`[SearchHandler] Palavra-chave encontrada na página: ${page.name}`);
+                        const snippet = extractAndHighlightSnippet(html, query, 100);
+                        const resultItem = document.createElement("div");
+                        resultItem.className = "search-item";
+                        resultItem.innerHTML = `
+                            <h3>${page.name.charAt(0).toUpperCase() + page.name.slice(1)}</h3>
+                            <p>${snippet}</p>
+                        `;
+                        resultItem.addEventListener("click", () => {
+                            console.log(`[SearchHandler] Clique detectado para: ${page.name}`);
+                            window.location.hash = page.name; // Atualiza o hash na URL
+                            resultsContainer.style.display = "none"; // Fecha o dropdown
+                            const navEvent = new Event("hashchange");
+                            console.log("[SearchHandler] Disparando evento de hashchange.");
+                            window.dispatchEvent(navEvent);
+                        });
+
+                        resultsList.appendChild(resultItem);
+                        foundResults = true;
+                    } else {
+                        console.log(`[SearchHandler] Palavra-chave não encontrada na página: ${page.name}`);
+                    }
+                })
+                .catch((error) => console.error(`[SearchHandler] Erro ao buscar na página ${page.name}: ${error.message}`));
+        });
+
+        // Processa os resultados
+        Promise.all(fetchPromises).then(() => {
+            if (!foundResults) {
+                console.warn("[SearchHandler] Nenhum resultado encontrado.");
+                const noResultItem = document.createElement("div");
+                noResultItem.className = "search-item";
+                noResultItem.innerHTML = `<p>Nenhum resultado encontrado.</p>`;
+                resultsList.appendChild(noResultItem);
+            }
+            resultsContainer.style.display = "block"; // Mostra o dropdown
+            console.log("[SearchHandler] Resultados exibidos.");
+        });
+    }
+
+    // Função para extrair e destacar os trechos encontrados
+    function extractAndHighlightSnippet(content, keyword, length) {
+        const sanitizedContent = content.replace(/<[^>]*>?/gm, ""); // Remove tags HTML
+        const index = sanitizedContent.toLowerCase().indexOf(keyword);
+        if (index === -1) return "";
+        const start = Math.max(0, index - length / 2);
+        const end = Math.min(sanitizedContent.length, index + length / 2);
+        const snippet = sanitizedContent
+            .substring(start, end)
+            .replace(new RegExp(keyword, "gi"), (match) => `<mark>${match}</mark>`); // Destaca o termo pesquisado
+        console.log(`[SearchHandler] Snippet gerado: "${snippet}"`);
+        return snippet;
+    }
+
+    // Configura eventos para o botão e o input
+    searchButton.addEventListener("click", performSearch);
+    searchInput.addEventListener("keypress", (event) => {
+        if (event.key === "Enter") {
+            performSearch();
+        }
+    });
+
+    
+}
+// Configura o listener para mudanças no hash da URL
+window.addEventListener("hashchange", async () => {
+    const page = window.location.hash.substring(1);
+    console.log(`[Navigation] Hash mudou para: ${page}`);
+    try {
+        await loadComponent("pages", page);
+        console.log(`[Navigation] Página "${page}" carregada com sucesso.`);
+    } catch (error) {
+        console.error(`[Navigation] Erro ao carregar a página "${page}": ${error.message}`);
+    }
+});
+
+// Expõe a função globalmente
+window.setupSearchEvents = setupSearchEvents;
+
+export { setupSearchEvents };
+
+
+
+// frontend\globals\footer\footer.css
+
+footer {
+  background-color: var(--header-footer-background); /* Fundo dinâmico */
+  color: var(--header-footer-text-color); /* Texto dinâmico */
+  text-align: center;
+  padding: 20px 0;
+  font-size: 0.9rem;
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2); /* Sombra padrão */
+  border-top: 3px solid var(--header-footer-border); /* Destaque na borda superior */
+}
+
+footer a {
+  text-decoration: none;
+  color: var(--header-footer-text-color); /* Link com cor de texto padrão */
+  margin: 0 10px;
+  transition: color 0.3s ease, text-shadow 0.3s ease;
+}
+
+footer a:hover {
+  color: var(--header-footer-link-hover); /* Cor ao passar o mouse */
+  text-shadow: 0 1px 4px var(--header-footer-link-hover); /* Efeito de sombra */
+}
+
+
+
+// frontend\globals\footer\footer.html
+
+<footer>
+  <p>&copy; 2024 Avalume. Todos os direitos reservados.</p>
+  <p>
+    <a href="https://twitter.com">Twitter</a> | 
+    <a href="https://facebook.com">Facebook</a> | 
+    <a href="https://instagram.com">Instagram</a>
+  </p>
+ <div id="search-placeholder"></div>
+</footer>
+
+
+
+// frontend\globals\footer\footerHandler.js
+
+console.log("footerHandler carregado com sucesso. FOOOOTER============================");
+
+function setupNavEvents() {
+console.log("setupNavEvents carregado com sucesso. SETUP === FOOOOTER============================");
+	}
+
+export { setupNavEvents };
+
+
+
+// frontend\globals\nav\nav.css
+
+nav {
+  background-color: var(--header-footer-background); /* Fundo dinâmico */
+  color: var(--header-footer-text-color); /* Cor do texto dinâmico */
+  padding: 15px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Sombra padrão */
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+nav.scrolled {
+  background-color: rgba(0, 0, 0, 0.8); /* Fundo mais escuro ao rolar */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); /* Sombra mais forte */
+}
+
+nav .logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--header-footer-text-color); /* Cor primária dinâmica */
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  gap: 20px; /* Espaçamento entre os itens */
+}
+
+nav a {
+  text-decoration: none;
+  color: var(--header-footer-text-color); /* Cor do texto dinâmico */
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 10px 15px;
+  border-radius: 5px;
+  transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
+}
+
+nav a:hover {
+  background-color: var(--header-footer-link-hover); /* Fundo ao passar o mouse */
+  color: var(--header-footer-background); /* Texto ajustado dinamicamente */
+  transform: scale(1.05); /* Efeito de zoom */
+}
+
+nav a.active {
+  background-color: var(--header-footer-border); /* Fundo dinâmico para link ativo */
+  color: var(--header-footer-background); /* Texto branco dinâmico */
+  font-weight: bold;
+  border-bottom: 2px solid var(--header-footer-background); /* Destaque na parte inferior */
+}
+
+
+   header {
+            background-color: #00A884;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        header img {
+            height: 50px;
+        }
+        nav ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+        nav ul li {
+            position: relative;
+            margin: 0 15px;
+        }
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        nav ul li ul {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: #FFFFFF;
+            color: #00A884;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            list-style: none;
+            padding: 10px 0;
+        }
+        nav ul li ul li {
+            margin: 0;
+        }
+        nav ul li ul li a {
+            color: #00A884;
+            padding: 10px 20px;
+            display: block;
+            text-decoration: none;
+        }
+        nav ul li ul li a:hover {
+            background-color: #F7F7F7;
+        }
+        nav ul li:hover ul {
+            display: block;
+        }
+        .login {
+            background-color: white;
+            color: #00A884;
+            padding: 5px 10px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+
+
+// frontend\globals\nav\nav.html
+
+<nav>
+  <div class="logo">Amazon Align</div>
+  <ul id="menu-list">
+        <!-- Os itens do menu serão gerados aqui dinamicamente --> 
+
+  </ul>
+        <div id="search-placeholder"></div>
+
+</nav>
+
+
+// frontend\globals\nav\navHandler.js
+
+// NavHandler.js
+//console.log(`[NavHandler] carregado.`);
+
+import { config } from '../../core/config.js'; // Configuração principal
+import { loadComponent } from '../../core/loader.js'; // Loader para carregar componentes
+import { injectDynamics } from '../../core/dynamics.js'; // Injetar dinâmicos
+
+//console.log('[NavHandler] Iniciando.');
+
+// Função principal para configurar o menu
+function setupNavEvents() {
+    //console.log('[NavHandler] Inicializando menu...');
+
+    // Seleciona o elemento onde os itens do menu serão inseridos
+    const menuList = document.querySelector('#menu-list');
+    if (!menuList) {
+        //console.error('[NavHandler] Elemento "#menu-list" não encontrado no DOM.');
+        return;
+    }
+
+    // Gera itens do menu com base na configuração de páginas
+    //console.log('[NavHandler] Gerando itens do menu...');
+    const pages = Object.values(config.pages); // Obtém as páginas do `config`
+    menuList.innerHTML = ''; // Limpa o menu antes de adicionar novos itens
+
+    pages.forEach((page) => {
+        const listItem = document.createElement('li');
+        listItem.innerHTML = `<a href="#${page.name}" data-page="${page.name}">${page.name.charAt(0).toUpperCase() + page.name.slice(1)}</a>`;
+        menuList.appendChild(listItem);
+    });
+
+    //console.log('[NavHandler] Itens do menu gerados com sucesso.');
+
+    // Adiciona eventos de clique aos links do menu
+    menuList.addEventListener('click', async (event) => {
+        const target = event.target;
+        if (target.tagName === 'A') {
+            event.preventDefault(); // Evita o comportamento padrão de navegação
+            const pageName = target.getAttribute('data-page');
+            if (pageName) {
+                //console.log(`[NavHandler] Página "${pageName}" selecionada.`);
+                try {
+                    // Carrega a página selecionada
+                    await loadComponent("pages", pageName);
+                    //console.log(`[NavHandler] Página "${pageName}" carregada com sucesso.`);
+
+                    // Injeta os componentes dinâmicos presentes na página
+                    await injectDynamics();
+                    //console.log(`[NavHandler] Componentes dinâmicos injetados com sucesso para a página "${pageName}".`);
+                } catch (error) {
+                    //console.error(`[NavHandler] Erro ao carregar a página ou dinâmicos "${pageName}": ${error.message}`);
+                }
+            }
+        }
+    });
+}
+
+// Exporta a função para uso no index.js
+export { setupNavEvents };
+
+
+
+
+// frontend\globals\theme\reset.css
+
+/* Tema claro (padrão) */
+:root {
+  /* Cores base */
+  --background-color: #ffffff; /* Fundo principal */
+  --foreground-color: #f9f9f9; /* Fundo secundário */
+  --primary-color: #007acc; /* Cor primária */
+  --secondary-color: #004d99; /* Cor secundária */
+  --text-color: #333333; /* Texto principal */
+  --text-secondary-color: #555555; /* Texto secundário */
+  --border-color: #dddddd; /* Cor das bordas */
+  --link-color: #0066cc; /* Cor dos links */
+  --hover-color: #005299; /* Cor ao passar o mouse */
+
+  /* Cores de destaque */
+  --accent-color: #ff9800; /* Cor de destaque */
+  --highlight-color: #ffe082; /* Destaque suave */
+
+  /* Sombras */
+  --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra padrão */
+  --box-shadow-hover: 0 6px 10px rgba(0, 0, 0, 0.15); /* Sombra ao passar o mouse */
+
+  /* Gradientes */
+  --gradient-primary: linear-gradient(45deg, #007acc, #005299); /* Gradiente primário */
+  --gradient-secondary: linear-gradient(45deg, #004d99, #003366); /* Gradiente secundário */
+}
+
+/* Tema escuro */
+[data-theme='dark'] {
+  /* Cores base */
+  --background-color: #1e1e1e; /* Fundo principal */
+  --foreground-color: #2a2a2a; /* Fundo secundário */
+  --primary-color: #1a73e8; /* Cor primária */
+  --secondary-color: #003366; /* Cor secundária */
+  --text-color: #e5e5e5; /* Texto principal */
+  --text-secondary-color: #bbbbbb; /* Texto secundário */
+  --border-color: #444444; /* Cor das bordas */
+  --link-color: #4e9eff; /* Cor dos links */
+  --hover-color: #3b82f6; /* Cor ao passar o mouse */
+
+  /* Cores de destaque */
+  --accent-color: #ff9800; /* Cor de destaque */
+  --highlight-color: #ffcc80; /* Destaque suave */
+
+  /* Sombras */
+  --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); /* Sombra padrão */
+  --box-shadow-hover: 0 6px 10px rgba(0, 0, 0, 0.4); /* Sombra ao passar o mouse */
+
+  /* Gradientes */
+  --gradient-primary: linear-gradient(45deg, #1a73e8, #3b82f6); /* Gradiente primário */
+  --gradient-secondary: linear-gradient(45deg, #003366, #1a73e8); /* Gradiente secundário */
+}
+
+
+
+// frontend\globals\theme\styles.css
+
+/* Container pai */
+#header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Espaço entre itens */
+}
+
+/* Search container */
+#search-container {
+  margin-left: auto;
+}
+
+/* Estilo geral do corpo */
+body {
+  font-family: 'Arial', sans-serif; /* Fonte padrão */
+  font-size: 16px; /* Tamanho de fonte base */
+  line-height: 1.6; /* Espaçamento entre linhas */
+  color: var(--text-color); /* Cor do texto principal */
+  background-color: var(--background-color); /* Cor de fundo geral */
+  transition: background-color 0.3s ease, color 0.3s ease; /* Transição suave */
+}
+
+/* Links */
+a {
+  text-decoration: none; /* Remove sublinhado */
+  color: var(--link-color); /* Cor dos links */
+  transition: color 0.3s ease; /* Transição suave */
+}
+
+a:hover {
+  color: var(--hover-color); /* Cor ao passar o mouse */
+  text-decoration: underline; /* Adiciona sublinhado ao passar o mouse */
+}
+
+/* Botões */
+button {
+  background-color: var(--primary-color); /* Fundo */
+  color: var(--text-on-primary); /* Texto com contraste dinâmico */
+  border: none; /* Sem borda */
+  border-radius: 4px; /* Borda arredondada */
+  padding: 10px 15px; /* Espaçamento interno */
+  cursor: pointer; /* Indica que o botão é clicável */
+  font-size: 1em; /* Tamanho do texto */
+  transition: background-color 0.3s ease, color 0.3s ease; /* Transição suave */
+}
+
+button:hover {
+  background-color: var(--hover-color); /* Fundo ao passar o mouse */
+  color: var(--text-on-secondary); /* Ajusta o texto para contraste dinâmico */
+}
+
+/* Layout geral */
+.container {
+  max-width: 1200px; /* Largura máxima */
+  margin: 0 auto; /* Centraliza horizontalmente */
+  padding: 20px; /* Espaçamento interno */
+}
+
+/* Cabeçalhos */
+h1, h2, h3, h4, h5, h6 {
+  margin-bottom: 20px; /* Espaçamento inferior */
+  font-weight: 600; /* Peso da fonte */
+  color: var(--text-color); /* Garante a cor do texto */
+  transition: color 0.3s ease; /* Transição suave */
+}
+
+/* Listas */
+ul {
+  list-style-type: none; /* Remove marcadores de lista */
+  padding: 0;
+}
+
+ul li {
+  margin-bottom: 10px; /* Espaçamento entre itens */
+  color: var(--text-secondary-color); /* Texto secundário */
+  transition: color 0.3s ease; /* Transição suave */
+}
+
+/* Imagens */
+img {
+  max-width: 100%; /* Imagem não excede o tamanho do container */
+  height: auto; /* Mantém a proporção */
+  display: block; /* Remove espaços em branco ao redor */
+}
+
+/* Formulários */
+input, textarea, select {
+  width: 100%; /* Largura total */
+  padding: 10px; /* Espaçamento interno */
+  margin-bottom: 20px; /* Espaçamento inferior */
+  border: 1px solid var(--border-color); /* Borda */
+  border-radius: 4px; /* Bordas arredondadas */
+  font-size: 1em; /* Tamanho do texto */
+  background-color: var(--foreground-color); /* Fundo */
+  color: var(--text-color); /* Texto */
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease; /* Transições suaves */
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none; /* Remove o contorno padrão */
+  border-color: var(--primary-color); /* Realce na borda */
+  box-shadow: 0 0 5px var(--primary-color); /* Adiciona um leve brilho */
+}
+
+
+
+// frontend\globals\theme\theme.css
+
+
+
+/* Tema Moderno e Clean */
+:root {
+  /* Cores base */
+  --background-color: #f4f4f9; /* Fundo claro sutil */
+  --foreground-color: #ffffff; /* Fundo secundário branco puro */
+  --primary-color: #4CAF50; /* Verde suave para botões e destaques */
+  --secondary-color: #2196F3; /* Azul claro e moderno */
+  --text-color: #333333; /* Preto suave para texto principal */
+  --text-secondary-color: #777777; /* Cinza claro para texto secundário */
+  --border-color: #e0e0e0; /* Cinza para bordas */
+  --link-color: #3f51b5; /* Azul vibrante para links */
+  --hover-color: #009688; /* Verde-água ao passar o mouse */
+
+  /* Cores de destaque */
+  --accent-color: #FFC107; /* Amarelo para destaque */
+  --highlight-color: #E91E63; /* Rosa vivo para ações críticas */
+
+  /* Sombras */
+  --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra padrão */
+  --box-shadow-hover: 0 6px 12px rgba(0, 0, 0, 0.15); /* Sombra ao passar o mouse */
+
+  /* Gradientes */
+  --gradient-primary: linear-gradient(45deg, #4CAF50, #81C784); /* Gradiente primário verde suave */
+  --gradient-secondary: linear-gradient(45deg, #2196F3, #64B5F6); /* Gradiente secundário azul suave */
+
+  /* Ajuste para texto sobre fundo colorido */
+  --text-on-primary: #ffffff; /* Texto branco sobre cores primárias */
+  --text-on-secondary: #000000; /* Texto preto sobre cores secundárias */
+
+  /* nav e footer */
+  --header-footer-background: #00A884; /* Azul-escuro para menu e rodapé */
+  --header-footer-text-color: #ffffff; /* Cor do texto no rodapé/menu */
+  --header-footer-link-hover: #1abc9c; /* Verde-água ao passar o mouse nos links */
+  --header-footer-border: #455A64; /* Cinza-escuro para bordas no rodapé/menu */
+}
+
+/* Tema Escuro */
+[data-theme='dark'] {
+  /* Cores base */
+  --background-color: #121212; /* Fundo preto */
+  --foreground-color: #1E1E1E; /* Fundo secundário escuro */
+  --primary-color: #BB86FC; /* Roxo brilhante */
+  --secondary-color: #03DAC6; /* Verde-água brilhante */
+  --text-color: #E0E0E0; /* Texto principal branco acinzentado */
+  --text-secondary-color: #B0B0B0; /* Texto secundário cinza claro */
+  --border-color: #333333; /* Cinza-escuro para bordas */
+  --link-color: #81D4FA; /* Azul claro vibrante */
+  --hover-color: #FF8A65; /* Laranja suave ao passar o mouse */
+
+  /* Cores de destaque */
+  --accent-color: #FF4081; /* Rosa neon para destaque */
+  --highlight-color: #FFD54F; /* Amarelo brilhante para destaque crítico */
+
+  /* Sombras */
+  --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Sombra padrão */
+  --box-shadow-hover: 0 6px 10px rgba(0, 0, 0, 0.3); /* Sombra ao passar o mouse */
+
+  /* Gradientes */
+  --gradient-primary: linear-gradient(45deg, #BB86FC, #3700B3); /* Gradiente primário roxo */
+  --gradient-secondary: linear-gradient(45deg, #03DAC6, #018786); /* Gradiente secundário verde-água */
+
+  /* Ajuste para texto sobre fundo colorido */
+  --text-on-primary: #ffffff; /* Texto branco sobre cores primárias */
+  --text-on-secondary: #ffffff; /* Texto branco sobre cores secundárias */
+}
+
+
+
+// frontend\globals\theme\themeHandler.js
+
+
+    // Adiciona funcionalidade de troca de tema
+    const toggleButton = document.getElementById('theme-toggle');
+    toggleButton.addEventListener('click', () => {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', newTheme);
+    });
+
+
+
+// frontend\pages\about\about.css
+
+/* Estilos para a seção About */
+#about-section {
+  min-height: 100vh; /* Ocupa pelo menos uma altura de viewport */
+  background-color: var(--background-color); /* Fundo dinâmico */
+  padding: 80px 40px; /* Maior espaçamento para melhor layout */
+  text-align: left;
+  font-family: 'Arial', sans-serif; /* Fonte padrão */
+  line-height: 1.8; /* Melhor espaçamento entre as linhas */
+  border-left: 5px solid var(--primary-color); /* Destaque com variável */
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.1); /* Sombra interna */
+  border-radius: 10px; /* Bordas suaves */
+}
+
+/* Títulos */
+#about-section h1,
+#about-section h2 {
+  font-size: 2.5em; /* Tamanho maior para os títulos */
+  color: var(--primary-color); /* Cor dinâmica para títulos */
+  margin-bottom: 20px;
+  text-transform: uppercase; /* Texto em caixa alta */
+  letter-spacing: 1px; /* Espaçamento entre letras */
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2); /* Sombra suave no texto */
+}
+
+/* Parágrafos */
+#about-section p {
+  font-size: 1.2em; /* Texto maior para legibilidade */
+  color: var(--text-color); /* Texto dinâmico */
+  text-align: justify; /* Justifica o texto para maior legibilidade */
+  margin-bottom: 20px;
+  line-height: 1.8; /* Melhor espaçamento entre linhas */
+  letter-spacing: 0.5px; /* Melhora o espaçamento do texto */
+}
+
+/* Lista de itens */
+#about-section ul {
+  list-style-type: disc; /* Marcadores padrão */
+  margin: 20px 0;
+  padding-left: 40px; /* Alinhamento para listas */
+}
+
+#about-section ul li {
+  font-size: 1.1em; /* Tamanho da fonte */
+  color: var(--text-color); /* Cor dinâmica */
+  margin-bottom: 10px;
+}
+
+/* Destaques */
+#about-section strong {
+  color: var(--secondary-color); /* Cor secundária para ênfase */
+  font-weight: bold; /* Destaca o texto */
+}
+
+/* Containers de texto */
+#about-section .container {
+  max-width: 1200px; /* Limita a largura máxima do conteúdo */
+  margin: 0 auto; /* Centraliza o conteúdo */
+}
+
+/* Seções internas */
+#about-section .mission,
+#about-section .history,
+#about-section .call-to-action {
+  margin-top: 40px; /* Espaçamento entre as seções */
+  padding: 20px;
+  background-color: var(--secondary-color); /* Fundo com cor secundária */
+  color: var(--background-color); /* Texto contrastante */
+  border-radius: 8px; /* Bordas suaves */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra para destaque */
+}
+
+/* Botão de chamada para ação */
+#about-section .call-to-action .btn {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 15px 30px;
+  font-size: 1.1em;
+  color: var(--background-color); /* Texto claro */
+  background-color: var(--primary-color); /* Fundo primário */
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  text-transform: uppercase; /* Texto em caixa alta */
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+#about-section .call-to-action .btn:hover {
+  background-color: var(--hover-color); /* Fundo no hover */
+  transform: scale(1.05); /* Efeito de zoom */
+}
+
+/* Equipe */
+#about-section .team {
+  margin-top: 40px;
+  display: flex;
+  gap: 20px; /* Espaçamento entre os membros */
+  flex-wrap: wrap; /* Ajusta o layout em telas menores */
+}
+
+#about-section .team .member {
+  flex: 1 1 30%; /* Cada membro ocupa 30% do espaço */
+  text-align: center;
+  padding: 20px;
+  background-color: var(--background-color); /* Fundo dinâmico */
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra suave */
+}
+
+#about-section .team .member img {
+  width: 100px; /* Tamanho fixo da imagem */
+  height: 100px;
+  border-radius: 50%; /* Forma circular */
+  margin-bottom: 15px;
+  object-fit: cover;
+}
+
+#about-section .team .member h3 {
+  font-size: 1.2em;
+  color: var(--primary-color); /* Cor dinâmica */
+  margin-bottom: 5px;
+}
+
+#about-section .team .member p {
+  font-size: 1em;
+  color: var(--text-color); /* Texto dinâmico */
+}
+
+
+
+// frontend\pages\about\about.html
+
+<section id="about-section">
+  <div class="container">
+    <!-- Título Principal -->
+    <header>
+      <h1>Sobre Nós</h1>
+      <h2>Quem Somos</h2>
+    </header>
+
+    <!-- Introdução -->
+    <div class="introduction">
+      <p>
+        Somos a <strong>Avalume</strong>, uma plataforma dedicada a ajudar programadores de todos os níveis a aprimorar suas habilidades. Nosso objetivo é transformar o aprendizado em uma experiência prática e interativa, com foco em exemplos reais e projetos dinâmicos.
+      </p>
+    </div>
+
+    <!-- Nossa Missão -->
+    <div class="mission">
+      <h2>Nossa Missão</h2>
+      <p>
+        Capacitar indivíduos e equipes a dominar a programação por meio de aprendizado baseado em projetos, desafios interativos e uma abordagem prática que conecta teoria à aplicação.
+      </p>
+    </div>
+
+    <!-- História -->
+    <div class="history">
+      <h2>Um Pouco da Nossa História</h2>
+      <p>
+        Fundada em 2024, a Avalume começou como uma ideia simples: tornar o aprendizado de programação mais acessível e divertido. Desde então, crescemos para incluir exemplos práticos, ferramentas inovadoras e uma comunidade ativa de entusiastas da tecnologia.
+      </p>
+    </div>
+
+    <!-- Chamada para Ação -->
+    <div class="call-to-action">
+      <h2>Por Que Escolher a Avalume?</h2>
+      <p>
+        Oferecemos mais do que teoria. Aqui você encontra:
+      </p>
+      <ul>
+        <li>Exemplos práticos e focados em problemas reais.</li>
+        <li>Desafios interativos para testar suas habilidades.</li>
+        <li>Uma comunidade que apoia seu crescimento.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+
+// frontend\pages\credenciamento\credenciamento.css
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f7;
+        }
+        header {
+            background-color: #00A884;
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 1.8em;
+        }
+        section {
+            padding: 40px 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #005C89;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        form label {
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+        form input, form select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        form button {
+            background-color: #00A884;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        form button:hover {
+            background-color: #005C89;
+        }
+        .info-section {
+            margin-top: 20px;
+            font-size: 1em;
+            color: #333;
+        }
+
+
+// frontend\pages\credenciamento\credenciamento.html
+
+
+    <header>
+        <h1>Credenciamento</h1>
+    </header>
+    <section>
+        <h2>Seja um Parceiro Amazon Align</h2>
+        <p>Preencha o formulário abaixo para se tornar um profissional credenciado e fazer parte da nossa rede de inovação e qualidade.</p>
+
+        <form id="credenciamento-form">
+            <label for="nome">Nome Completo</label>
+            <input type="text" id="nome" name="nome" placeholder="Digite seu nome completo" required>
+
+            <label for="cpf">CPF</label>
+            <input type="text" id="cpf" name="cpf" placeholder="Digite seu CPF" required>
+
+            <label for="cro">CRO (se aplicável)</label>
+            <input type="text" id="cro" name="cro" placeholder="Digite seu número do CRO">
+
+            <label for="email">E-mail</label>
+            <input type="email" id="email" name="email" placeholder="Digite seu e-mail" required>
+
+            <label for="telefone">Telefone</label>
+            <input type="tel" id="telefone" name="telefone" placeholder="Digite seu telefone" required>
+
+            <label for="senha">Criar Senha</label>
+            <input type="password" id="senha" name="senha" placeholder="Crie uma senha" required>
+
+            <button type="submit">Enviar Credenciamento</button>
+        </form>
+
+        <div class="info-section">
+            <p>Após o envio do formulário, nossa equipe entrará em contato para validar suas informações e liberar o acesso ao painel de profissionais.</p>
+        </div>
+    </section>
+
+
+
+
+// frontend\pages\home\home.css
+
+    /* ==========================
+           Hero Section
+        ========================== */
+        .hero {
+            background: linear-gradient(to right, #00A884, #005C89);
+            color: white;
+            text-align: center;
+            padding: 100px 20px;
+        }
+        .hero h1 {
+            font-size: 2.8em;
+            margin-bottom: 10px;
+        }
+        .hero p {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+        .hero .cta {
+            margin-top: 20px;
+        }
+        .hero .cta a {
+            background-color: #FFFFFF;
+            color: #00A884;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 1em;
+            margin: 0 10px;
+        }
+
+        /* ==========================
+           Section Styles
+        ========================== */
+        section {
+            padding: 50px 20px;
+            text-align: center;
+        }
+        .como-funciona, .beneficios, .depoimentos, .contato {
+            background-color: #F7F7F7;
+            margin-bottom: 20px;
+        }
+        .como-funciona h2, .beneficios h2, .depoimentos h2, .contato h2 {
+            color: #005C89;
+            margin-bottom: 15px;
+        }
+        .como-funciona p, .beneficios p, .depoimentos p, .contato p {
+            font-size: 1.1em;
+        }
+        .beneficios .item {
+            display: inline-block;
+            width: 30%;
+            text-align: center;
+            margin: 20px 1%;
+        }
+        .beneficios .item img {
+            width: 50px;
+            margin-bottom: 10px;
+        }
+        .depoimentos blockquote {
+            font-style: italic;
+            color: #333;
+        }
+        .contato a {
+            display: inline-block;
+            background-color: #00A884;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 1em;
+        }
+
+
+// frontend\pages\home\home.html
+
+  <!-- ==========================
+         Hero Section
+    ========================== -->
+    <main>
+        <section class="hero">
+            <h1>Amazon Align - Alinhadores Invisíveis e Credenciamentos</h1>
+            <p>Transformando sorrisos com tecnologia avançada e respeito à natureza.</p>
+            <div class="cta">
+                <a href="#Torne-se-um-Parceiro">Credencie-se Agora</a>
+                <a href="#pedidos">Faça seu Pedido</a>
+            </div>
+        </section>
+
+        <!-- ==========================
+             Como Funciona Section
+        ========================== -->
+        <section id="como-funciona" class="como-funciona">
+            <h2>Como Funciona</h2>
+            <p>Nosso processo é simples e eficiente:</p>
+            <div class="steps">
+                <p><strong>Passo 1:</strong> Credenciamento. <a href="#credenciamento">Saiba mais</a></p>
+                <p><strong>Passo 2:</strong> Envie os modelos (escaneamento ou moldes).</p>
+                <p><strong>Passo 3:</strong> Receba os alinhadores em até 7 dias úteis.</p>
+            </div>
+        </section>
+
+        <!-- ==========================
+             Benefícios Section
+        ========================== -->
+        <section id="beneficios" class="beneficios">
+            <h2>Benefícios para Dentistas</h2>
+            <div class="item">
+                <img src="lucro.png" alt="Lucro">
+                <p><strong>Alta Margem de Lucro</strong></p>
+                <p>Retorno financeiro com o primeiro caso fechado.</p>
+            </div>
+            <div class="item">
+                <img src="rapidez.png" alt="Rapidez">
+                <p><strong>Rapidez</strong></p>
+                <p>Entrega em até 7 dias úteis.</p>
+            </div>
+            <div class="item">
+                <img src="suporte.png" alt="Suporte">
+                <p><strong>Suporte Completo</strong></p>
+                <p>Atendimento técnico e materiais promocionais.</p>
+            </div>
+        </section>
+
+        <!-- ==========================
+             Depoimentos Section
+        ========================== -->
+        <section id="depoimentos" class="depoimentos">
+            <h2>Depoimentos</h2>
+            <blockquote>"Os alinhadores da Amazon Align transformaram minha clínica. Agilidade e qualidade incríveis!"</blockquote>
+            <blockquote>"Um suporte técnico impecável e resultados excelentes para meus pacientes!"</blockquote>
+        </section>
+
+        <!-- ==========================
+             Contato Section
+        ========================== -->
+        <section id="contato" class="contato">
+            <h2>Contato Rápido</h2>
+            <p>Fale conosco diretamente:</p>
+            <a href="https://wa.me/123456789" target="_blank">Fale com um consultor</a>
+        </section>
+    </main>
+
+
+// frontend\pages\pedidos\cadastroPaciente.html
 
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <title>Amazon Align - Fazer Pedido</title>
     <style>
-/* HEADER - Cabeçalho Fixo */
-header {
-    width: 100%;
-    background: linear-gradient(to right, #0056b3, #007BFF);
-    color: white;
-    padding: 15px 20px;
-    text-align: center;
-    font-size: 20px;
-    font-weight: bold;
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 60px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-    z-index: 1000;
-}
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f7;
+        }
+        header {
+            background-color: #00A884;
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 1.8em;
+        }
+        section {
+            padding: 40px 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #005C89;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        form label {
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+        form input, form select, form textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        form button {
+            background-color: #00A884;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        form button:hover {
+            background-color: #005C89;
+        }
+        .status-info {
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
 
-/* Ajuste para evitar que o conteúdo fique escondido abaixo do header */
-body {
-    font-family: Arial, sans-serif;
-    background-color: #eef2f7;
-    margin: 0;
-    padding-top: 70px; /* Garante espaço abaixo do header */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
+    <!-- Pedido Page -->
+    <header>
+        <h1>Fazer Pedido</h1>
+    </header>
+    <section>
+        <h2>Solicitação de Alinhadores</h2>
+        <p>Preencha os detalhes abaixo para realizar a solicitação de planejamento ortodôntico e produção de alinhadores.</p>
+        <form id="pedido-form">
+            <label for="paciente-nome">Nome do Paciente</label>
+            <input type="text" id="paciente-nome" name="paciente-nome" placeholder="Digite o nome do paciente" required>
 
-/* Ajuste do conteúdo principal */
-main {
-    width: 90%;
-    max-width: 1200px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    justify-content: center;
-    align-items: center;
-}
+            <label for="idade">Idade do Paciente</label>
+            <input type="number" id="idade" name="idade" placeholder="Digite a idade do paciente" required>
 
-/* Estilização para garantir que as tabelas fiquem visíveis */
-.container {
-    background: white;
-    width: 100%;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
-    min-height: 180px;
-    overflow-x: auto; /* Permite rolagem horizontal para tabelas muito largas */
-}
+            <label for="dados-clinicos">Dados Clínicos</label>
+            <textarea id="dados-clinicos" name="dados-clinicos" placeholder="Descreva o caso clínico" rows="4" required></textarea>
 
-/* Responsividade: Ajusta a largura para telas menores */
-@media (max-width: 768px) {
-    main {
-        width: 95%;
-    }
-    .container {
-        min-height: 150px;
-    }
-}
+            <label for="arquivos">Upload de Arquivos (STL ou OBJ)</label>
+            <input type="file" id="arquivos" name="arquivos" accept=".stl,.obj" required>
 
-/* Estilização das Tabelas */
-table {
+            <label for="preferencia-planejamento">Preferência de Planejamento</label>
+            <select id="preferencia-planejamento" name="preferencia-planejamento" required>
+                <option value="videoconferencia">Planejamento por Videoconferência</option>
+                <option value="interno">Planejamento Interno (envio para aprovação)</option>
+            </select>
+
+            <label for="informacoes-adicionais">Informações Adicionais</label>
+            <textarea id="informacoes-adicionais" name="informacoes-adicionais" placeholder="Adicione informações adicionais, se necessário" rows="4"></textarea>
+
+            <button type="submit">Enviar Pedido</button>
+        </form>
+
+        <div class="status-info">
+            <p>Após o envio, você poderá acompanhar o status do seu pedido diretamente no painel do profissional credenciado.</p>
+        </div>
+    </section>
+
+</body>
+</html>
+
+
+
+// frontend\pages\pedidos\criarPedido.html
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon Align - Fazer Pedido</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f7;
+        }
+        header {
+            background-color: #00A884;
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 1.8em;
+        }
+        section {
+            padding: 40px 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #005C89;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        form label {
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+        form input, form select, form textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        form button {
+            background-color: #00A884;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        form button:hover {
+            background-color: #005C89;
+        }
+        .status-info {
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Pedido Page -->
+    <header>
+        <h1>Fazer Pedido</h1>
+    </header>
+    <section>
+        <h2>Solicitação de Alinhadores</h2>
+        <p>Preencha os detalhes abaixo para realizar a solicitação de planejamento ortodôntico e produção de alinhadores.</p>
+        <form id="pedido-form">
+            <label for="paciente-nome">Nome do Paciente</label>
+            <input type="text" id="paciente-nome" name="paciente-nome" placeholder="Digite o nome do paciente" required>
+
+            <label for="idade">Idade do Paciente</label>
+            <input type="number" id="idade" name="idade" placeholder="Digite a idade do paciente" required>
+
+            <label for="dados-clinicos">Dados Clínicos</label>
+            <textarea id="dados-clinicos" name="dados-clinicos" placeholder="Descreva o caso clínico" rows="4" required></textarea>
+
+            <label for="informacoes-adicionais">Informações Adicionais</label>
+            <textarea id="informacoes-adicionais" name="informacoes-adicionais" placeholder="Adicione informações adicionais, se necessário" rows="4"></textarea>
+
+            <button type="submit">Enviar Pedido</button>
+        </form>
+
+        <div class="status-info">
+            <p>Após o envio, você poderá acompanhar o status do seu pedido diretamente no painel do profissional credenciado.</p>
+        </div>
+    </section>
+
+</body>
+</html>
+
+
+
+// frontend\pages\pedidos\detalhesPedido.html
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon Align - Fazer Pedido</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f7;
+        }
+        header {
+            background-color: #00A884;
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 1.8em;
+        }
+        section {
+            padding: 40px 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #005C89;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        form label {
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+        form input, form select, form textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        form button {
+            background-color: #00A884;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        form button:hover {
+            background-color: #005C89;
+        }
+        .status-info {
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Pedido Page -->
+    <header>
+        <h1>Fazer Pedido</h1>
+    </header>
+    <section>
+        <h2>Solicitação de Alinhadores</h2>
+        <p>Preencha os detalhes abaixo para realizar a solicitação de planejamento ortodôntico e produção de alinhadores.</p>
+        <form id="pedido-form">
+            <label for="paciente-nome">Nome do Paciente</label>
+            <input type="text" id="paciente-nome" name="paciente-nome" placeholder="Digite o nome do paciente" required>
+
+            <label for="idade">Idade do Paciente</label>
+            <input type="number" id="idade" name="idade" placeholder="Digite a idade do paciente" required>
+
+            <label for="dados-clinicos">Dados Clínicos</label>
+            <textarea id="dados-clinicos" name="dados-clinicos" placeholder="Descreva o caso clínico" rows="4" required></textarea>
+
+            <label for="arquivos">Upload de Arquivos (STL ou OBJ)</label>
+            <input type="file" id="arquivos" name="arquivos" accept=".stl,.obj" required>
+
+            <label for="preferencia-planejamento">Preferência de Planejamento</label>
+            <select id="preferencia-planejamento" name="preferencia-planejamento" required>
+                <option value="videoconferencia">Planejamento por Videoconferência</option>
+                <option value="interno">Planejamento Interno (envio para aprovação)</option>
+            </select>
+
+            <label for="informacoes-adicionais">Informações Adicionais</label>
+            <textarea id="informacoes-adicionais" name="informacoes-adicionais" placeholder="Adicione informações adicionais, se necessário" rows="4"></textarea>
+
+            <button type="submit">Enviar Pedido</button>
+        </form>
+
+        <div class="status-info">
+            <p>Após o envio, você poderá acompanhar o status do seu pedido diretamente no painel do profissional credenciado.</p>
+        </div>
+    </section>
+
+</body>
+</html>
+
+
+
+// frontend\pages\pedidos\listarPedidos.html
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon Align - Fazer Pedido</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f7;
+        }
+        header {
+            background-color: #00A884;
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 1.8em;
+        }
+        section {
+            padding: 40px 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #005C89;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        form label {
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+        form input, form select, form textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        form button {
+            background-color: #00A884;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        form button:hover {
+            background-color: #005C89;
+        }
+        .status-info {
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Pedido Page -->
+    <header>
+        <h1>Fazer Pedido</h1>
+    </header>
+    <section>
+        <h2>Solicitação de Alinhadores</h2>
+        <p>Preencha os detalhes abaixo para realizar a solicitação de planejamento ortodôntico e produção de alinhadores.</p>
+        <form id="pedido-form">
+            <label for="paciente-nome">Nome do Paciente</label>
+            <input type="text" id="paciente-nome" name="paciente-nome" placeholder="Digite o nome do paciente" required>
+
+            <label for="idade">Idade do Paciente</label>
+            <input type="number" id="idade" name="idade" placeholder="Digite a idade do paciente" required>
+
+            <label for="dados-clinicos">Dados Clínicos</label>
+            <textarea id="dados-clinicos" name="dados-clinicos" placeholder="Descreva o caso clínico" rows="4" required></textarea>
+
+            <label for="arquivos">Upload de Arquivos (STL ou OBJ)</label>
+            <input type="file" id="arquivos" name="arquivos" accept=".stl,.obj" required>
+
+            <label for="preferencia-planejamento">Preferência de Planejamento</label>
+            <select id="preferencia-planejamento" name="preferencia-planejamento" required>
+                <option value="videoconferencia">Planejamento por Videoconferência</option>
+                <option value="interno">Planejamento Interno (envio para aprovação)</option>
+            </select>
+
+            <label for="informacoes-adicionais">Informações Adicionais</label>
+            <textarea id="informacoes-adicionais" name="informacoes-adicionais" placeholder="Adicione informações adicionais, se necessário" rows="4"></textarea>
+
+            <button type="submit">Enviar Pedido</button>
+        </form>
+
+        <div class="status-info">
+            <p>Após o envio, você poderá acompanhar o status do seu pedido diretamente no painel do profissional credenciado.</p>
+        </div>
+    </section>
+
+</body>
+</html>
+
+
+
+// frontend\pages\pedidos\pedidos.css
+
+
+.resumo-pedidos table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 15px;
-    background: white;
+    margin-top: 10px;
 }
 
-th, td {
+.resumo-pedidos th, .resumo-pedidos td {
+    text-align: left;
     padding: 10px;
+    border: 1px solid #ddd;
+}
+
+.resumo-pedidos th {
+    background-color: #007bff;
+    color: white;
+}
+
+.resumo-pedidos td {
+    background-color: #f9f9f9;
+}
+
+/* Informações do Dentista */
+.dentista-info p {
+    font-size: 16px;
+    color: #555;
+}
+
+/* Escolha/Cadastro de Paciente */
+.paciente-info {
+    margin-top: 20px;
+}
+
+.paciente-info label {
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.paciente-info select {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.paciente-info button {
+    margin-left: 10px;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 5px;
+    background-color: #28a745; /* Verde para cadastro */
+    color: white;
+    cursor: pointer;
+}
+
+.paciente-info button:hover {
+    opacity: 0.9;
+}
+
+/* Status do Pedido */
+.status-pedido {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #f1f1f1;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+.status-pedido p {
+    margin: 5px 0;
+    font-size: 16px;
+    color: #555;
+}
+
+.status-pedido button {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+}
+
+.status-pedido button:hover {
+    background-color: #0056b3;
+}
+
+/* Formulário de Novo Pedido */
+.novo-pedido form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.novo-pedido label {
+    font-weight: bold;
+}
+
+.novo-pedido input, .novo-pedido textarea {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+    width: 100%;
+}
+
+.novo-pedido textarea {
+    resize: none;
+}
+
+.novo-pedido button[type="submit"] {
+    align-self: flex-start;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.novo-pedido button[type="submit"]:hover {
+    background-color: #0056b3;
+}
+
+
+
+// frontend\pages\pedidos\pedidos.html
+
+<!-- ========================== -->
+<!-- Gestão de Pedidos Section -->
+<!-- ========================== -->
+<section id="gestao-pedidos" class="gestao-pedidos">
+    <h2>Gestão de Pedidos</h2>
+
+    <!-- Informações do Dentista -->
+    <div class="dentista-info">
+        <p><strong>Dentista:</strong> Dr. João Silva</p>
+    </div>
+
+    <!-- Resumo Geral de Pedidos -->
+    <div id="resumo-pedidos" class="resumo-pedidos">
+        <h3>Resumo Geral de Pedidos</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Paciente</th>
+                    <th>Data</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>Maria Souza</td>
+                    <td>2025-01-20</td>
+                    <td>Em Andamento</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>Carlos Lima</td>
+                    <td>2025-01-18</td>
+                    <td>Concluído</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>Ana Paula</td>
+                    <td>2025-01-22</td>
+                    <td>Cancelado</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Escolher ou Cadastrar Paciente -->
+    <div class="paciente-info">
+        <label for="paciente">Paciente:</label>
+        <select id="paciente" name="paciente">
+            <option value="" disabled selected>Escolha um paciente</option>
+            <option value="1">Maria Souza</option>
+            <option value="2">Carlos Lima</option>
+        </select>
+        <button id="cadastrar-paciente">Cadastrar Paciente</button>
+    </div>
+
+    <!-- Status do Pedido -->
+    <div id="status-pedido" class="status-pedido">
+        <h3>Status do Pedido Atual</h3>
+        <p>Pedido em andamento para <strong>Maria Souza</strong>. <em>(Entrega prevista: 2025-01-25)</em></p>
+        <button id="detalhes-pedido">Ver Detalhes</button>
+    </div>
+
+    <!-- Cadastrar Novo Pedido -->
+    <div id="novo-pedido" class="novo-pedido" style="display: none;">
+        <h3>Cadastrar Novo Pedido</h3>
+        <form>
+            <label for="detalhes">Detalhes do Pedido:</label>
+            <textarea id="detalhes" name="detalhes" rows="4"></textarea>
+
+            <label for="data">Data de Entrega:</label>
+            <input type="date" id="data" name="data">
+
+            <button type="submit">Salvar Pedido</button>
+        </form>
+    </div>
+</section>
+
+
+
+// frontend\pages\theme\theme.css
+
+.theme-gallery {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.theme-gallery header h1 {
+  color: var(--text-color);
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.theme-gallery header p {
+  color: var(--text-secondary-color);
+  margin-bottom: 2rem;
+}
+
+.color-palette, .gradient-palette, .components-simulation {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.color-box, .gradient-box {
+  flex: 1;
+  padding: 2rem;
+  color: var(--text-on-primary);
+  text-transform: uppercase;
+  font-weight: bold;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: var(--box-shadow);
+}
+
+.color-box.primary {
+  background-color: var(--primary-color);
+}
+
+.color-box.secondary {
+  background-color: var(--secondary-color);
+}
+
+.color-box.accent {
+  background-color: var(--accent-color);
+}
+
+.color-box.neutral {
+  background-color: var(--foreground-color);
+  color: var(--text-color);
+}
+
+.gradient-box.primary-gradient {
+  background: var(--gradient-primary);
+}
+
+.gradient-box.secondary-gradient {
+  background: var(--gradient-secondary);
+}
+
+.primary-text {
+  font-size: 1.2rem;
+  color: var(--text-color);
+  margin-bottom: 0.5rem;
+}
+
+.secondary-text {
+  font-size: 1rem;
+  color: var(--text-secondary-color);
+}
+
+.btn-primary, .btn-secondary {
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  text-transform: uppercase;
+  box-shadow: var(--box-shadow);
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: var(--text-on-primary);
+}
+
+.btn-secondary {
+  background-color: var(--secondary-color);
+  color: var(--text-on-primary);
+}
+
+.card {
+  padding: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background-color: var(--foreground-color);
+  box-shadow: var(--box-shadow);
+  text-align: left;
+}
+
+.card h3 {
+  margin-top: 0;
+  color: var(--text-color);
+}
+
+.card p {
+  margin: 0.5rem 0 0;
+  color: var(--text-secondary-color);
+}
+
+
+
+// frontend\pages\theme\theme.html
+
+<section class="theme-gallery">
+  <header>
+    <h1>Galeria de Temas</h1>
+    <p>Explore os temas disponíveis e veja como as cores e estilos são aplicados.</p>
+  </header>
+
+  <!-- Paleta de Cores -->
+  <section>
+    <h2>Paleta de Cores</h2>
+    <div class="color-palette">
+      <div class="color-box primary">PRIMÁRIA</div>
+      <div class="color-box secondary">SECUNDÁRIA</div>
+      <div class="color-box accent">DESTAQUE</div>
+      <div class="color-box neutral">NEUTRA</div>
+    </div>
+  </section>
+
+  <!-- Gradientes -->
+  <section>
+    <h2>Exemplos de Gradientes</h2>
+    <div class="gradient-palette">
+      <div class="gradient-box primary-gradient">GRADIENTE PRIMÁRIO</div>
+      <div class="gradient-box secondary-gradient">GRADIENTE SECUNDÁRIO</div>
+    </div>
+  </section>
+
+  <!-- Fontes -->
+  <section>
+    <h2>Aplicação de Fontes</h2>
+    <p class="primary-text">Esta é uma fonte primária usada em textos principais.</p>
+    <p class="secondary-text">Esta é uma fonte secundária usada em textos de destaque.</p>
+  </section>
+
+  <!-- Simulação em Componentes -->
+  <section>
+    <h2>Simulação em Componentes</h2>
+    <div class="components-simulation">
+      <button class="btn-primary">BOTÃO PRIMÁRIO</button>
+      <button class="btn-secondary">BOTÃO SECUNDÁRIO</button>
+      <div class="card">
+        <h3>Título do Card</h3>
+        <p>Este é um exemplo de card utilizando as cores e estilos do tema.</p>
+      </div>
+    </div>
+  </section>
+</section>
+
+
+
+// frontend\painel\dashboard\admin\detalhes_admin.css
+
+.container {
+    width: 80%;
+    margin: auto;
+    padding: 20px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.dentista-selecao {
+    margin-bottom: 20px;
+}
+
+.detalhes-card {
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    margin-bottom: 20px;
+}
+
+.detalhes-card p {
+    font-size: 16px;
+    margin: 5px 0;
+}
+
+.modificar-credenciais {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.btn {
+    padding: 10px 15px;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+    transition: 0.3s;
+}
+
+.btn:hover {
+    background-color: #0056b3;
+}
+
+
+
+// frontend\painel\dashboard\admin\detalhes_admin.html
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes do Dentista</title>
+    <style>
+        
+        /* Estilos específicos para a página de detalhes do dentista */
+.detalhes-dentista-page {
+    background-color: #f4f4f4;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+/* Container principal */
+.detalhes-dentista-page .container {
+    max-width: 500px;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+/* Título */
+.detalhes-dentista-page h2 {
+    font-size: 22px;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+/* Seleção de dentista */
+.detalhes-dentista-page .dentista-selecao {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.detalhes-dentista-page label {
+    font-weight: bold;
+}
+
+.detalhes-dentista-page select {
+    padding: 8px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    width: 100%;
+    text-align: center;
+}
+
+/* Botões */
+.detalhes-dentista-page .btn {
+    padding: 8px 15px;
+    background: #007BFF;
+    color: #fff;
+    font-size: 14px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.detalhes-dentista-page .btn:hover {
+    background: #0056b3;
+}
+
+/* Card de detalhes */
+.detalhes-dentista-page .detalhes-card {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: left;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+    margin-top: 15px;
+}
+
+.detalhes-dentista-page .detalhes-card p {
+    font-size: 16px;
+    margin: 5px 0;
+}
+
+/* Modificação de credenciais */
+.detalhes-dentista-page .modificar-credenciais {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.detalhes-dentista-page .modificar-credenciais button {
+    background: #28a745;
+}
+
+.detalhes-dentista-page .modificar-credenciais button:hover {
+    background: #218838;
+}
+
+/* Marcador de rolagem */
+.detalhes-dentista-page .marcador-detalhes {
+    position: absolute;
+    top: -50px;
+}
+
+    </style>
+</head>
+<body class="detalhes-dentista-page">
+    <div class="container">
+        <!-- Marcador de rolagem invisível -->
+        <div id="marcador-detalhes" class="marcador-detalhes"></div>
+        <h2>🔍 <strong>Detalhes do Dentista</strong></h2>
+
+        <!-- Seleção do Dentista -->
+        <div class="dentista-selecao">
+            <label for="dentista-select">Escolha um dentista:</label>
+            <select id="dentista-select">
+                <option value="">Selecione...</option>
+            </select>
+            <button id="carregar-detalhes" class="btn">📄 Carregar Detalhes</button>
+        </div>
+
+        <!-- Exibição dos Detalhes -->
+        <div id="detalhes-dentista" class="detalhes-card" style="display: none;">
+            <p><strong>Nome:</strong> <span id="dentista-nome"></span></p>
+            <p><strong>Email:</strong> <span id="dentista-email"></span></p>
+            <p><strong>Telefone:</strong> <span id="dentista-telefone"></span></p>
+            <p><strong>Total de Pedidos:</strong> <span id="dentista-total-pedidos"></span></p>
+            <p><strong>Pedidos Abertos:</strong> <span id="dentista-pedidos-abertos"></span></p>
+            <p><strong>É Administrador?</strong> <span id="dentista-admin"></span></p>
+            <p><strong>É Credenciado?</strong> <span id="dentista-credenciado"></span></p>
+        </div>
+
+        <!-- Botões de Modificação -->
+        <h3>⚙️ Modificar Credenciais</h3>
+        <div class="modificar-credenciais" style="display: none;">
+            <button id="toggle-admin" class="btn">🔄 Alternar Admin</button>
+            <button id="toggle-credenciado" class="btn">🔄 Alternar Credenciamento</button>
+        </div>
+    </div>
+
+    <!-- --> <script src="detalhes_admin.js"></script><!-- -->
+</body>
+</html>
+
+
+
+// frontend\painel\dashboard\admin\detalhes_admin.js
+
+console.log("[Detalhes Dentista] 🔥 Script detalhes_admin.js carregado corretamente!");
+
+// ✅ Função para carregar a lista de dentistas no <select>
+async function carregarDentistasParaSelecao() {
+    console.log("[Detalhes Dentista] 🔄 Carregando lista de dentistas...");
+
+    try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            console.error("❌ Usuário não autenticado! Redirecionando para login.");
+            window.location.href = "/login.html";
+            return;
+        }
+
+        const response = await fetch("http://localhost:5000/admin/dentistas/dashboard", {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Erro ao carregar dentistas. Status: ${response.status}`);
+        }
+
+        const dentistas = await response.json();
+        console.log("✅ Dentistas recebidos:", dentistas);
+
+        const select = document.getElementById("dentista-select");
+        if (!select) {
+            console.error("❌ Elemento <select> não encontrado.");
+            return;
+        }
+
+        // 🔄 Limpa o select antes de adicionar novos dentistas
+        select.innerHTML = `<option value="">Selecione...</option>`;
+        dentistas.forEach(dentista => {
+            const option = document.createElement("option");
+            option.value = dentista.id;
+            option.textContent = ` ${dentista.id} - ${dentista.nome} `;
+            select.appendChild(option);
+        });
+
+        console.log("✅ Select atualizado com dentistas disponíveis.");
+
+    } catch (error) {
+        console.error("❌ Erro ao carregar dentistas:", error);
+    }
+}
+
+// ✅ Função para carregar os detalhes do dentista selecionado
+async function carregarDetalhesDentista() {
+    console.log("[Detalhes Dentista] 🔄 Buscando detalhes do dentista selecionado...");
+
+    const select = document.getElementById("dentista-select");
+    const dentistaId = select.value;
+
+    if (!dentistaId) {
+        console.warn("⚠️ Nenhum dentista selecionado.");
+        return;
+    }
+
+    try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(`http://localhost:5000/admin/dentistas/${dentistaId}`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Erro ao carregar detalhes. Status: ${response.status}`);
+        }
+
+        const dentista = await response.json();
+        console.log("✅ Detalhes do dentista recebidos:", dentista);
+
+        // 📝 Atualiza os campos no HTML com os dados do dentista
+        document.getElementById("dentista-nome").textContent = dentista.nome;
+        document.getElementById("dentista-email").textContent = dentista.email;
+        document.getElementById("dentista-telefone").textContent = dentista.telefone;
+        document.getElementById("dentista-total-pedidos").textContent = dentista.total_pedidos;
+        document.getElementById("dentista-pedidos-abertos").textContent = dentista.pedidos_abertos;
+        document.getElementById("dentista-admin").textContent = dentista.is_admin ? "✅ Sim" : "❌ Não";
+        document.getElementById("dentista-credenciado").textContent = dentista.is_verified ? "✅ Sim" : "❌ Não";
+
+        // 🔥 Exibe os detalhes do dentista
+        document.getElementById("detalhes-dentista").style.display = "block";
+        document.querySelector(".modificar-credenciais").style.display = "block";
+
+        // 🔄 Garante que os botões de modificação estão atualizados
+        document.getElementById("toggle-admin").onclick = () => alterarAdmin(dentista.id, dentista.is_admin);
+        document.getElementById("toggle-credenciado").onclick = () => alterarCredenciado(dentista.id, dentista.is_verified);
+
+    } catch (error) {
+        console.error("❌ Erro ao carregar detalhes do dentista:", error);
+    }
+}
+
+// ✅ Função para alternar status de administrador
+async function alterarAdmin(id, atual) {
+    console.log(`🔄 Alterando permissão de admin para o ID ${id}...`);
+    
+    const token = localStorage.getItem("token");
+
+    try {
+        const response = await fetch(`http://localhost:5000/admin/dentistas/${id}/toggle-is_admin`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Erro ao alterar status do admin. Status: ${response.status}`);
+        }
+
+        console.log(`✅ Status do admin ID ${id} alterado com sucesso!`);
+        carregarDetalhesDentista(); // 🔄 Atualiza a exibição dos detalhes
+
+    } catch (error) {
+        console.error(`❌ Erro ao alterar status do admin ID ${id}:`, error);
+    }
+}
+
+// ✅ Função para alternar credenciamento do dentista
+async function alterarCredenciado(id, atual) {
+    console.log(`🔄 Alternando status de credenciamento para o dentista ID ${id}...`);
+
+    const token = localStorage.getItem("token");
+
+    try {
+        const response = await fetch(`http://localhost:5000/admin/dentistas/${id}/toggle-is_verified`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Erro ao alternar credenciamento. Status: ${response.status}`);
+        }
+
+        console.log(`✅ Credenciamento do dentista ID ${id} alterado com sucesso!`);
+        carregarDetalhesDentista(); // 🔄 Atualiza a exibição dos detalhes
+
+    } catch (error) {
+        console.error(`❌ Erro ao alternar credenciamento ID ${id}:`, error);
+    }
+}
+
+// ✅ **Garantindo que os eventos sejam adicionados corretamente**
+document.addEventListener("DOMContentLoaded", () => {
+    console.log("[Detalhes Dentista] 🚀 Inicializando funcionalidades...");
+
+    carregarDentistasParaSelecao();
+
+    // ✅ Garante que o botão "Carregar Detalhes" seja vinculado corretamente
+    const botaoCarregar = document.getElementById("carregar-detalhes");
+    if (botaoCarregar) {
+        botaoCarregar.addEventListener("click", carregarDetalhesDentista);
+        console.log("✅ Evento de clique vinculado ao botão 'Carregar Detalhes'");
+    } else {
+        console.error("❌ Botão 'Carregar Detalhes' não encontrado!");
+    }
+});
+window.carregarDentistasParaSelecao = carregarDentistasParaSelecao;
+window.carregarDetalhesDentista = carregarDetalhesDentista;
+
+
+// frontend\painel\dashboard\admin\estatisticas_admin.css
+
+
+
+
+// frontend\painel\dashboard\admin\estatisticas_admin.html
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estatísticas do Sistema</title>
+
+</head>
+<body>
+    <div class="container">
+        <h2>📊 <strong>Estatísticas do Sistema</strong></h2>
+        <div class="stats">
+            <div class="card">Dentistas: <span id="dentistas">0</span></div>
+            <div class="card">Pacientes: <span id="pacientes">0</span></div>
+            <div class="card">Pedidos Totais: <span id="pedidosTotais">0</span></div>
+            <div class="card">Pedidos Abertos: <span id="pedidosAbertos">0</span></div>
+            <div class="card">Pedidos Concluídos: <span id="pedidosConcluidos">0</span></div>
+            <div class="card">Pedidos Cancelados: <span id="pedidosCancelados">0</span></div>
+            <div class="card">Dentistas Credenciados: <span id="dentistasCred">0</span></div>
+            <div class="card">Pedidos nos Últimos 7 dias: <span id="pedidosSemana">0</span></div>
+        </div>
+    </div>
+
+    <!-- --> <script src="estatisticas_admin.js"></script><!-- -->
+</body>
+</html>
+
+
+
+// frontend\painel\dashboard\admin\estatisticas_admin.js
+
+
+        console.log("[Estatísticas Admin] 🔥 Script estatisticas_admin.js carregado corretamente!");
+
+        async function carregarEstatisticas() {
+            console.log("[Estatísticas Admin] 🔄 Iniciando carregamento das estatísticas...");
+
+            try {
+                // ✅ Obtém o token do localStorage
+                const token = localStorage.getItem("token");
+                if (!token) {
+                    console.error("❌ Usuário não autenticado! Redirecionando para login.");
+                    window.location.href = "/login.html";
+                    return;
+                }
+
+                console.log("🔍 Enviando requisição para buscar estatísticas...");
+                const apiResponse = await fetch("http://localhost:5000/admin/estatisticas", {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
+
+                if (!apiResponse.ok) {
+                    throw new Error(`❌ Erro ao carregar estatísticas. Status: ${apiResponse.status}`);
+                }
+
+                const estatisticas = await apiResponse.json();
+                console.log("✅ Estatísticas recebidas:", estatisticas);
+
+                // ✅ Confirma que os elementos existem antes de tentar manipular
+                function atualizarElemento(id, valor) {
+                    const elemento = document.getElementById(id);
+                    if (elemento) {
+                        console.log(`📝 Atualizando #${id} -> ${valor}`);
+                        elemento.textContent = valor || 0;
+                    } else {
+                        console.warn(`⚠️ Elemento #${id} não encontrado! Verifique o HTML.`);
+                    }
+                }
+
+                // ✅ Atualiza os valores no HTML com verificação
+                atualizarElemento("dentistas", estatisticas.total_dentistas);
+                atualizarElemento("pacientes", estatisticas.total_pacientes);
+                atualizarElemento("pedidosTotais", estatisticas.total_pedidos);
+                atualizarElemento("pedidosAbertos", estatisticas.pedidos_abertos);
+                atualizarElemento("pedidosConcluidos", estatisticas.pedidos_concluidos);
+                atualizarElemento("pedidosCancelados", estatisticas.pedidos_cancelados);
+                atualizarElemento("dentistasCred", estatisticas.dentistas_credenciados);
+                atualizarElemento("pedidosSemana", estatisticas.pedidos_ultimos7dias);
+
+                console.log("✅ Estatísticas atualizadas no HTML com sucesso!");
+
+            } catch (error) {
+                console.error("❌ Erro ao carregar estatisticas_admin:", error);
+            }
+        }
+
+        // 🔥 Chama a função ao carregar o dashboard
+        carregarEstatisticas();
+
+
+// frontend\painel\dashboard\admin\pedidos_admin.css
+
+
+
+
+// frontend\painel\dashboard\admin\pedidos_admin.html
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Lista de Pedidos em Aberto</title>
+    </head>
+    <body>
+     
+            <h2>📋 Pedidos em Aberto</h2>
+            <table border="1" width="100%">
+                <thead>
+    <tr>
+        <th>
+            Dentista (ID) <br>
+            <select id="filtro-dentista">
+                <option value="">Todos</option>
+            </select>
+        </th>
+        <th>Paciente (ID)</th>
+        <th>
+            Data do Pagamento <br>
+            <select id="filtro-data">
+                <option value="todos">Todos</option>
+                <option value="7">Últimos 7 dias</option>
+                <option value="30">Últimos 30 dias</option>
+            </select>
+        </th>
+        <th>
+            Status <br>
+            <select id="filtro-status">
+                <option value="">Todos</option>
+            </select>
+        </th>
+        <th>Ficha Técnica</th>
+        <th>Arquivo 3D</th>
+        <th>
+            Vídeo Conferência <br>
+            <select id="filtro-video">
+                <option value="">Todos</option>
+                <option value="true">✅ Sim</option>
+                <option value="false">❌ Não</option>
+            </select>
+        </th>
+    </tr>
+</thead>
+
+                <tbody id="pedidos-admin">
+                    <!-- Os pedidos serão carregados dinamicamente pelo JavaScript -->
+                </tbody>
+            </table>
+      
+
+        <!-- --> <script src="pedidos_admin.js"></script><!-- -->
+    </body>
+</html>
+
+
+
+// frontend\painel\dashboard\admin\pedidos_admin.js
+
+console.log("[Pedidos Admin] 🔥 Script pedidos_admin.js carregado corretamente!");
+
+let pedidosOriginais = [];
+
+// Carrega a lista de pedidos do backend
+async function carregarPedidos() {
+    console.log("[Pedidos Admin] 🔄 Iniciando carregamento de pedidos...");
+
+    try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            console.error("❌ Usuário não autenticado! Redirecionando para login.");
+            window.location.href = "/login.html";
+            return;
+        }
+
+        console.log("🔍 Enviando requisição para buscar pedidos...");
+        const apiResponse = await fetch("http://localhost:5000/admin/pedidos/dashboard", {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            }
+        });
+
+        if (!apiResponse.ok) {
+            throw new Error(`❌ Erro ao carregar pedidos. Status: ${apiResponse.status}`);
+        }
+
+        pedidosOriginais = await apiResponse.json();
+        console.log("✅ Pedidos recebidos:", pedidosOriginais);
+
+        // Renderiza a tabela sem aplicar filtros locais
+        renderizarTabelaPedidos();
+        
+    } catch (error) {
+        console.error("❌ Erro ao carregar pedidos_admin:", error);
+        const tabelaPedidos = document.getElementById("pedidos-admin");
+        if (tabelaPedidos) {
+            tabelaPedidos.innerHTML = `<tr><td colspan="7" style="color: red;">Erro ao carregar pedidos.</td></tr>`;
+        }
+    }
+}
+
+// Renderiza a tabela de pedidos sem filtros
+function renderizarTabelaPedidos() {
+    console.log("🔄 Renderizando tabela de pedidos...");
+
+    const tabelaPedidos = document.getElementById("pedidos-admin");
+    if (!tabelaPedidos) {
+        console.warn("⚠️ Elemento #pedidos-admin não encontrado!");
+        return;
+    }
+
+    tabelaPedidos.innerHTML = "";
+
+    // Se não houver pedidos
+    if (!pedidosOriginais.length) {
+        tabelaPedidos.innerHTML = `
+            <tr>
+                <td colspan="7" style="text-align: center; font-weight: bold;">
+                    Nenhum pedido encontrado.
+                </td>
+            </tr>`;
+        return;
+    }
+
+    // Monta cada linha da tabela
+    pedidosOriginais.forEach(pedido => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td>${pedido.dentista_nome}</td>
+            <td>${pedido.paciente_nome}</td>
+            <td>${new Date(pedido.data_pagamento).toLocaleDateString()}</td>
+            <td>${pedido.status}</td>
+            <td>
+                <button class="btn ficha-btn" data-info='${JSON.stringify(pedido.ficha_tecnica || {})}'>
+                    📄 Ver Ficha
+                </button>
+            </td>
+            <td>
+                ${pedido.arquivo_3d 
+                    ? `<a href="${pedido.arquivo_3d}" target="_blank" class="btn">📁 Baixar</a>` 
+                    : "❌ Sem Arquivo"}
+            </td>
+            <td>${pedido.video_conferencia ? "✅ Sim" : "❌ Não"}</td>
+        `;
+        tabelaPedidos.appendChild(row);
+    });
+
+    console.log("✅ Tabela de pedidos renderizada!");
+}
+
+// 🔥 Inicia o carregamento dos pedidos assim que o arquivo é importado
+carregarPedidos();
+
+
+
+// frontend\painel\dashboard\admin\tabela_admin.css
+
+
+
+
+// frontend\painel\dashboard\admin\tabela_admin.html
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabela Principal</title>
+
+ <style>
+ /* 🔥 Estilização específica para a tabela de dentistas */
+/* 🔥 Estilização específica para a tabela de dentistas */
+.container {
+    width: 95%;
+    margin: 20px auto;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+    text-align: center;
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #333;
+    font-weight: bold;
+}
+
+/* ✅ Aplicando um azul mais harmonioso */
+.tabela-dentistas {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 16px;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* ✅ Melhorando o cabeçalho */
+.tabela-dentistas thead tr {
+    background-color: #0056A6; /* Azul escuro */
+    color: white;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.tabela-dentistas th, 
+.tabela-dentistas td {
+    padding: 12px;
     border: 1px solid #ddd;
     text-align: center;
 }
 
-th {
-    background: #007BFF;
+/* ✅ Alternância de cores para melhor legibilidade */
+.tabela-dentistas tbody tr:nth-child(even) {
+    background-color: #eef4fc; /* Azul bem claro */
+}
+
+.tabela-dentistas tbody tr:nth-child(odd) {
+    background-color: #ffffff; /* Fundo branco */
+}
+
+/* ✅ Hover discreto nas linhas */
+.tabela-dentistas tbody tr:hover {
+    background-color: #d4e4ff; /* Azul muito suave */
+    transition: 0.2s ease-in-out;
+}
+
+/* ✅ Ajustando botões para manter o mesmo tamanho */
+.tabela-dentistas .btn-detalhes,
+.tabela-dentistas .btn-admin,
+.tabela-dentistas .btn-remove {
+    display: inline-block;
+    width: 130px; /* Definindo largura fixa */
+    padding: 8px 0; /* Ajustando altura */
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+/* ✅ Ajustando botões para harmonia visual */
+.tabela-dentistas .btn-detalhes {
+    background: #007bff; /* Azul chamativo */
     color: white;
 }
 
-/* Permite que tabelas muito grandes rolem sem esconder conteúdo */
-.tabela-container {
-    max-height: 500px; /* Altura máxima ajustável */
-    overflow-y: auto; /* Rolagem vertical se necessário */
+.tabela-dentistas .btn-detalhes:hover {
+    background: #0056b3;
+    transform: scale(1.05);
+}
+
+.tabela-dentistas .btn-admin {
+    background: #17a2b8; /* Azul claro */
+    color: white;
+}
+
+.tabela-dentistas .btn-admin:hover {
+    background: #117a8b;
+    transform: scale(1.05);
+}
+
+.tabela-dentistas .btn-remove {
+    background: #dc3545; /* Vermelho */
+    color: white;
+}
+
+.tabela-dentistas .btn-remove:hover {
+    background: #c82333;
+    transform: scale(1.05);
+}
+
+/* ✅ Ajustando os botões de filtro e ordenação */
+.tabela-dentistas .filter-btn, 
+.tabela-dentistas .sort-btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.tabela-dentistas .filter-btn:hover, 
+.tabela-dentistas .sort-btn:hover {
+    background: #0056b3;
+}
+
+/* ✅ Ajustando o seletor de nome */
+.tabela-dentistas select {
+    padding: 6px;
+    border-radius: 5px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    background: white;
 }
 
 
     </style>
 </head>
 <body>
+    <div class="container">
+        <h2>🛠 <strong>Gerenciamento de Dentistas</strong></h2>
+
+        <table class="tabela-dentistas">
+
+            <thead>
+                <tr>
+                    <th>
+                        ID <br>
+                        <button class="sort-btn" id="ordenar-id">🔼🔽</button>
+                    </th>
+                    <th>
+                        Nome (ID) <br>
+                        <select id="filtro-nome">
+                            <option value="">Todos</option>
+                        </select>
+                    </th>
+                                        <th>
+                        Detalhes <br>
+                    </th>
+                    <th>
+                        Admin <br>
+                        <button class="filter-btn filter-todos" id="filtro-admin">Todos</button>
+                    </th>
+                    <th>
+                        Verificado <br>
+                        <button class="filter-btn filter-todos" id="filtro-verificado">Todos</button>
+                    </th>
+                    <th>
+                        Pedidos Totais <br>
+                        <button class="sort-btn" id="ordenar-pedidos-totais">🔼🔽</button>
+                    </th>
+                    <th>
+                        Pedidos em Aberto <br>
+                        <button class="sort-btn" id="ordenar-pedidos-abertos">🔼🔽</button>
+                    </th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="tabela-admin">
+                <tr><td colspan="7">Carregando administradores...</td></tr>
+            </tbody>
+        </table>
+    </div>
 
 
-    <main>
-        <!-- Pedidos em Aberto -->
-        <section id="pedidos-container" class="container">
-            <h2>📋 Pedidos em Aberto</h2>
-            <div id="pedidos-content">Carregando pedidos...</div>
-        </section>
+   <script type="module" src="tabela_admin_filtros.js"></script>  
+<script type="module" src="tabela_admin.js"></script>
+</body>
+</html>
 
-        <!-- Tabela Principal -->
-        <section id="tabela-container" class="container">
-            <h2>📊 Tabela de Dados</h2>
-            <div id="tabela-content">Carregando...</div>
-        </section>
 
-        <!-- Detalhes -->
-        <section id="detalhes-container" class="container">
-            <h2>🔍 Detalhes</h2>
-            <div id="detalhes-content">Selecione um pedido...</div>
-        </section>
+   
 
-        <!-- Estatísticas -->
-        <section id="estatisticas-container" class="container">
-            <h2>📈 Estatísticas</h2>
-            <div id="estatisticas-content">Carregando estatísticas...</div>
-        </section>
-    </main>
+
+
+// frontend\painel\dashboard\admin\tabela_admin.js
+
+
+
+console.log("[Admin] 🔥 Script tabela_admin.js carregado corretamente!");
+
+export let adminsData = [];
+
+// Carrega a lista de administradores do backend
+async function carregarAdmins() {
+    console.log("[Admin] 🔄 Iniciando carregamento dos administradores...");
+
+    try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            console.error("❌ Usuário não autenticado! Redirecionando para login.");
+            window.location.href = "/login.html";
+            return;
+        }
+
+        console.log("🔍 Enviando requisição para buscar administradores...");
+        const apiResponse = await fetch("http://localhost:5000/admin/dentistas/dashboard", {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            }
+        });
+
+        if (!apiResponse.ok) {
+            throw new Error(`❌ Erro ao carregar administradores. Status: ${apiResponse.status}`);
+        }
+
+        adminsData = await apiResponse.json();
+        console.log("✅ Administradores recebidos:", adminsData);
+
+        // Renderiza a tabela 
+        atualizarTabela();
+    } catch (error) {
+        console.error("❌ Erro ao carregar administradores:", error);
+        const tabela = document.getElementById("tabela-admin");
+        if (tabela) {
+            tabela.innerHTML = `<tr><td colspan="8" style="color: red;">Erro ao carregar administradores.</td></tr>`;
+        }
+    }
+}
+
+// Renderiza a tabela de administradores (sem filtragem ou ordenação)
+function atualizarTabela() {
+    console.log("🔄 Atualizando tabela (sem filtros)...");
+
+    const tabela = document.getElementById("tabela-admin");
+    if (!tabela) {
+        console.warn("⚠️ Tabela de administradores não encontrada!");
+        return;
+    }
+
+    tabela.innerHTML = "";
+    adminsData.forEach(admin => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td>${admin.id}</td>
+            <td>${admin.nome} (ID: ${admin.id})</td>
+            <td>
+                <button class="btn btn-detalhes" onclick="exibirDetalhes(${admin.id})">📄 Ver Detalhes</button>
+            </td>
+            <td>${admin.is_admin ? "✅ Sim" : "❌ Não"}</td>
+            <td>${admin.is_verified ? "✅ Sim" : "❌ Não"}</td>
+            <td>${admin.total_pedidos}</td>
+            <td>${admin.pedidos_abertos}</td>
+            <td><!-- Botões de ação, se necessário --></td>
+        `;
+        tabela.appendChild(row);
+    });
+
+    console.log("✅ Tabela atualizada sem filtros!");
+}
+
+// Exibe detalhes de um dentista específico
+function exibirDetalhes(id) {
+    console.log(`🔍 Exibindo detalhes do dentista ID: ${id}`);
+
+    // Ajusta o <select> para que o dentista apareça como selecionado
+    const select = document.getElementById("dentista-select");
+    if (!select) {
+        console.error("❌ Elemento <select> não encontrado para exibir detalhes.");
+        return;
+    }
+
+    // Cria a option se ainda não existir
+    let option = select.querySelector(`option[value="${id}"]`);
+    if (!option) {
+        option = document.createElement("option");
+        option.value = id;
+        option.textContent = `Dentista ${id}`;
+        select.appendChild(option);
+    }
+    select.value = id;
+
+    // Chama a função de carregar detalhes (está normalmente em outro arquivo, ex: detalhes_admin.js)
+    if (typeof carregarDetalhesDentista === "function") {
+        console.log(`🔄 Buscando detalhes do dentista ID ${id} na API...`);
+        carregarDetalhesDentista().then(() => {
+            const marcador = document.getElementById("marcador-detalhes");
+            if (marcador) {
+                marcador.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+            console.log(`✅ Detalhes do dentista ID ${id} carregados e exibidos!`);
+        });
+    } else {
+        console.warn("⚠️ Função carregarDetalhesDentista não encontrada! Verifique se detalhes_admin.js está importado.");
+    }
+}
+
+// Expondo a função para uso no atributo onclick do botão
+window.exibirDetalhes = exibirDetalhes;
+
+// Inicia o carregamento assim que o arquivo for importado
+carregarAdmins();
+
+
+
+// frontend\painel\dashboard\admin\utils.js
+
+// authUtils.js
+export function verificarAutenticacao() {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    console.error("❌ Usuário não autenticado! Redirecionando para login.");
+    window.location.href = "/login.html";
+    return false;
+  }
+  return true;
+}
+
+
+
+// frontend\painel\dashboard\admin.html
+
+  <!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+  <style>
+    /* HEADER - Cabeçalho Fixo */
+    header {
+      width: 100%;
+      background: linear-gradient(to right, #0056b3, #007BFF);
+      color: white;
+      padding: 15px 20px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 60px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+    }
+
+    /* Ajuste para evitar que o conteúdo fique escondido abaixo do header */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #eef2f7;
+      margin: 0;
+      padding-top: 70px; /* Garante espaço abaixo do header */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Ajuste do conteúdo principal */
+    main {
+      width: 90%;
+      max-width: 1200px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Estilização para garantir que as tabelas fiquem visíveis */
+    .container {
+      background: white;
+      width: 100%;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+      min-height: 180px;
+      overflow-x: auto; /* Permite rolagem horizontal para tabelas muito largas */
+    }
+
+    /* Responsividade: Ajusta a largura para telas menores */
+    @media (max-width: 768px) {
+      main {
+        width: 95%;
+      }
+      .container {
+        min-height: 150px;
+      }
+    }
+
+    /* Estilização das Tabelas */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      background: white;
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+
+    th {
+      background: #007BFF;
+      color: white;
+    }
+
+    /* Permite que tabelas muito grandes rolem sem esconder conteúdo */
+    .tabela-container {
+      max-height: 500px; /* Altura máxima ajustável */
+      overflow-y: auto; /* Rolagem vertical se necessário */
+    }
+  </style>
+</head>
+<body>
+
+  <main>
+    <!-- Seção de Pedidos -->
+    <section id="pedidos-container" class="container">
+      <h2>📋 Pedidos</h2>
+      <div id="pedidos-content">Carregando pedidos...</div>
+    </section>
+
+    <!-- Seção de Tabela (ex.: Administradores) -->
+    <section id="tabela-container" class="container">
+      <h2>📑 Tabela</h2>
+      <div id="tabela-admin" class="tabela-container">
+        <!-- Conteúdo da tabela será injetado via JS -->
+      </div>
+    </section>
+
+    <!-- Seção de Detalhes -->
+    <section id="detalhes-container" class="container">
+      <h2>🔎 Detalhes</h2>
+      <!-- Marcador opcional para scroll suave -->
+      <div id="marcador-detalhes"></div>
+      <div id="detalhes-content">Carregando detalhes...</div>
+    </section>
+
+    <!-- Seção de Estatísticas (opcional) -->
+    <section id="estatisticas-container" class="container">
+      <h2>📈 Estatísticas</h2>
+      <div id="estatisticas-content">Carregando estatísticas...</div>
+    </section>
+  </main>
+
 
     <script src="admin.js"></script>
 </body>
@@ -133,7 +3538,7 @@ th {
 
 
 
-// ..\frontend\painel\dashboard\admin\admin.js
+// frontend\painel\dashboard\admin.js
 
 const pedidosContainer = document.getElementById("pedidos-container");
 const tabelaContainer = document.getElementById("tabela-container");
@@ -145,7 +3550,7 @@ async function carregarModulo(container, htmlPath, cssPath, scriptPath, nome, ca
     console.log(`📂 Carregando módulo: ${nome}`);
 
     try {
-        // 🔥 Carrega o HTML do módulo
+        // Carrega o HTML do módulo
         const response = await fetch(htmlPath);
         if (!response.ok) throw new Error(`Módulo ${nome} não encontrado!`);
 
@@ -153,7 +3558,7 @@ async function carregarModulo(container, htmlPath, cssPath, scriptPath, nome, ca
         container.innerHTML = moduloHtml;
         console.log(`✅ HTML do módulo ${nome} carregado!`);
 
-        // 🔥 Carrega o CSS do módulo (se ainda não estiver carregado)
+        // Carrega o CSS do módulo (se ainda não estiver carregado)
         if (!document.querySelector(`link[href='${cssPath}']`)) {
             const css = document.createElement("link");
             css.rel = "stylesheet";
@@ -162,17 +3567,17 @@ async function carregarModulo(container, htmlPath, cssPath, scriptPath, nome, ca
             console.log(`🎨 CSS do módulo ${nome} carregado!`);
         }
 
-        // 🔥 Remove qualquer script antigo do mesmo módulo (para evitar duplicação)
+        // Remove qualquer script antigo do mesmo módulo (para evitar duplicação)
         const existingScript = document.querySelector(`script[src='${scriptPath}']`);
         if (existingScript) {
             existingScript.remove();
             console.log(`🗑 Script antigo do módulo ${nome} removido.`);
         }
 
-        // 🔥 Carrega o JS do módulo DINAMICAMENTE e executa o callback após o carregamento
+        // Carrega o JS do módulo DINAMICAMENTE e executa o callback após o carregamento
         const script = document.createElement("script");
         script.src = scriptPath;
-        script.type = "module";  // ✅ Adicionando suporte a módulos
+        script.type = "module";
         script.defer = true;
 
         script.onload = () => {
@@ -195,68 +3600,48 @@ async function carregarModulo(container, htmlPath, cssPath, scriptPath, nome, ca
 
 // 🔥 Carregando módulos dinamicamente
 
-// 🔥 Primeiro, carregamos os filtros da tabela
-const isPainel = window.location.href.includes("painel");
-
-const caminhoFiltros = isPainel
-    ? "dashboard/admin/modules/tabela_admin_filtros.js" // Caminho no painel
-    : "modules/tabela_admin_filtros.js"; // Caminho normal fora do painel
-
-
-///
-    // 🔥 Carregando Pedidos
+// Carregando Pedidos
 carregarModulo(
     pedidosContainer, 
-    "dashboard/admin/modules/pedidos_admin.html", 
-    "dashboard/admin/modules/pedidos_admin.css", 
-    "dashboard/admin/modules/pedidos_admin.js", 
+    "dashboard/admin/pedidos_admin.html", 
+    "dashboard/admin/pedidos_admin.css", 
+    "dashboard/admin/pedidos_admin.js", 
     "pedidos_admin",
     () => {
         console.log("🚀 Inicializando funcionalidades de pedidos...");
     }
 );
-// 🔥 carregando tabela
 
+// Carregando a Tabela (sem filtros)
 carregarModulo(
     tabelaContainer, 
-    "dashboard/admin/modules/tabela_admin.html", 
-    "dashboard/admin/modules/tabela_admin.css", 
-    caminhoFiltros, // Agora usa o caminho correto dependendo do contexto
-    "tabela_admin_filtros",
+    "dashboard/admin/tabela_admin.html", 
+    "dashboard/admin/tabela_admin.css", 
+    "dashboard/admin/tabela_admin.js", 
+    "tabela_admin",
     () => {
-        console.log("🚀 Filtros da tabela carregados!");
-        
-        carregarModulo(
-            tabelaContainer, 
-            "dashboard/admin/modules/tabela_admin.html", 
-            "dashboard/admin/modules/tabela_admin.css", 
-            "dashboard/admin/modules/tabela_admin.js", 
-            "tabela_admin",
-            () => {
-                console.log("🚀 Inicializando funcionalidades da tabela...");
-
-            }
-        );
+        console.log("🚀 Inicializando funcionalidades da tabela...");
     }
 );
 
-
-// 🔥 Carregando Detalhes
+// Carregando Detalhes
 carregarModulo(
     detalhesContainer, 
-    "dashboard/admin/modules/detalhes_admin.html", 
-    "dashboard/admin/modules/detalhes_admin.css", 
-    "dashboard/admin/modules/detalhes_admin.js", 
+    "dashboard/admin/detalhes_admin.html", 
+    "dashboard/admin/detalhes_admin.css", 
+    "dashboard/admin/detalhes_admin.js", 
     "detalhes_admin",
     () => {
         console.log("🚀 Inicializando funcionalidades de detalhes...");
-        
+
+        // Verifica e carrega a lista de dentistas para o <select>
         if (typeof carregarDentistasParaSelecao === "function") {
             carregarDentistasParaSelecao();
         } else {
             console.error("❌ Função carregarDentistasParaSelecao não encontrada!");
         }
 
+        // Vincula evento ao botão "Carregar Detalhes"
         const botaoCarregar = document.getElementById("carregar-detalhes");
         if (botaoCarregar) {
             botaoCarregar.addEventListener("click", () => {
@@ -273,12 +3658,12 @@ carregarModulo(
     }
 );
 
-// 🔥 Carregando Estatísticas
+// Carregando Estatísticas
 carregarModulo(
     estatisticasContainer, 
-    "dashboard/admin/modules/estatisticas_admin.html", 
-    "dashboard/admin/modules/estatisticas_admin.css", 
-    "dashboard/admin/modules/estatisticas_admin.js", 
+    "dashboard/admin/estatisticas_admin.html", 
+    "dashboard/admin/estatisticas_admin.css", 
+    "dashboard/admin/estatisticas_admin.js", 
     "estatisticas_admin",
     () => {
         console.log("🚀 Inicializando funcionalidades de estatísticas...");
@@ -287,12 +3672,1542 @@ carregarModulo(
 
 
 
-// ..\frontend\painel\painel.css
+// frontend\painel\dashboard\core\filtros.css
+
+.sort-btn {
+  width: 20px;
+  height: 20px;
+  border: 1px solid #333;
+  background: #ddd;
+  cursor: pointer;
+  margin-left: 5px;
+  display: inline-block;
+  text-align: center;
+  line-height: 18px;
+  font-size: 12px;
+  border-radius: 3px;
+}
+
+.sort-btn.neutral::after { content: "↕"; }
+.sort-btn.desc::after { content: "↓"; }
+.sort-btn.asc::after { content: "↑"; }
+
+.sort-btn:hover {
+  background: #bbb;
+}
+
+.sort-btn.desc {
+  background: #ffcccc; /* Vermelho claro pra desc */
+}
+
+.sort-btn.asc {
+  background: #ccffcc; /* Verde claro pra asc */
+}
+
+
+// frontend\painel\dashboard\core\filtros.js
+
+export function initSortButtons(tableId, dataArray, renderFn) {
+  const buttons = document.querySelectorAll(`#${tableId} .sort-btn`);
+  buttons.forEach(btn => {
+    btn.classList.add("neutral"); // Estado inicial
+    let state = 0;
+    btn.addEventListener("click", () => {
+      state = (state + 1) % 3;
+      btn.classList.remove("asc", "desc", "neutral");
+      if (state === 1) btn.classList.add("desc");
+      else if (state === 2) btn.classList.add("asc");
+      else btn.classList.add("neutral");
+      console.log("Estado do botão:", state); // Debug
+      // Sem ordenação por enquanto
+      renderFn(dataArray); // Só recria a tabela
+    });
+  });
+}
+
+
+// frontend\painel\dashboard\dentista\filtrosBackend.js
+
+// 📌 filtros.js – Todas as funções de filtro usadas nas tabelas
+
+// 🔹 Filtro por Nome (Busca texto em qualquer parte do nome)
+export function filtrarPorNome(lista, textoNome) {
+  if (!textoNome || textoNome.trim() === "") {
+    return lista; // Retorna a lista original se o filtro estiver vazio
+  }
+  const texto = textoNome.toLowerCase().trim();
+  return lista.filter(item => item.nome && item.nome.toLowerCase().includes(texto));
+}
+
+// 🔹 Filtro por Intervalo de Datas (dataInicio e dataFim são strings "YYYY-MM-DD")
+export function filtrarPorData(lista, dataInicio, dataFim) {
+  const inicio = dataInicio ? new Date(dataInicio) : null;
+  const fim = dataFim ? new Date(dataFim) : null;
+
+  return lista.filter(item => {
+    if (!item.data) return false; // Ignora itens sem data válida
+    const dataItem = new Date(item.data);
+    if (isNaN(dataItem)) return false; // Se não for uma data válida, ignora
+
+    return (!inicio || dataItem >= inicio) && (!fim || dataItem <= fim);
+  });
+}
+
+// 🔹 Filtro por Status (Filtra exatamente pelo status informado)
+export function filtrarPorStatus(lista, statusSelecionado) {
+  if (!statusSelecionado || statusSelecionado.trim() === "" || statusSelecionado.toLowerCase() === "todos") {
+    return lista; // Retorna a lista original se não houver filtro
+  }
+  const statusFiltro = statusSelecionado.toLowerCase().trim();
+  return lista.filter(item => item.status && item.status.toLowerCase() === statusFiltro);
+}
+
+// 🔹 Filtro por ID (Filtra um ID exato ou busca parte dele)
+export function filtrarPorId(lista, idBusca) {
+  if (!idBusca || idBusca.trim() === "") {
+    return lista;
+  }
+  return lista.filter(item => String(item.id).includes(idBusca.trim()));
+}
+
+// 🔹 Combinação de Filtros (Aplica múltiplos filtros de uma vez)
+export function aplicarFiltros(lista, { nome, dataInicio, dataFim, status, id }) {
+  let resultado = lista;
+  if (id) resultado = filtrarPorId(resultado, id);
+  if (nome) resultado = filtrarPorNome(resultado, nome);
+  if (dataInicio || dataFim) resultado = filtrarPorData(resultado, dataInicio, dataFim);
+  if (status) resultado = filtrarPorStatus(resultado, status);
+  return resultado;
+}
 
 
 
 
-// ..\frontend\painel\painel.html
+// frontend\painel\dashboard\dentista\filtrosFrontend.js
+
+// 📌 filtros.js – Todas as funções de filtro usadas nas tabelas
+
+// 🔹 Filtro por Nome (Busca texto em qualquer parte do nome)
+export function filtrarPorNome(lista, textoNome) {
+  if (!textoNome || textoNome.trim() === "") {
+    return lista; // Retorna a lista original se o filtro estiver vazio
+  }
+  const texto = textoNome.toLowerCase().trim();
+  return lista.filter(item => item.nome && item.nome.toLowerCase().includes(texto));
+}
+
+// 🔹 Filtro por Intervalo de Datas (dataInicio e dataFim são strings "YYYY-MM-DD")
+export function filtrarPorData(lista, dataInicio, dataFim) {
+  const inicio = dataInicio ? new Date(dataInicio) : null;
+  const fim = dataFim ? new Date(dataFim) : null;
+
+  return lista.filter(item => {
+    if (!item.data) return false; // Ignora itens sem data válida
+    const dataItem = new Date(item.data);
+    if (isNaN(dataItem)) return false; // Se não for uma data válida, ignora
+
+    return (!inicio || dataItem >= inicio) && (!fim || dataItem <= fim);
+  });
+}
+
+// 🔹 Filtro por Status (Filtra exatamente pelo status informado)
+export function filtrarPorStatus(lista, statusSelecionado) {
+  if (!statusSelecionado || statusSelecionado.trim() === "" || statusSelecionado.toLowerCase() === "todos") {
+    return lista; // Retorna a lista original se não houver filtro
+  }
+  const statusFiltro = statusSelecionado.toLowerCase().trim();
+  return lista.filter(item => item.status && item.status.toLowerCase() === statusFiltro);
+}
+
+// 🔹 Filtro por ID (Filtra um ID exato ou busca parte dele)
+export function filtrarPorId(lista, idBusca) {
+  if (!idBusca || idBusca.trim() === "") {
+    return lista;
+  }
+  return lista.filter(item => String(item.id).includes(idBusca.trim()));
+}
+
+// 🔹 Combinação de Filtros (Aplica múltiplos filtros de uma vez)
+export function aplicarFiltros(lista, { nome, dataInicio, dataFim, status, id }) {
+  let resultado = lista;
+  if (id) resultado = filtrarPorId(resultado, id);
+  if (nome) resultado = filtrarPorNome(resultado, nome);
+  if (dataInicio || dataFim) resultado = filtrarPorData(resultado, dataInicio, dataFim);
+  if (status) resultado = filtrarPorStatus(resultado, status);
+  return resultado;
+}
+
+
+
+
+// frontend\painel\dashboard\dentista\pacientes_dentista\dados.js
+
+export let pacientesData = [];
+export let pedidosPacienteData = [];
+import { atualizarDropdownPacientes } from './dropdown.js'
+import { renderPedidosPaciente } from './tabela.js';
+
+export async function carregarPacientesDentista() {
+  console.log("[Paciente Dentista] 🔄 Iniciando carregamento de pacientes...");
+
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.error("❌ Usuário não autenticado! Redirecionando para login.");
+      window.location.href = "/login.html";
+      return;
+    }
+
+    const response = await fetch("http://localhost:5000/dentista/pacientes/dashboard", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) throw new Error(`❌ Erro ao carregar pacientes. Status: ${response.status}`);
+
+    // 🔹 Captura os headers recebidos
+    const headers = response.headers;
+    const dentista = {
+      id: headers.get("X-Dentista-ID") || "--",
+      nome: headers.get("X-Dentista-Nome") || "Desconhecido",
+      sexo: headers.get("X-Dentista-Sexo") || "M"
+    };
+
+    console.log("✅ Dados do Dentista:", dentista);
+
+    // 🔹 Define o prefixo "Dr." ou "Dra."
+    const prefixo = dentista.sexo === "F" ? "Dra." : "Dr.";
+
+    // 🔹 Atualiza os elementos do HTML (verifica se existem antes)
+    const dentistaNomeEl = document.getElementById("dentista-nome");
+    const dentistaIdEl = document.getElementById("dentista-id");
+
+    if (dentistaNomeEl) {
+      dentistaNomeEl.textContent = `${prefixo} ${dentista.nome}`;
+      console.log(`📝 Atualizando nome do dentista para: ${prefixo} ${dentista.nome}`);
+    } else {
+      console.warn("⚠️ Elemento #dentista-nome não encontrado!");
+    }
+
+    if (dentistaIdEl) {
+      dentistaIdEl.textContent = `(ID: ${dentista.id})`;
+    } else {
+      console.warn("⚠️ Elemento #dentista-id não encontrado!");
+    }
+
+    // 🔹 Captura os pacientes e atualiza a tabela
+    const dadosRecebidos = await response.json();
+    pacientesData = [...new Map(dadosRecebidos.map(p => [p.id, p])).values()];
+
+    console.log("✅ Pacientes carregados:", pacientesData);
+    atualizarDropdownPacientes();
+
+  } catch (error) {
+    console.error("❌ Erro ao carregar pacientes:", error);
+  }
+}
+
+
+export async function preencherResumoPaciente(pacienteId) {
+  console.log(`🔄 Atualizando resumo do paciente ID: ${pacienteId}`);
+
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.error("❌ Usuário não autenticado! Redirecionando para login.");
+      window.location.href = "/login.html";
+      return;
+    }
+
+    const response = await fetch(`http://localhost:5000/dentista/pacientes/${pacienteId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) throw new Error(`❌ Erro ao carregar detalhes do paciente. Status: ${response.status}`);
+
+    const data = await response.json();
+    console.log("✅ Dados do paciente recebidos:", data);
+
+    if (!data.paciente) {
+      console.warn("⚠️ Nenhum paciente encontrado para este ID.");
+      return;
+    }
+
+    // 🔹 Atualiza os elementos do HTML corretamente
+    document.getElementById("nome-paciente-selecionado").textContent = data.paciente.nome || "Desconhecido";
+    document.getElementById("contato-paciente").textContent = data.paciente.telefone || "---";
+    document.getElementById("data-paciente").textContent = data.paciente.data_nascimento || "--";
+    document.getElementById("sexo-paciente").textContent = data.paciente.sexo || "--";
+
+    console.log(typeof renderPedidosPaciente);
+    console.log(typeof renderPedidosPaciente);
+    console.log(typeof renderPedidosPaciente);
+    // 🔹 Atualiza pedidos na tabela
+    renderPedidosPaciente(data.pedidos);
+
+    // 🔹 Atualiza o dropdown para refletir o paciente selecionado
+    const selectPacienteAtivo = document.getElementById("paciente-ativo");
+    if (selectPacienteAtivo) {
+      selectPacienteAtivo.value = pacienteId;
+    }
+
+    // 🔹 Faz o scroll automático para a seção do resumo do paciente
+    const infoPacienteSection = document.getElementById("info-dentista");
+    if (infoPacienteSection) {
+      infoPacienteSection.scrollIntoView({ behavior: "smooth" });
+      console.log("📜 Rolando para o resumo do paciente...");
+    }
+
+  } catch (error) {
+    console.error("❌ Erro ao buscar detalhes do paciente:", error);
+  }
+}
+
+
+export async function carregarPedidosPaciente(pacienteId) {
+  console.log(`🔄 Buscando pedidos do paciente ID: ${pacienteId}...`);
+
+  const token = localStorage.getItem("token");
+  if (!token) {
+    console.error("❌ Usuário não autenticado! Redirecionando para login.");
+    window.location.href = "/login.html";
+    return;
+  }
+
+  try {
+    const response = await fetch(`http://localhost:5000/dentista/pacientes/${pacienteId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) throw new Error(`❌ Erro ao carregar pedidos do paciente. Status: ${response.status}`);
+
+    const data = await response.json();
+    console.log(`✅ Pedidos recebidos para o paciente ${pacienteId}:`, data.pedidos);
+
+    renderPedidosPaciente(data.pedidos); // 🔥 Renderiza corretamente os pedidos do paciente
+
+  } catch (error) {
+    console.error("❌ Erro ao carregar pedidos do paciente:", error);
+    renderPedidosPaciente([]);
+  }
+}
+
+
+// frontend\painel\dashboard\dentista\pacientes_dentista\dropdown.js
+
+import { pacientesData, preencherResumoPaciente, carregarPedidosPaciente } from "./dados.js";
+
+export function atualizarDropdownPacientes() {
+    console.log("[Paciente Dentista] 🔄 Atualizando dropdown de pacientes...");
+
+    const selectPacienteAtivo = document.getElementById("paciente-ativo");
+    if (!selectPacienteAtivo) {
+        console.warn("⚠️ Dropdown #paciente-ativo não encontrado!");
+        return;
+    }
+
+    selectPacienteAtivo.innerHTML = `<option value="">Escolha...</option>` + 
+        pacientesData.map(p => `<option value="${p.id}">${p.nome}</option>`).join("");
+
+    selectPacienteAtivo.addEventListener("change", () => {
+        const pacienteId = selectPacienteAtivo.value;
+        if (pacienteId) {
+            preencherResumoPaciente(pacienteId);
+            carregarPedidosPaciente(pacienteId);
+        }
+    });
+}
+
+
+
+// frontend\painel\dashboard\dentista\pacientes_dentista\eventos.js
+
+
+
+
+// frontend\painel\dashboard\dentista\pacientes_dentista\tabela.js
+
+import { pacientesData } from "./dados.js";
+import { carregarPedidosPaciente, preencherResumoPaciente } from "./dados.js";
+
+export function renderListaPacientes() {
+  const tabela = document.getElementById("tabela-pacientes");
+  const thead = tabela.querySelector("thead");
+  const tbody = tabela.querySelector("tbody");
+  const selectPacienteAtivo = document.getElementById("paciente-ativo");
+
+  // Limpa conteúdo anterior
+  thead.innerHTML = "";
+  tbody.innerHTML = "";
+
+  // Cabeçalho dinâmico
+thead.innerHTML = `
+  <tr>
+    <th>Nome</th>
+    <th>Data de Nascimento</th>
+    <th>Sexo</th>
+    <th>Pedidos em Aberto</th>
+    <th>Ações</th>
+  </tr>
+  <tr>
+    <td><input type="text" id="filtro-nome" placeholder="Filtrar Nome"></td>
+    <td><input type="date" id="filtro-data-nascimento"></td>
+    <td>
+      <select id="filtro-sexo">
+        <option value="">Todos</option>
+        <option value="M">M</option>
+        <option value="F">F</option>
+      </select>
+    </td>
+    <td>--</td>
+    <td>--</td>
+  </tr>
+`;
+
+  // Se não houver pacientes
+  if (!pacientesData.length) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">Nenhum paciente encontrado.</td></tr>`;
+    return;
+  }
+
+  // Preenche a tabela
+  pacientesData.forEach(paciente => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${paciente.nome} (ID: ${paciente.id})</td>
+      <td>${paciente.data_nascimento || "--"}</td>
+      <td>${paciente.sexo || "--"}</td>
+      <td>${paciente.pedidos_abertos ?? 0}</td>
+      <td><button class="btn-ver" data-id="${paciente.id}">Ver</button></td>
+    `;
+    tbody.appendChild(row);
+  });
+
+  // Adiciona eventos aos botões "Ver"
+  document.querySelectorAll(".btn-ver").forEach(btn =>
+    btn.addEventListener("click", () => {
+      const pacienteId = btn.getAttribute("data-id");
+
+    
+
+      preencherResumoPaciente(pacienteId);
+      carregarPedidosPaciente(pacienteId);
+    })
+  );
+}
+export function renderPedidosPaciente(pedidos = []) {
+  console.log("[Paciente Dentista] 🔄 Atualizando tabela de pedidos do paciente...");
+
+  const tabelaPedidos = document.getElementById("tabela-pedidos-paciente");
+  if (!tabelaPedidos) {
+    console.warn("⚠️ Elemento #tabela-pedidos-paciente não encontrado!");
+    return;
+  }
+
+  const thead = tabelaPedidos.querySelector("thead");
+  const tbody = tabelaPedidos.querySelector("tbody");
+
+  // Limpa conteúdo anterior
+  thead.innerHTML = "";
+  tbody.innerHTML = "";
+
+  // Cabeçalho dinâmico com filtros
+  thead.innerHTML = `
+    <tr>
+      <th>ID</th>
+      <th>Detalhes</th>
+      <th>Arquivo 3D</th>
+      <th>Status</th>
+    </tr>
+    <tr>
+      <td><input type="text" id="filtro-id-pedido" placeholder="Filtrar ID"></td>
+      <td>--</td>
+      <td>--</td>
+      <td>
+        <select id="filtro-status-pedido">
+          <option value="">Todos</option>
+          <option value="aberto">Aberto</option>
+          <option value="pago">Pago</option>
+          <option value="finalizado">Finalizado</option>
+          <option value="cancelado">Cancelado</option>
+        </select>
+      </td>
+    </tr>
+  `;
+
+  // Preenche o corpo da tabela
+  tbody.innerHTML = pedidos.length
+    ? pedidos.map(pedido => `
+      <tr>
+        <td>${pedido.id}</td>
+        <td><button class="btn-detalhes" data-ficha='${JSON.stringify(pedido.ficha_tecnica)}'>Ver Detalhes</button></td>
+        <td>${pedido.arquivo_3d ? `<a href="${pedido.arquivo_3d}" target="_blank">Link</a>` : "Sem arquivo"}</td>
+        <td>${pedido.status || "Indefinido"}</td>
+      </tr>`).join("")
+    : `<tr><td colspan="4" style="text-align:center;">Nenhum pedido encontrado.</td></tr>`;
+
+  console.log("[Paciente Dentista] ✅ Tabela de pedidos do paciente atualizada!");
+
+  // Adiciona evento para abrir detalhes da ficha técnica
+  document.querySelectorAll(".btn-detalhes").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const fichaTecnica = JSON.parse(btn.getAttribute("data-ficha"));
+      alert(`📋 Detalhes da Ficha Técnica:\n${JSON.stringify(fichaTecnica, null, 2)}`);
+    });
+  });
+}
+
+
+// frontend\painel\dashboard\dentista\paciente_dentista.css
+
+/* Estilos gerais do módulo de pacientes */
+#paciente-dentista {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+#paciente-dentista h2 {
+  font-size: 24px;
+  margin-bottom: 15px;
+  color: #007BFF;
+}
+
+/* Seleção do paciente ativo */
+.selecao-paciente {
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.selecao-paciente label {
+  font-weight: bold;
+}
+#paciente-ativo {
+  padding: 8px;
+  font-size: 16px;
+}
+
+/* Resumo do paciente */
+#resumo-paciente {
+  margin-bottom: 30px;
+  border: 1px solid #ddd;
+  padding: 15px;
+  border-radius: 6px;
+  background-color: #f9f9f9;
+}
+#resumo-paciente h3 {
+  font-size: 20px;
+  margin-bottom: 5px;
+}
+#resumo-paciente p {
+  margin: 3px 0;
+}
+#resumo-paciente h4 {
+  margin-top: 15px;
+  font-size: 18px;
+  margin-bottom: 5px;
+}
+#tabela-pedidos-paciente {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 5px;
+}
+#tabela-pedidos-paciente th,
+#tabela-pedidos-paciente td {
+  padding: 8px;
+  border: 1px solid #ddd;
+  text-align: center;
+}
+#tabela-pedidos-paciente th {
+  background-color: #007BFF;
+  color: #fff;
+}
+#btn-criar-pedido {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background-color: #007BFF;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  border-radius: 4px;
+}
+#btn-criar-pedido:hover {
+  background-color: #0056b3;
+}
+
+/* Lista de pacientes */
+#lista-pacientes {
+  margin-top: 20px;
+}
+#lista-pacientes h3 {
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+#tabela-pacientes {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 10px;
+}
+#tabela-pacientes th,
+#tabela-pacientes td {
+  padding: 10px;
+  border: 1px solid #ddd;
+  text-align: center;
+}
+#tabela-pacientes th {
+  background-color: #007BFF;
+  color: #fff;
+}
+
+/* Botões da tabela */
+.btn-ver {
+  padding: 6px 10px;
+  margin-right: 5px;
+  background-color: #007BFF;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.btn-ver:hover {
+  background-color: #0056b3;
+}
+
+/* Botões de paciente */
+.botoes-paciente {
+  margin-top: 10px;
+}
+#btn-novo-paciente {
+  padding: 8px 12px;
+  background-color: #007BFF;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  border-radius: 4px;
+}
+#btn-novo-paciente:hover {
+  background-color: #0056b3;
+}
+
+
+
+// frontend\painel\dashboard\dentista\paciente_dentista.html
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Painel - Pacientes</title>
+</head>
+<body>
+
+  <section id="info-dentista">
+  <h2>Olá, <span id="dentista-nome">Carregando...</span> <span id="dentista-id"></span></h2>
+
+  </section>
+
+  <section id="selecao-paciente">
+    <label for="paciente-ativo">Selecione o Paciente:</label>
+    <select id="paciente-ativo">
+      <option value="">Escolha...</option>
+      <!-- Opções carregadas via JS -->
+    </select>
+  </section>
+
+  <section id="resumo-paciente">
+    <h3>Resumo do Paciente: <span id="nome-paciente-selecionado">---</span></h3>
+    <p>Contato: <span id="contato-paciente">---</span></p>
+    <p>Data de Nascimento: <span id="data-paciente">---</span></p>
+    <p>Sexo: <span id="sexo-paciente">---</span></p>
+
+    <h4>Pedidos do Paciente</h4>
+    <table id="tabela-pedidos-paciente">
+      <thead>
+        <tr>
+          <th>ID Pedido</th>
+          <th>Ficha Técnica</th>
+          <th>Arquivo 3D</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Pedidos carregados via JS -->
+      </tbody>
+    </table>
+    <button id="btn-criar-pedido">+ Criar Pedido</button>
+  </section>
+
+  <section id="lista-pacientes">
+    <h3>Lista de Pacientes</h3>
+    <table id="tabela-pacientes">
+      <thead>
+        <tr>
+          <th>1Nome</th>
+          <th>Data de Nascimento</th>
+          <th>Sexo</th>
+          <th>Pedidos em Aberto</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Pacientes carregados via JS -->
+      </tbody>
+    </table>
+    <button id="btn-novo-paciente">+ Novo Paciente</button>
+  </section>
+
+</body>
+</html>
+
+
+
+// frontend\painel\dashboard\dentista\paciente_dentista.js
+
+console.log("[Paciente Dentista] 🔥 Script paciente_dentista.js carregado corretamente!");
+
+
+import { carregarPacientesDentista, preencherResumoPaciente, carregarPedidosPaciente } from "./pacientes_dentista/dados.js";
+import { renderListaPacientes, renderPedidosPaciente } from "./pacientes_dentista/tabela.js";
+import { atualizarDropdownPacientes } from "./pacientes_dentista/dropdown.js"; // Mantenha essa importação por último!
+
+
+// 🔹 Inicializa os pacientes ao carregar a página
+carregarPacientesDentista().then(() => {
+    renderListaPacientes();
+    setTimeout(() => {
+        atualizarDropdownPacientes(); // Aguarda um pouco para garantir que foi carregado
+    }, 100);
+});
+
+
+// 🔹 Torna funções globais para serem acessíveis de outros lugares (se necessário)
+window.preencherResumoPaciente = preencherResumoPaciente;
+
+export let pacientesData = [];
+export let pedidosPacienteData = [];
+
+
+
+
+// frontend\painel\dashboard\dentista\pedidos_dentista.css
+
+    /* Estilos para a seção de pedidos do dentista */
+      .cabecalho-pedidos {
+      margin-bottom: 15px;
+      text-align: right;
+    }
+
+    #btn-novo-pedido {
+      padding: 8px 12px;
+      background-color: #007BFF;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    #btn-novo-pedido:hover {
+      background-color: #0056b3;
+    }
+
+    #tabela-pedidos-dentista {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+    }
+    #tabela-pedidos-dentista th,
+    #tabela-pedidos-dentista td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+    #tabela-pedidos-dentista th {
+      background-color: #007BFF;
+      color: #fff;
+    }
+
+    .btn-ver {
+      padding: 6px 10px;
+      background-color: #007BFF;
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .btn-ver:hover {
+      background-color: #0056b3;
+    }
+
+
+
+// frontend\painel\dashboard\dentista\pedidos_dentista.html
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Painel - Pedidos</title>
+</head>
+<body>
+
+  <!-- Seção de Pedidos -->
+  <section id="pedidos-dentista">
+    <h3>📋 Meus Pedidos</h3>
+
+    <!-- Cabeçalho com botão para criar novo pedido -->
+    <div class="cabecalho-pedidos">
+      <button id="btn-novo-pedido" class="btn-primario">+ Novo Pedido</button>
+    </div>
+
+    <!-- Mensagem de Carregamento -->
+    <div id="carregando-pedidos" class="carregando">Carregando pedidos...</div>
+
+    <!-- Tabela de Pedidos -->
+    <table id="tabela-pedidos-dentista">
+      <thead>
+        <tr>
+          <th>ID Pedido</th>
+          <th>Paciente</th>
+          <th>Data do Pedido</th>
+          <th>Status</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Pedidos carregados via JS -->
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Script (Carregar no Final para Evitar Erros do DOM) -->
+  <script src="dashboard/dentista/modules/pedidos_dentista.js"></script>
+
+</body>
+</html>
+
+
+
+// frontend\painel\dashboard\dentista\pedidos_dentista.js
+
+console.log("[Pedidos Dentista] 🔥 Script pedidos_dentista.js carregado corretamente!");
+import { initSortButtons } from "../core/filtros.js"; // Import correto
+
+// Array global para armazenar os pedidos do backend
+export let pedidosData = [];
+
+async function carregarPedidosDentista() {
+  console.log("[Pedidos Dentista] 🔄 Iniciando carregamento de pedidos...");
+
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.error("❌ Usuário não autenticado! Redirecionando para login.");
+      window.location.href = "/login.html";
+      return;
+    }
+
+    console.log("🌍 Enviando requisição para /dentista/pedidos/dashboard...");
+    const response = await fetch("http://localhost:5000/dentista/pedidos/dashboard", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`❌ Erro ao carregar pedidos. Status: ${response.status}`);
+    }
+
+    const dadosRecebidos = await response.json();
+
+    if (!Array.isArray(dadosRecebidos)) {
+      console.error("❌ O backend não retornou um array de pedidos! Resposta recebida:", dadosRecebidos);
+      return;
+    }
+
+    pedidosData = dadosRecebidos;
+    console.log("✅ Pedidos carregados:", pedidosData);
+
+    renderListaPedidosDentista(); // Renderiza com dados iniciais
+  } catch (error) {
+    console.error("❌ Erro ao carregar pedidos do dentista:", error);
+    exibirErroNaTabela("Erro ao carregar pedidos.");
+  }
+}
+
+function renderListaPedidosDentista(pedidos = pedidosData) {
+  console.log("[Pedidos Dentista] 🔄 Substituindo toda a tabela...");
+
+  const containerPedidos = document.getElementById("pedidos-dentista");
+  if (!containerPedidos) {
+    console.warn("⚠️ Seção #pedidos-dentista não encontrada!");
+    return;
+  }
+
+  // Remove tabela antiga, se existir
+  const tabelaAntiga = document.getElementById("tabela-pedidos-dentista");
+  if (tabelaAntiga) {
+    tabelaAntiga.remove();
+  }
+
+  // Cria nova tabela
+  const novaTabela = document.createElement("table");
+  novaTabela.id = "tabela-pedidos-dentista";
+  novaTabela.classList.add("tabela");
+
+  // Cabeçalho com filtros
+ novaTabela.innerHTML = `
+    <thead>
+      <tr>
+        <th>ID Pedido</th>
+        <th>Paciente</th>
+        <th>Data do Pedido</th>
+        <th>Status</th>
+        <th>Ficha Técnica</th>
+        <th>Arquivo 3D</th>
+        <th>Ações</th>
+      </tr>
+      <tr>
+        <td>
+          <input type="text" id="filtro-id-pedido" placeholder="ID" maxlength="10" size="5">
+          <button class="sort-btn" data-col="id"></button>
+        </td>
+        <td>
+          <select id="filtro-paciente" class="filter-select">
+            <option value="">Todos</option>
+          </select>
+          <button class="sort-btn" data-col="paciente_nome"></button>
+        </td>
+        <td>
+          <select id="filtro-data-pedido">
+            <option value="">Todas</option>
+            <option value="7">Últimos 7 dias</option>
+            <option value="30">Últimos 30 dias</option>
+          </select>
+          <button class="sort-btn" data-col="data_criacao"></button>
+        </td>
+        <td>
+          <select id="filtro-status-pedido">
+            <option value="">Todos</option>
+            <option value="aberto">Aberto</option>
+            <option value="pago">Pago</option>
+            <option value="finalizado">Finalizado</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+          <button class="sort-btn" data-col="status"></button>
+        </td>
+        <td>--</td>
+        <td>--</td>
+        <td>--</td>
+      </tr>
+    </thead>
+    <tbody id="tbody-pedidos"></tbody>
+  `;
+
+
+  containerPedidos.appendChild(novaTabela);
+
+  const tbody = document.getElementById("tbody-pedidos");
+
+  // Verifica se há pedidos
+ // Na função renderListaPedidosDentista
+if (!pedidos.length) {
+  tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">Nenhum pedido encontrado.</td></tr>`;
+  return;
+}
+
+// Preenche com pedidos ordenados
+tbody.innerHTML = pedidos.map(pedido => `
+  <tr>
+    <td>${pedido.id}</td>
+    <td>${pedido.paciente_nome || "N/D"}</td>
+    <td>${pedido.data_criacao || "--"}</td>
+    <td>${pedido.status || "Indefinido"}</td>
+    <td><button class="btn-detalhes" data-id="${pedido.id}">📄 Detalhes</button></td>
+    <td>${pedido.arquivo_3d ? `<a href="${pedido.arquivo_3d}" target="_blank">📂 Ver Arquivo</a>` : "Sem arquivo"}</td>
+    <td><button class="btn-ver-detalhes" data-id="${pedido.id}">👁 Ver</button></td>
+  </tr>
+`).join("");
+
+  // Eventos dos botões "Detalhes" e "Ver"
+  document.querySelectorAll(".btn-detalhes").forEach(btn =>
+    btn.addEventListener("click", () => abrirFichaTecnica(btn.getAttribute("data-id")))
+  );
+  document.querySelectorAll(".btn-ver-detalhes").forEach(btn =>
+    btn.addEventListener("click", () => verDetalhesPedidoDentista(btn.getAttribute("data-id")))
+  );
+
+  console.log("[Pedidos Dentista] ✅ Tabela de pedidos atualizada!");
+
+  // Inicializa os botões de ordenação
+  initSortButtons("tabela-pedidos-dentista", pedidosData, renderListaPedidosDentista);
+
+  // Conecta o filtro de ID
+  const filtroId = document.getElementById("filtro-id-pedido");
+  filtroId.addEventListener("input", (e) => {
+    const filtered = pedidosData.filter(p => String(p.id).includes(e.target.value));
+    renderListaPedidosDentista(filtered);
+  });
+}
+
+function exibirErroNaTabela(mensagem) {
+  const tabela = document.getElementById("tabela-pedidos-dentista");
+  const tbody = tabela?.querySelector("tbody");
+  if (tbody) {
+    tbody.innerHTML = `<tr><td colspan="7" style="color: red; text-align: center;">${mensagem}</td></tr>`;
+  }
+}
+
+function abrirFichaTecnica(pedidoId) {
+  console.log(`📑 Abrindo ficha técnica do pedido ID: ${pedidoId}`);
+  alert(`Funcionalidade para abrir ficha técnica do pedido #${pedidoId} ainda não implementada.`);
+}
+
+function verDetalhesPedidoDentista(pedidoId) {
+  console.log(`🔎 Ver detalhes do pedido ID: ${pedidoId}`);
+  const pedido = pedidosData.find(p => p.id == pedidoId);
+  if (!pedido) {
+    console.warn(`⚠️ Pedido ID ${pedidoId} não encontrado!`);
+    return;
+  }
+  const pacienteId = pedido.paciente_id;
+  if (!pacienteId) {
+    console.warn(`⚠️ Pedido ID ${pedidoId} não possui um paciente associado!`);
+    return;
+  }
+  console.log(`📌 Buscando informações do paciente ID: ${pacienteId}...`);
+  preencherResumoPaciente(pacienteId).then(() => {});
+}
+
+// Expõe funções globalmente
+window.carregarPedidosDentista = carregarPedidosDentista;
+window.abrirFichaTecnica = abrirFichaTecnica;
+window.verDetalhesPedidoDentista = verDetalhesPedidoDentista;
+
+// Inicia o carregamento
+carregarPedidosDentista();
+
+
+// frontend\painel\dashboard\dentista.css
+
+
+
+
+// frontend\painel\dashboard\dentista.html
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dentista Dashboard</title>
+  <style>
+    /* HEADER - Cabeçalho Fixo (caso queira incluir) */
+    header {
+      width: 100%;
+      background: linear-gradient(to right, #0056b3, #007BFF);
+      color: white;
+      padding: 15px 20px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 60px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+    }
+
+    /* Ajuste para evitar que o conteúdo fique escondido abaixo do header */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #eef2f7;
+      margin: 0;
+      padding-top: 70px; /* Espaço para o header */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Conteúdo principal */
+    main {
+      width: 90%;
+      max-width: 1200px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Estilo dos containers */
+    .container {
+      background: white;
+      width: 100%;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+      min-height: 180px;
+      overflow-x: auto;
+    }
+
+    /* Responsividade */
+    @media (max-width: 768px) {
+      main {
+        width: 95%;
+      }
+      .container {
+        min-height: 150px;
+      }
+    }
+
+    /* Estilo das Tabelas */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      background: white;
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+
+    th {
+      background: #007BFF;
+      color: white;
+    }
+
+    .tabela-container {
+      max-height: 500px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <!-- Seção de Pedidos do Dentista -->
+    <section id="pedidos-container" class="container">
+      <h2>📋 Meus Pedidos</h2>
+           <div id="pedidos-content">Carregando pedidos...</div>
+    </section>
+  </main>
+ <!-- -->
+      <!-- Seção de pacientes do Dentista -->
+<section id="paciente-container" class="container">
+  <!-- Conteúdo injetado dinamicamente -->
+</section>
+
+  </main>
+
+  <!-- Carrega o script principal do Dentista Dashboard -->
+  <script src="dentista.js"></script>
+</body>
+</html>
+
+
+
+// frontend\painel\dashboard\dentista.js
+
+// dentista.js
+console.log("[Dentista] 🔥 Iniciando dentista.js...");
+
+// Seleciona o container onde será injetado o módulo de pedidos
+const pedidosContainer = document.getElementById("pedidos-container");
+const pacienteContainer = document.getElementById("paciente-container");
+
+// Função para carregar módulos dinamicamente (HTML, CSS e JS)
+async function carregarModulo(container, htmlPath, cssPath, scriptPath, nome, callback) {
+  console.log(`📂 Carregando módulo: ${nome}`);
+
+  try {
+    // Carrega o HTML do módulo
+    const response = await fetch(htmlPath);
+    if (!response.ok) throw new Error(`Módulo "${nome}" não encontrado!`);
+
+    const moduloHtml = await response.text();
+    container.innerHTML = moduloHtml;
+    console.log(`✅ HTML do módulo "${nome}" carregado!`);
+
+    // Carrega o CSS do módulo, se ainda não estiver carregado
+    if (!document.querySelector(`link[href='${cssPath}']`)) {
+      const cssLink = document.createElement("link");
+      cssLink.rel = "stylesheet";
+      cssLink.href = cssPath;
+      document.head.appendChild(cssLink);
+      console.log(`🎨 CSS do módulo "${nome}" carregado!`);
+    }
+
+    // Remove qualquer script antigo do mesmo módulo (para evitar duplicação)
+    const existingScript = document.querySelector(`script[src='${scriptPath}']`);
+    if (existingScript) {
+      existingScript.remove();
+      console.log(`🗑 Script antigo do módulo "${nome}" removido.`);
+    }
+
+    // Carrega o JS do módulo dinamicamente e executa o callback após o carregamento
+    const script = document.createElement("script");
+    script.src = scriptPath;
+    script.type = "module";
+    script.defer = true;
+
+    script.onload = () => {
+      console.log(`✅ JS do módulo "${nome}" carregado!`);
+      if (typeof callback === "function") {
+        console.log(`🚀 Executando callback para "${nome}"...`);
+        callback();
+      }
+    };
+
+    script.onerror = () => console.error(`❌ Erro ao carregar ${scriptPath}!`);
+
+    document.body.appendChild(script);
+  } catch (error) {
+    console.error(`❌ Erro ao carregar "${nome}":`, error);
+    container.innerHTML = `<p style="color: red;">Erro ao carregar "${nome}".</p>`;
+  }
+}
+
+
+// Carrega CSS genérico de filtros
+if (!document.querySelector(`link[href="../core/filtros.css"]`)) {
+  const cssLink = document.createElement("link");
+  cssLink.rel = "stylesheet";
+  cssLink.href = "./core/filtros.css";
+  document.head.appendChild(cssLink);
+  console.log("🎨 CSS genérico de filtros carregado!");
+}
+ // /**
+// Carregando o módulo "pedidos_dentista"
+  carregarModulo(
+    pedidosContainer,
+    "dashboard/dentista/pedidos_dentista.html",  // Caminho do HTML do módulo
+    "dashboard/dentista/pedidos_dentista.css",   // Caminho do CSS do módulo
+    "dashboard/dentista/pedidos_dentista.js",    // Caminho do JS do módulo
+    "pedidos_dentista",
+    () => {
+      console.log("🚀 Inicializando funcionalidades de pedidos (dentista)...");
+
+    }
+  );
+//**/
+// Carregando o módulo "paciente_dentista"
+
+carregarModulo(
+  pacienteContainer,
+  "dashboard/dentista/paciente_dentista.html",
+  "dashboard/dentista/paciente_dentista.css",
+  "dashboard/dentista/paciente_dentista.js",
+  "paciente_dentista"
+);
+
+
+
+
+
+// frontend\painel\login\auth.js
+
+// Função auxiliar para checar expiração do token
+function isTokenExpired(token) {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1])); // decodifica o payload JWT
+    const agora = Math.floor(Date.now() / 1000);
+    return payload.exp && payload.exp < agora; // compara exp com o timestamp atual
+  } catch (err) {
+    // se der erro ao decodificar, considera o token inválido/expirado
+    return true;
+  }
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+    console.log("[Auth] Verificando autenticação...");
+
+    const loginContainer = document.getElementById("login-container");
+    const dashboardContainer = document.getElementById("dashboard-container");
+    const header = document.getElementById("titulo");
+
+    if (!loginContainer || !dashboardContainer || !header) {
+        console.error("❌ Erro: Elementos do DOM não encontrados!");
+        return;
+    }
+
+    const token = localStorage.getItem("token");
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    // Verifica se há token, se há user, e se o token não está expirado
+    if (token && user && !isTokenExpired(token)) {
+        console.log("✅ Usuário autenticado:", user);
+
+        // Define o caminho do dashboard e do script correspondente
+        const dashboardPath = user.is_admin ? "dashboard/admin.html" : "dashboard/dentista.html";
+        const scriptPath = user.is_admin ? "dashboard/admin.js" : "dashboard/dentista.js";
+
+        console.log(`📂 Carregando dashboard: ${dashboardPath}`);
+
+        try {
+            const response = await fetch(dashboardPath);
+            if (!response.ok) throw new Error("Dashboard não encontrado!");
+
+            const dashboardHtml = await response.text();
+            dashboardContainer.innerHTML = dashboardHtml;
+
+            // Carrega dinamicamente o JS do dashboard
+            const dashboardScript = document.createElement("script");
+            dashboardScript.src = scriptPath;
+            dashboardScript.onload = () => console.log(`✅ [Auth] ${scriptPath} carregado!`);
+            document.body.appendChild(dashboardScript);
+            
+        } catch (error) {
+            console.error("❌ Erro ao carregar o dashboard:", error);
+            dashboardContainer.innerHTML = `<p style="color: red;">Erro ao carregar o dashboard.</p>`;
+        }
+
+        // Atualiza o header com os dados do usuário
+        header.innerHTML = `
+            <span>${user.is_admin ? "👑 ADMIN" : "🦷 DENTISTA"} - Sr. ${user.nome} (ID: ${user.id})</span>
+            ${user.is_verified ? '✅ Credenciado' : '❌ Não Credenciado'}
+            <button id="logout-button">Logout</button>
+        `;
+
+        // Esconde login e mostra dashboard
+        loginContainer.style.display = "none";
+        dashboardContainer.style.display = "block";
+
+        // Logout (quando o usuário clica em "Sair")
+        document.getElementById("logout-button").addEventListener("click", () => {
+            console.log("🚪 Logout realizado!");
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            location.href = location.href; // 🔄 Recarrega a página
+        });
+
+    } else {
+        console.warn("⚠️ Token ausente, usuário inexistente ou token expirado.");
+
+        // Mostra o login e esconde o dashboard
+        loginContainer.style.display = "block";
+        dashboardContainer.style.display = "none";
+    }
+});
+
+
+
+// frontend\painel\login\login.css
+
+/* Estilo específico para o Login */
+#login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+}
+
+.content-box {
+    background: white;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    max-width: 350px;
+    width: 100%;
+}
+
+h1 {
+    font-size: 24px;
+    color: #1e3c72;
+    margin-bottom: 10px;
+}
+
+h2 {
+    font-size: 20px;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    color: #555;
+    margin-bottom: 5px;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    outline: none;
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 10px;
+    font-size: 18px;
+    color: white;
+    background: #1e3c72;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: #16345e;
+}
+
+.error-message {
+    color: red;
+    font-size: 14px;
+    margin-top: 10px;
+    display: none;
+}
+
+
+
+// frontend\painel\login\login.html
+
+<div class="container" id="login-container">
+    <div class="content-box">
+        <h1>Amazon Align</h1>
+        <h2>Login 2</h2>
+        <form id="login-form" autocomplete="off">
+            <div class="form-group">
+                <label for="email">E-mail:</label>
+                <input type="email" id="email" name="email" placeholder="Digite seu e-mail" value="Pedro01@gmail.com" required>
+            </div>
+            <div class="form-group">
+                <label for="senha">Senha:</label>
+                <input type="password" id="senha" name="senha" placeholder="Digite sua senha" value="123" required>
+            </div>
+            <button type="submit" class="btn-primary">Entrar</button>
+            <p id="error-message" class="error-message">E-mail ou senha inválidos.</p>
+        </form>
+    </div>
+</div>
+
+
+
+// frontend\painel\login\login.js
+
+console.log("[Login] Iniciando login.js...");
+
+setTimeout(() => {
+    console.log("[Login] Tentando obter os elementos do DOM...");
+
+    const loginContainer = document.getElementById("login-container");
+    const dashboardContainer = document.getElementById("dashboard-container");
+
+    if (!loginContainer || !dashboardContainer) {
+        console.error("❌ loginContainer ou dashboardContainer não encontrados!");
+        return;
+    }
+
+    console.log("✅ Containers encontrados!", { loginContainer, dashboardContainer });
+
+    const loginForm = document.getElementById("login-form");
+    if (!loginForm) {
+        console.error("❌ Formulário de login não encontrado!");
+        return;
+    }
+
+    console.log("✅ Formulário de login encontrado!");
+
+    loginForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        console.log("📤 Evento de submit acionado!");
+
+        const emailInput = document.getElementById("email");
+        const senhaInput = document.getElementById("senha");
+
+        if (!emailInput || !senhaInput) {
+            console.error("❌ Campos de e-mail ou senha não encontrados no DOM!");
+            return;
+        }
+
+        const email = emailInput.value.trim().toLowerCase();
+        const senha = senhaInput.value.trim();
+
+        console.log(`🔑 Tentando login com:\n   - Email: ${email}\n   - Senha: ${senha}`);
+
+        try {
+            console.log("🌍 Enviando requisição para o servidor...");
+            const response = await fetch("http://localhost:5000/dentistas/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ email, senha })
+            });
+
+            console.log("🔄 Resposta recebida do servidor.");
+            const data = await response.json();
+
+            console.log("📥 Resposta JSON:", data);
+
+            if (!response.ok) {
+                console.error(`❌ Erro no login: ${data.message || "Erro desconhecido"}`);
+                document.getElementById("error-message").textContent = data.message;
+                document.getElementById("error-message").style.display = "block";
+                return;
+            }
+
+            console.log("✅ Login bem-sucedido!");
+            console.log("🛠️ Salvando token no localStorage...");
+
+            localStorage.setItem("token", data.token);
+            localStorage.setItem("user", JSON.stringify(data.dentista));
+
+            console.log("🔀 Ocultando login e mostrando o dashboard...");
+            loginContainer.style.display = "none";  // Esconde o login
+            dashboardContainer.style.display = "block"; // Mostra o dashboard
+             location.href = location.href;
+
+        } catch (error) {
+            console.error("❌ Erro ao tentar logar:", error);
+            document.getElementById("error-message").textContent = "Erro ao conectar ao servidor.";
+            document.getElementById("error-message").style.display = "block";
+        }
+    });
+
+    console.log("📌 Event listener de submit adicionado ao formulário!");
+}, 1000);
+
+
+
+// frontend\painel\painel.css
+
+
+
+
+// frontend\painel\painel.html
 
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -331,8 +5246,16 @@ carregarModulo(
 
 <script src="login/auth.js"></script>
 
-<script>
-        // Função para carregar o login real dinamicamente
+    <script src="painel.js"></script>
+</html>
+
+
+
+// frontend\painel\painel.js
+
+    console.log("[painel] 🔄 Iniciando login.js...");
+
+      // Função para carregar o login real dinamicamente
  async function carregarLogin() {
     console.log("🔄 Carregando login...");
 
@@ -363,14 +5286,3 @@ carregarModulo(
 
 // 🔥 Carregar login ao iniciar a página
 carregarLogin();
-
-    </script>
-
-    <script src="painel.js"></script>
-</html>
-
-
-
-// ..\frontend\painel\painel.js
-
-    console.log("[painel] 🔄 Iniciando login.js...");

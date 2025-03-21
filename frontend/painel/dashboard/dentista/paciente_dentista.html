@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Painel - Pacientes</title>
+</head>
+<body>
+  <section id="info-dentista">
+    <h2>Olá, <span id="dentista-nome">Carregando...</span> <span id="dentista-id"></span></h2>
+  </section>
+  <!-- aqui é onde deveria ter o btn criar paciente -->
+  <section id="selecao-paciente">
+    <label for="paciente-ativo">Selecione o Paciente:</label>
+    <select id="paciente-ativo">
+      <option value="">Escolha...</option>
+    </select>
+  </section>
+  <!-- 📌 Seção de Resumo do Paciente -->
+  <section id="resumo-paciente">
+   <h4>Dados:</h4>
+    <p>Contato: <span id="contato-paciente">---</span></p>
+    <p>Data de Nascimento: <span id="data-paciente">---</span></p>
+    <p>Sexo: <span id="sexo-paciente">---</span></p>
+      <!-- aqui é onde deveria ter o btn criar pedido -->
+  </section>
+  <h4>Pedidos do Paciente <span id="nome-paciente-selecionado">---</span></h4>
+  <table id="tabela-pedidos-paciente" class="tabela">
+     
+      <tbody id="tbody-pedidos-paciente">
+        <!-- Os pedidos serão carregados dinamicamente -->
+      </tbody>
+  </table>
+
+      <h4>Lista de Pacientes</h4>
+    <section id="lista-pacientes">
+      <table id="tabela-pacientes" class="tabela">
+        <thead id="thead-pacientes">
+     
+        </thead>
+        <tbody id="tbody-pacientes">
+          <tr><td colspan="2" style="text-align:center;">Carregando pacientes...</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <script type="module" src="dashboard/dentista/pacientes_dentista.js"></script>
+
+</body>
+</html>
