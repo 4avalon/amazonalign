@@ -19,15 +19,17 @@ const dashboardDentistaRoutes = require("./routes/dashboardDentista");
 const app = express();
 
 // Configurações básicas
+// Configurações básicas
 app.use(cors({
-  origin: [
-    "http://localhost:8000",             // dev local
-    "https://4avalon.github.io",         // GitHub Pages
-  ],
-  credentials: true
+  origin: '*', // Libera geral — depois pode restringir se quiser
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+app.options('*', cors()); // 🔥 Isso resolve os erros de CORS pré-flight
+
 app.use(express.json());
+
 
 // Rotas
 app.use('/dentistas', dentistasRoutes);
