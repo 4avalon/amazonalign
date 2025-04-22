@@ -1,4 +1,6 @@
 console.log("[cadastro_pedido] 🔥 Iniciando Cadastro de Pedido...");
+import { capturarFichaTecnicaComoJSON } from "./ficha_tecnica_utils.js";
+import { BASE_URL } from "../../../config.js"; // ajuste conforme o nível da pasta
 
 // Aguarda o carregamento do DOM
 setTimeout(() => {
@@ -25,27 +27,22 @@ async function handleCadastroPedido(event) {
     const form = event.target;
     const formData = new FormData(form);
 
-    // Converte os dados do formulário para um objeto
+    // Captura dados do formulário básico do pedido
     const pedidoData = Object.fromEntries(formData.entries());
 
     // Adiciona o `dentista_id` e `paciente_id`
-    pedidoData.dentista_id = localStorage.getItem("dentista_id") || null;
-    pedidoData.paciente_id = localStorage.getItem("paciente_id") || null;
+    pedidoData.dentista_id = localStorage.getItem("dentista_id");
+    pedidoData.paciente_id = localStorage.getItem("paciente_id");
+    pedidoData.status = 'aberto'; // valor padrão inicial
 
-    // 🔹 Captura os dados da ficha técnica e os converte para JSON
-    const fichaTecnicaData = capturarDadosFichaTecnica();
-    pedidoData.ficha_tecnica = JSON.stringify(fichaTecnicaData); // Converte JSON para string
+    // 🔹 Captura os dados da ficha técnica usando a função que já existe
+    const fichaTecnicaData = capturarFichaTecnicaComoJSON();
+    pedidoData.ficha_tecnica = fichaTecnicaData;
 
-    // Validação: Garante que todos os campos obrigatórios estão preenchidos
-    if (!validarFormulario(pedidoData)) {
-        alert("⚠️ Preencha todos os campos obrigatórios antes de continuar.");
-        return;
-    }
-
-    console.log("📤 Enviando Pedido + Ficha Técnica:", pedidoData);
-
+    // Envio dos dados ao backend
     try {
-        const response = await fetch("http://localhost:5000/pedidos", {
+        const response = await fetch(`${BASE_URL}/pedidos`, {
+
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -55,18 +52,20 @@ async function handleCadastroPedido(event) {
         });
 
         const result = await response.json();
-        console.log("📩 Resposta do servidor:", result);
+if (response.ok) {
+    alert("✅ Pedido cadastrado com sucesso!");
+    document.getElementById("form-active").innerHTML = ""; // remove o formulário após sucesso
+    location.reload(); // atualiza a página
+} else {
+    alert(`❌ Erro: ${result.message}`);
+}
 
-        if (response.ok) {
-            alert("✅ Pedido cadastrado com sucesso!", () => location.reload()); // 🔄 Recarrega ao clicar em "OK"
-        } else {
-            alert(`❌ Erro: ${result.message}`);
-        }
     } catch (error) {
         console.error("❌ Erro ao cadastrar pedido:", error);
         alert("Erro ao cadastrar pedido. Verifique sua conexão.");
     }
 }
+
 function validarFormulario(pedidoData) {
     if (!pedidoData.paciente_id) {
         console.warn("⚠️ Paciente não selecionado.");
@@ -79,5 +78,43 @@ function validarFormulario(pedidoData) {
     }
 
     return true; // Tudo OK
+}
+
+
+///testando salvar os pedidos com Ficha Tecnica json
+async function salvarPedido() {
+  try {
+    // 🔹 1. Captura dados do formulário do pedido
+    const idPaciente = document.getElementById("paciente_id").value;
+    const descricao = document.getElementById("descricao_tratamento").value;
+    const dataInicio = document.getElementById("data_inicio").value;
+
+    // 🔹 2. Captura a ficha técnica (via função global)
+    const fichaTecnica = window.fichaTecnicaUtils.capturarFichaTecnicaComoJSON();
+
+    // 🔹 3. Monta o objeto a ser enviado
+    const payload = {
+      id_paciente: idPaciente,
+      descricao: descricao,
+      data_inicio: dataInicio,
+      ficha_tecnica: fichaTecnica
+    };
+
+    // 🔹 4. Envia pro backend
+    const response = await fetch("/api/pedidos", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) throw new Error("Erro ao salvar pedido");
+
+    const resultado = await response.json();
+    alert("✅ Pedido salvo com sucesso!");
+    // Redirecionar ou atualizar tela
+  } catch (error) {
+    console.error("❌ Erro ao salvar pedido:", error);
+    alert("Erro ao salvar o pedido.");
+  }
 }
 

@@ -1,4 +1,4 @@
-console.log("[Paciente Dentista] 🔥 Script paciente_dentista.js carregado corretamente!");
+//console.log("[Paciente Dentista] 🔥 Script paciente_dentista.js carregado corretamente!");
 
 // Importando funções essenciais dos módulos
 import { inicializarTabelaPacientes } from "./pacientes_dentista/tabela_pacientes.js";

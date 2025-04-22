@@ -1,10 +1,12 @@
-console.log("[Paciente Dentista] 🔥 Módulo dados.js carregado!");
+//console.log("[Paciente Dentista] 🔥 Módulo dados.js carregado!");
 
 // 🔹 Armazena dados globalmente (para reutilização)
+import { BASE_URL } from "../../../config.js"; // ajuste se necessário
+
 export let pacientesData = [];
 
 export async function carregarPacientes() {
-  console.log("[Paciente Dentista] 🔄 Buscando lista de pacientes...");
+  //console.log("[Paciente Dentista] 🔄 Buscando lista de pacientes...");
 
   try {
     const token = localStorage.getItem("token");
@@ -14,7 +16,8 @@ export async function carregarPacientes() {
       return [];
     }
 
-    const response = await fetch("http://localhost:5000/dentista/pacientes/dashboard", {
+    const response = await fetch(`${BASE_URL}/dentista/pacientes/dashboard`, {
+
       method: "GET",
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -24,7 +27,7 @@ export async function carregarPacientes() {
     const pacientes = await response.json();
     if (!Array.isArray(pacientes)) throw new Error("Os dados recebidos não são uma lista válida!");
 
-    console.log("📌 Pacientes carregados:", pacientes);
+    //console.log("📌 Pacientes carregados:", pacientes);
     pacientesData = pacientes; // Atualiza a variável global
 
     return pacientes;
@@ -41,7 +44,7 @@ export async function carregarPacientes() {
  */
 
 export async function carregarDetalhesPaciente(pacienteId) {
-  console.log(`📦 Buscando detalhes do paciente ID: ${pacienteId}...`);
+  //console.log(`📦 Buscando detalhes do paciente ID: ${pacienteId}...`);
 
   try {
     const token = localStorage.getItem("token");
@@ -51,7 +54,8 @@ export async function carregarDetalhesPaciente(pacienteId) {
       return null;
     }
 
-    const response = await fetch(`http://localhost:5000/dentista/pacientes/${pacienteId}`, {
+    const response = await fetch(`${BASE_URL}/dentista/pacientes/${pacienteId}`, {
+
       method: "GET",
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -64,7 +68,7 @@ export async function carregarDetalhesPaciente(pacienteId) {
       return null;
     }
 
-    console.log(`📋 Detalhes do paciente ${pacienteId}:`, data);
+    //console.log(`📋 Detalhes do paciente ${pacienteId}:`, data);
     return data; // Retorna { paciente, pedidos }
   } catch (error) {
     console.error("❌ Erro ao buscar detalhes do paciente:", error);

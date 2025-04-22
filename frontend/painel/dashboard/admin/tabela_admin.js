@@ -1,7 +1,7 @@
 
 
 console.log("[Admin] 🔥 Script tabela_admin.js carregado corretamente!");
-
+import { BASE_URL } from "../../config.js"; // ajuste o caminho conforme a pasta atual
 export let adminsData = [];
 
 // Carrega a lista de administradores do backend
@@ -17,7 +17,8 @@ async function carregarAdmins() {
         }
 
         console.log("🔍 Enviando requisição para buscar administradores...");
-        const apiResponse = await fetch("http://localhost:5000/admin/dentistas/dashboard", {
+        const apiResponse = await fetch(`${BASE_URL}/admin/dentistas/dashboard`, {
+
             method: "GET",
             headers: {
                 "Content-Type": "application/json",

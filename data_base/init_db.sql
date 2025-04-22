@@ -39,27 +39,17 @@ CREATE TABLE IF NOT EXISTS pedidos (
     id SERIAL PRIMARY KEY,
     paciente_id INTEGER NOT NULL REFERENCES pacientes(id) ON DELETE CASCADE,
     dentista_id INTEGER NOT NULL REFERENCES dentistas(id) ON DELETE CASCADE,
+    descricao TEXT,
     data_pagamento TIMESTAMP,
     data_entrega TIMESTAMP,
     video_conferencia BOOLEAN DEFAULT FALSE,
     arquivo_3d TEXT,
     ficha_tecnica JSONB,
     status VARCHAR(20) CHECK (
-      status IN (
-        'aberto', 
-        'pago', 
-        'em_producao', 
-        'finalizado', 
-        'entregue', 
-        'cancelado'
-      )
+      status IN ('aberto', 'pago', 'em_producao', 'finalizado', 'entregue', 'cancelado')
     ) DEFAULT 'aberto',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
--- (Opcional) Restaurar permissões
-GRANT ALL ON SCHEMA public TO postgres;
-GRANT ALL ON SCHEMA public TO public;
 
 -- =========================================
 -- 1) INSERIR DENTISTAS PRIMEIRO
@@ -119,14 +109,6 @@ VALUES
   (4, 9, TRUE,  'link_3d_model_ricardo1','{"procedimento":"Implante","quantidade":2}',    'pago', '2024-02-21', NULL),
   (4, 9, FALSE, 'link_3d_model_ricardo2','{"procedimento":"Clareamento","tipo":"químico"}', 'aberto', NULL, NULL);
 
--- Atualizar sequência para dentistas
-SELECT setval('dentistas_id_seq', (SELECT COALESCE(MAX(id), 1) FROM dentistas), false);
-
--- Atualizar sequência para pacientes
-SELECT setval('pacientes_id_seq', (SELECT COALESCE(MAX(id), 1) FROM pacientes), false);
-
--- Atualizar sequência para pedidos
-SELECT setval('pedidos_id_seq', (SELECT COALESCE(MAX(id), 1) FROM pedidos), false);
 
 -- =========================================
 -- 4) CONSULTAS DE VERIFICAÇÃO

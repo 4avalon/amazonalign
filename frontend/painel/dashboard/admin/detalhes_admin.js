@@ -1,4 +1,5 @@
-console.log("[Detalhes Dentista] 🔥 Script detalhes_admin.js carregado corretamente!");
+console.log("[Detalhes Admin] 🔥 Script detalhes_admin.js carregado corretamente!");
+import { BASE_URL } from "../../config.js"; // ajuste o caminho conforme a pasta atual
 
 // ✅ Função para carregar a lista de dentistas no <select>
 async function carregarDentistasParaSelecao() {
@@ -12,7 +13,8 @@ async function carregarDentistasParaSelecao() {
             return;
         }
 
-        const response = await fetch("http://localhost:5000/admin/dentistas/dashboard", {
+        const response = await fetch(`${BASE_URL}/admin/dentistas/dashboard`, {
+
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
@@ -63,7 +65,8 @@ async function carregarDetalhesDentista() {
 
     try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`http://localhost:5000/admin/dentistas/${dentistaId}`, {
+        const response = await fetch(`${BASE_URL}/admin/dentistas/${dentistaId}`, {
+
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
@@ -107,7 +110,8 @@ async function alterarAdmin(id, atual) {
     const token = localStorage.getItem("token");
 
     try {
-        const response = await fetch(`http://localhost:5000/admin/dentistas/${id}/toggle-is_admin`, {
+        const response = await fetch(`${BASE_URL}/admin/dentistas/${id}/toggle-is_admin`, {
+
             method: "PATCH",
             headers: {
                 "Content-Type": "application/json",
@@ -134,7 +138,8 @@ async function alterarCredenciado(id, atual) {
     const token = localStorage.getItem("token");
 
     try {
-        const response = await fetch(`http://localhost:5000/admin/dentistas/${id}/toggle-is_verified`, {
+        const response = await fetch(`${BASE_URL}/admin/dentistas/${id}/toggle-is_verified`, {
+
             method: "PATCH",
             headers: {
                 "Content-Type": "application/json",

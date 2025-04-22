@@ -11,7 +11,7 @@ function isTokenExpired(token) {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-    console.log("[Auth] Verificando autenticação...");
+    //console.log("[Auth] Verificando autenticação...");
 
     const loginContainer = document.getElementById("login-container");
     const dashboardContainer = document.getElementById("dashboard-container");
@@ -27,13 +27,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Verifica se há token, se há user, e se o token não está expirado
     if (token && user && !isTokenExpired(token)) {
-        console.log("✅ Usuário autenticado:", user);
+        //console.log("✅ Usuário autenticado:", user);
 
         // Define o caminho do dashboard e do script correspondente
         const dashboardPath = user.is_admin ? "dashboard/admin.html" : "dashboard/dentista.html";
         const scriptPath = user.is_admin ? "dashboard/admin.js" : "dashboard/dentista.js";
 
-        console.log(`📂 Carregando dashboard: ${dashboardPath}`);
+        //console.log(`📂 Carregando dashboard: ${dashboardPath}`);
 
         try {
             const response = await fetch(dashboardPath);
@@ -66,7 +66,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         // Logout (quando o usuário clica em "Sair")
         document.getElementById("logout-button").addEventListener("click", () => {
-            console.log("🚪 Logout realizado!");
+            //console.log("🚪 Logout realizado!");
             localStorage.removeItem("token");
             localStorage.removeItem("user");
             location.href = location.href; // 🔄 Recarrega a página

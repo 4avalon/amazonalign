@@ -1,5 +1,5 @@
 console.log("[Pedidos Admin] 🔥 Script pedidos_admin.js carregado corretamente!");
-
+import { BASE_URL } from "../../config.js"; // ajuste o caminho conforme a pasta atual
 let pedidosOriginais = [];
 
 // Carrega a lista de pedidos do backend
@@ -15,7 +15,8 @@ async function carregarPedidos() {
         }
 
         console.log("🔍 Enviando requisição para buscar pedidos...");
-        const apiResponse = await fetch("http://localhost:5000/admin/pedidos/dashboard", {
+        const apiResponse = await fetch(`${BASE_URL}/admin/pedidos/dashboard`, {
+
             method: "GET",
             headers: {
                 "Content-Type": "application/json",

@@ -1,0 +1,134 @@
+    /* HEADER - Cabeçalho Fixo (caso queira incluir) */
+header {
+  width: 100%;
+  background: linear-gradient(90deg, #0066cc, #00bfff);
+  color: white;
+  padding: 15px 30px;
+  font-size: 20px;
+  font-weight: 600;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 70px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  border-bottom: 2px solid #ffffff33;
+  border-radius: 0 0 10px 10px;
+}
+#logout-button {
+  background: #ffffff;
+  color: #007BFF;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+#logout-button:hover {
+  background: #f1f1f1;
+  color: #0056b3;
+  transform: translateY(-1px);
+}
+
+
+    /* Ajuste para evitar que o conteúdo fique escondido abaixo do header */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #eef2f7;
+      margin: 0;
+      padding-top: 70px; /* Espaço para o header */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Conteúdo principal */
+    main {
+      width: 90%;
+      max-width: 1200px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Estilo dos containers */
+    .container {
+      background: white;
+      width: 100%;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+      min-height: 180px;
+      overflow-x: auto;
+    }
+
+    /* Responsividade */
+    @media (max-width: 768px) {
+      main {
+        width: 95%;
+      }
+      .container {
+        min-height: 150px;
+      }
+    }
+
+    /* Estilo das Tabelas */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      background: white;
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+
+    th {
+      background: #007BFF;
+      color: white;
+    }
+
+
+.tabela-scroll {
+  max-height: 400px;
+  overflow-y: auto;
+  display: block;
+  width: 100%;
+  border: 1px solid #ccc;
+  margin-top: 10px;
+  border-radius: 6px;
+}
+
+
+.tabela {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed; /* importante */
+}
+
+.tabela th, .tabela td {
+  padding: 10px;
+  text-align: center;
+  border: 1px solid #ddd;
+  word-wrap: break-word;
+}
+
+.tabela thead th {
+  position: sticky;
+  top: 0;
+  background-color: #007BFF;
+  color: white;
+  z-index: 1;
+}

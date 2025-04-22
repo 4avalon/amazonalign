@@ -1,7 +1,8 @@
-console.log("[Login] Iniciando login.js...");
+//console.log("[Login] Iniciando login.js...");
+import { BASE_URL } from '../config.js'; // ajuste o caminho se estiver em outra pasta
 
 setTimeout(() => {
-    console.log("[Login] Tentando obter os elementos do DOM...");
+    //console.log("[Login] Tentando obter os elementos do DOM...");
 
     const loginContainer = document.getElementById("login-container");
     const dashboardContainer = document.getElementById("dashboard-container");
@@ -11,7 +12,7 @@ setTimeout(() => {
         return;
     }
 
-    console.log("✅ Containers encontrados!", { loginContainer, dashboardContainer });
+    //console.log("✅ Containers encontrados!", { loginContainer, dashboardContainer });
 
     const loginForm = document.getElementById("login-form");
     if (!loginForm) {
@@ -19,12 +20,12 @@ setTimeout(() => {
         return;
     }
 
-    console.log("✅ Formulário de login encontrado!");
+    //console.log("✅ Formulário de login encontrado!");
 
     loginForm.addEventListener("submit", async (event) => {
         event.preventDefault();
 
-        console.log("📤 Evento de submit acionado!");
+        //console.log("📤 Evento de submit acionado!");
 
         const emailInput = document.getElementById("email");
         const senhaInput = document.getElementById("senha");
@@ -37,11 +38,14 @@ setTimeout(() => {
         const email = emailInput.value.trim().toLowerCase();
         const senha = senhaInput.value.trim();
 
-        console.log(`🔑 Tentando login com:\n   - Email: ${email}\n   - Senha: ${senha}`);
+        //console.log(`🔑 Tentando login com:\n   - Email: ${email}\n   - Senha: ${senha}`);
 
         try {
-            console.log("🌍 Enviando requisição para o servidor...");
-            const response = await fetch("http://localhost:5000/dentistas/login", {
+            //console.log("🌍 Enviando requisição para o servidor...");
+           // const response = await fetch("http://localhost:5000/dentistas/login", {
+            console.log(" Usando API:", BASE_URL);
+            const response = await fetch(`${BASE_URL}/dentistas/login`, {
+
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -49,10 +53,10 @@ setTimeout(() => {
                 body: JSON.stringify({ email, senha })
             });
 
-            console.log("🔄 Resposta recebida do servidor.");
+            //console.log("🔄 Resposta recebida do servidor.");
             const data = await response.json();
 
-            console.log("📥 Resposta JSON:", data);
+            //console.log("📥 Resposta JSON:", data);
 
             if (!response.ok) {
                 console.error(`❌ Erro no login: ${data.message || "Erro desconhecido"}`);
@@ -61,15 +65,15 @@ setTimeout(() => {
                 return;
             }
 
-            console.log("✅ Login bem-sucedido!");
-            console.log("🛠️ Salvando token no localStorage...");
+            //console.log("✅ Login bem-sucedido!");
+            //console.log("🛠️ Salvando token no localStorage...");
 
             localStorage.setItem("token", data.token);
             localStorage.setItem("user", JSON.stringify(data.dentista));
             localStorage.setItem("dentista_id", data.dentista.id); // 
             
-            console.log("🦷 Dentista ID salvo:", data.dentista.id);
-            console.log("🔀 Ocultando login e mostrando o dashboard...");
+            //console.log("🦷 Dentista ID salvo:", data.dentista.id);
+            //console.log("🔀 Ocultando login e mostrando o dashboard...");
             loginContainer.style.display = "none";  // Esconde o login
             dashboardContainer.style.display = "block"; // Mostra o dashboard
              location.href = location.href;
@@ -81,5 +85,5 @@ setTimeout(() => {
         }
     });
 
-    console.log("📌 Event listener de submit adicionado ao formulário!");
+    //console.log("📌 Event listener de submit adicionado ao formulário!");
 }, 1000);

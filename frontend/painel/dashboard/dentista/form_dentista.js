@@ -1,15 +1,16 @@
-console.log("[Form Dentista] 🔥 Script carregado corretamente!");
+//console.log("[form_dentista]🔥 Script carregado corretamente!");
+import { BASE_URL } from "../../config.js";
 
 // Função para inicializar a seção de formulários
 function inicializarFormularios() {
-    console.log("📌 Inicializando sistema de formulários...");
+    //console.log("📌 Inicializando sistema de formulários...");
     inicializarBotoesFormulario();
     inicializarBotoesExtras();
 }
 
 // Função para criar e adicionar eventos aos botões de formulário principais
 function inicializarBotoesFormulario() {
-    console.log("📌 Criando botões e adicionando eventos...");
+    //console.log("📌 Criando botões e adicionando eventos...");
 
     let btnCadastroPaciente = document.getElementById("btn-cadastro-paciente");
     let btnCadastroPedido = document.getElementById("btn-cadastro-pedido");
@@ -22,12 +23,12 @@ function inicializarBotoesFormulario() {
     btnCadastroPaciente.addEventListener("click", () => chamarFormulario("cadastro-paciente"));
     btnCadastroPedido.addEventListener("click", () => chamarFormulario("cadastro-pedido"));
 
-    console.log("✅ Eventos adicionados aos botões principais de formulário!");
+    //console.log("✅ Eventos adicionados aos botões principais de formulário!");
 }
 
 // Função para adicionar eventos a outros botões do sistema
 function inicializarBotoesExtras() {
-    console.log("📌 Procurando botões extras para carregar formulários...");
+    //console.log("📌 Procurando botões extras para carregar formulários...");
 
     let botoesExtras = document.querySelectorAll("[data-form]");
     botoesExtras.forEach(botao => {
@@ -37,18 +38,18 @@ function inicializarBotoesExtras() {
         });
     });
 
-    console.log("✅ Eventos adicionados aos botões extras de formulário!");
+    //console.log("✅ Eventos adicionados aos botões extras de formulário!");
 }
 
 // Função que decide qual formulário carregar e faz scroll
 function chamarFormulario(tipo) {
-    console.log(`🔄 Chamando formulário: ${tipo}`);
+    //console.log(`🔄 Chamando formulário: ${tipo}`);
 
     const formContainer = document.getElementById("form-active");
 
     // Verifica se já há um formulário carregado
     if (formContainer.innerHTML.trim() !== "") {
-        console.log("🔄 Ocultando formulário anterior...");
+        //console.log("🔄 Ocultando formulário anterior...");
         formContainer.innerHTML = ""; // Remove o conteúdo anterior
     }
 
@@ -64,13 +65,13 @@ function chamarFormulario(tipo) {
     // Scroll suave para a seção do formulário
     setTimeout(() => {
         formContainer.scrollIntoView({ behavior: "smooth" });
-        console.log("📜 Scroll realizado até o formulário!");
+        //console.log("📜 Scroll realizado até o formulário!");
     }, 300);
 }
 
 // 🔹 **Agora carregamos o HTML + Script de Cadastro de Paciente**
 function carregarCadastroPaciente() {
-    console.log("🔄 Carregando formulário de Cadastro de Paciente...");
+    //console.log("🔄 Carregando formulário de Cadastro de Paciente...");
     carregarFormulario(
         "dashboard/dentista/form_dentista/cadastro_paciente.html",
         "dashboard/dentista/form_dentista/cadastro_paciente.js"
@@ -79,7 +80,7 @@ function carregarCadastroPaciente() {
 
 // 🔹 **Agora carregamos o HTML + Script de Cadastro de Pedido**
 function carregarCadastroPedido() {
-    console.log("🔄 Carregando formulários de Cadastro de Pedido e Ficha Técnica...");
+    //console.log("🔄 Carregando formulários de Cadastro de Pedido e Ficha Técnica...");
 
     let caminhoPedido = "dashboard/dentista/form_dentista/cadastro_pedido.html";
     let caminhoFicha = "dashboard/dentista/form_dentista/ficha_tecnica.html";
@@ -93,21 +94,21 @@ function carregarCadastroPedido() {
         })))
         .then(([pedidoHtml, fichaHtml]) => {
             let formContainer = document.getElementById("form-active");
-            formContainer.innerHTML = pedidoHtml + "<hr>" + fichaHtml; // Junta os dois formulários
+            formContainer.innerHTML = pedidoHtml + "<hr>" + fichaHtml;
             formContainer.style.display = "block";
 
-            console.log("✅ Formulários de Pedido e Ficha Técnica carregados com sucesso!");
-
-            // Agora carregamos os scripts específicos
             carregarScriptDinamico("dashboard/dentista/form_dentista/cadastro_pedido.js");
             carregarScriptDinamico("dashboard/dentista/form_dentista/ficha_tecnica.js");
+            carregarScriptDinamico("dashboard/dentista/form_dentista/ficha_tecnica_utils.js");
         })
         .catch(error => console.error("❌ Erro ao carregar os formulários:", error));
 }
 
+
+
 // Função genérica para carregar formulários e garantir que o script correto seja carregado
 function carregarFormulario(caminho, scriptPath = null) {
-    console.log(`📥 Carregando HTML de: ${caminho}`);
+    //console.log(`📥 Carregando HTML de: ${caminho}`);
 
     fetch(caminho)
         .then(response => {
@@ -121,7 +122,7 @@ function carregarFormulario(caminho, scriptPath = null) {
 
             formContainer.innerHTML = html; // Atualiza o conteúdo do formulário
             formContainer.style.display = "block";
-            console.log("✅ Formulário carregado com sucesso!");
+            //console.log("✅ Formulário carregado com sucesso!");
 
             // Se houver um script associado, carregá-lo dinamicamente
             if (scriptPath) {
@@ -135,7 +136,7 @@ function carregarFormulario(caminho, scriptPath = null) {
 
 // Função para carregar um script dinamicamente
 function carregarScriptDinamico(scriptPath) {
-    console.log(`📜 Tentando carregar script: ${scriptPath}`);
+    //console.log(`📜 Tentando carregar script: ${scriptPath}`);
 
     // Verifica se o script já foi carregado
     if (document.querySelector(`script[src="${scriptPath}"]`)) {
@@ -161,10 +162,10 @@ inicializarFormularios();
 // 📌 CADASTRO DE PACIENTE
 // ---------------------------------
 
-console.log("[cadastro_paciente] 🔥🔥🔥🔥 Iniciando");
+//console.log("[form_dentista] 🔥 Iniciando");
 
 function inicializarCadastroPaciente() {
-    console.log("📌 Inicializando Cadastro de Paciente...");
+    //console.log("📌[form_dentista] Inicializando Cadastro de Paciente...");
 
     const form = document.querySelector("#form-cadastro-paciente");
     if (!form) {
@@ -180,7 +181,7 @@ function inicializarCadastroPaciente() {
     const dentistaId = localStorage.getItem("dentista_id");
     if (dentistaId) {
         document.getElementById("dentista_id").value = dentistaId;
-        console.log(`🦷 Dentista ID encontrado: ${dentistaId}`);
+        //console.log(`🦷[form_dentista] Dentista ID encontrado: ${dentistaId}`);
     } else {
         console.warn("⚠️ Nenhum dentista_id encontrado no localStorage!");
     }
@@ -200,10 +201,11 @@ async function handleCadastroPaciente(event) {
         }
     });
 
-    console.log("📤 Enviando dados do paciente:", JSON.stringify(pacienteData, null, 2));
+    //console.log("[form_dentista]📤 Enviando dados do paciente:", JSON.stringify(pacienteData, null, 2));
 
     try {
-        const response = await fetch("http://localhost:5000/pacientes", {
+        const response = await fetch(`${BASE_URL}/pacientes`, {
+
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -212,10 +214,10 @@ async function handleCadastroPaciente(event) {
             body: JSON.stringify(pacienteData)
         });
 
-        console.log(`📡 Status da resposta: ${response.status}`);
+        //console.log(`[form_dentista]📡 Status da resposta: ${response.status}`);
 
         const result = await response.json();
-        console.log("📩 Resposta do servidor:", result);
+        //console.log("[form_dentista]📩 Resposta do servidor:", result);
 
         if (response.ok) {
             alert("✅ Paciente cadastrado com sucesso!");

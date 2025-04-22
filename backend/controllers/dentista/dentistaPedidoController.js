@@ -31,11 +31,23 @@ async function listarPedidosDentista(req, res) {
   const colunasPermitidas = {
     id: "p.id",
     paciente_nome: "pac.nome",
-    data_pagamento: "p.data_pagamento",
-    status: "p.status",
+    data_pagamento: "p.data_pagamento"
   };
 
-  if (coluna && colunasPermitidas[coluna]) {
+  if (coluna === "status") {
+    const direcao = ordem && ordem.toLowerCase() === "desc" ? "DESC" : "ASC";
+    ordemSql = `
+      CASE 
+        WHEN p.status = 'aberto' THEN 1
+        WHEN p.status = 'pago' THEN 2
+        WHEN p.status = 'em_producao' THEN 3
+        WHEN p.status = 'finalizado' THEN 4
+        WHEN p.status = 'entregue' THEN 5
+        WHEN p.status = 'cancelado' THEN 6
+        ELSE 7
+      END ${direcao}
+    `;
+  } else if (coluna && colunasPermitidas[coluna]) {
     const direcao = ordem && ordem.toLowerCase() === "asc" ? "ASC" : "DESC";
     ordemSql = `${colunasPermitidas[coluna]} ${direcao} NULLS LAST`;
   }
@@ -47,6 +59,7 @@ async function listarPedidosDentista(req, res) {
       pac.nome AS paciente_nome,
       p.paciente_id,
       COALESCE(TO_CHAR(p.data_pagamento, 'DD/MM/YYYY'), '--') AS data_pagamento,
+      TO_CHAR(p.created_at, 'DD/MM/YYYY') AS data_criacao,
       p.status, 
       p.arquivo_3d 
     FROM pedidos p
@@ -55,21 +68,18 @@ async function listarPedidosDentista(req, res) {
     ORDER BY ${ordemSql}
   `;
 
-
   console.log("🛠 Query gerada:", querySQL);
   console.log("📌 Valores passados:", valores);
 
   try {
     const result = await client.query(querySQL, valores);
     console.log("✅ Resultado da query:", result.rows);
-
     res.status(200).json(result.rows);
   } catch (err) {
     console.error("❌ Erro ao listar pedidos:", err);
     res.status(500).json({ message: "Erro interno no servidor.", error: err.message });
   }
 }
-
 
 module.exports = {
   listarPedidosDentista

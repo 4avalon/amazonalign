@@ -1,8 +1,9 @@
 import { carregarPedidosPaciente } from "./tabela_pedidos_paciente.js";
+import { BASE_URL } from "../../../config.js"; // ajuste se necessário
 
 // Configura o dropdown e os detalhes do paciente
 export async function configurarDetalhesPaciente() {
-  console.log("🔄 Configurando detalhes do paciente...");
+  //console.log("🔄 Configurando detalhes do paciente...");
 
   const selectPaciente = document.getElementById("paciente-ativo");
   if (!selectPaciente) {
@@ -15,7 +16,8 @@ export async function configurarDetalhesPaciente() {
     if (!token) return (window.location.href = "/login.html");
 
     // Buscar pacientes disponíveis
-    const response = await fetch("http://localhost:5000/dentista/pacientes/dashboard", {
+    const response = await fetch(`${BASE_URL}/dentista/pacientes/dashboard`, {
+
       method: "GET",
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -23,7 +25,7 @@ export async function configurarDetalhesPaciente() {
     if (!response.ok) throw new Error(`Erro HTTP ${response.status}`);
 
     const pacientes = await response.json();
-    console.log("📌 Lista de pacientes carregada:", pacientes);
+    //console.log("📌 Lista de pacientes carregada:", pacientes);
 
     if (!Array.isArray(pacientes) || pacientes.length === 0) {
       throw new Error("Nenhum paciente disponível!");
@@ -37,14 +39,22 @@ export async function configurarDetalhesPaciente() {
     // Seleciona automaticamente o primeiro paciente e preenche os detalhes
     const primeiroPaciente = pacientes[0];
     atualizarDadosPaciente(primeiroPaciente);
+    localStorage.setItem("paciente_id", primeiroPaciente.id);
+    //console.log("🧠 paciente_id inicial salvo no localStorage:", primeiroPaciente.id);
 
+    // Evento de troca de paciente no dropdown
     // Evento de troca de paciente no dropdown
     selectPaciente.onchange = () => {
       const pacienteSelecionado = pacientes.find(p => p.id == selectPaciente.value);
       if (pacienteSelecionado) {
         atualizarDadosPaciente(pacienteSelecionado);
+
+        // 🔥 Adiciona esta linha:
+        localStorage.setItem("paciente_id", pacienteSelecionado.id);
+        //console.log("🧠 paciente_id salvo no localStorage:", pacienteSelecionado.id);
       }
     };
+
   } catch (error) {
     console.error("❌ Erro ao carregar pacientes:", error);
   }
@@ -52,9 +62,12 @@ export async function configurarDetalhesPaciente() {
 
 // Atualiza os detalhes do paciente e a tabela de pedidos
 export function atualizarDadosPaciente(paciente) {
-  console.log(`📝 Atualizando para paciente: ${paciente.nome} (ID: ${paciente.id})`);
+  //console.log(`📝 Atualizando para paciente: ${paciente.nome} (ID: ${paciente.id})`);
+  document.querySelectorAll(".nome-paciente-selecionado").forEach(el => {
+    el.textContent = paciente.nome || "---";
+  });
 
-  document.getElementById("nome-paciente-selecionado").textContent = paciente.nome || "---";
+  //document.getElementById("nome-paciente-selecionado2").textContent = paciente.nome || "---";
   document.getElementById("contato-paciente").textContent = paciente.telefone || "---";
   document.getElementById("data-paciente").textContent = paciente.data_nascimento || "--";
   document.getElementById("sexo-paciente").textContent = paciente.sexo || "--";
@@ -63,7 +76,7 @@ export function atualizarDadosPaciente(paciente) {
   carregarPedidosPaciente(paciente.id);
 }
 export function carregarDadosDentista() {
-  console.log("🔄 Buscando dados do dentista via Token JWT...");
+  //console.log("🔄 Buscando dados do dentista via Token JWT...");
 
   const dentistaNome = document.getElementById("dentista-nome");
   const dentistaId = document.getElementById("dentista-id");
@@ -90,7 +103,7 @@ export function carregarDadosDentista() {
     }
 
     const tokenPayload = JSON.parse(atob(tokenParts[1]));
-    console.log("📌 Dados extraídos do Token JWT:", tokenPayload);
+    //console.log("📌 Dados extraídos do Token JWT:", tokenPayload);
 
     // 🔹 Verifica se os dados necessários existem
     if (!tokenPayload.id || !tokenPayload.nome) {

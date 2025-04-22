@@ -33,4 +33,6 @@ const autenticarDentista = (req, res, next) => {
     next();
 };
 
+
 module.exports = { autenticarToken, autenticarAdmin, autenticarDentista };
+

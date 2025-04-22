@@ -1,4 +1,5 @@
 console.log("[cadastro_paciente] 🔥🔥🔥🔥 Iniciando");
+import { BASE_URL } from "../../../config.js";
 
 // Aguarda um pequeno tempo para garantir que o formulário foi carregado
 setTimeout(() => {
@@ -45,7 +46,7 @@ async function handleCadastroPaciente(event) {
     console.log("📤 Enviando dados do paciente:", JSON.stringify(pacienteData, null, 2));
 
     try {
-        const response = await fetch("http://localhost:5000/pacientes", {
+        const response = await fetch(`${BASE_URL}/pacientes`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -74,3 +75,5 @@ if (response.ok) {
     }
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////
+/////////////////

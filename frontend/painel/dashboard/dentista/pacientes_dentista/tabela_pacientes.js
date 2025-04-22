@@ -1,16 +1,19 @@
 import { initSortAndFilters } from "../../core/sortAndFilter.js";
 import { carregarPedidosPaciente } from "../pacientes_dentista/tabela_pedidos_paciente.js";
+import { BASE_URL } from "../../../config.js"; // ajuste se necessário
 
 // Inicializa tabela ao carregar
 export function inicializarTabelaPacientes() {
-  const containerPacientes = document.getElementById("lista-pacientes");
+  const containerPacientes = document.getElementById("tabela-lista-pacientes");
 
   if (!containerPacientes) {
-    console.warn("⚠️ Container #lista-pacientes não encontrado!");
+    console.warn("⚠️ Container #tabela-lista-pacientes não encontrado!");
     return;
   }
 
-  containerPacientes.innerHTML = `
+containerPacientes.innerHTML = `
+      <h1> Tabela 3 tabela-lista-pacientes</h1>
+  <div class="tabela-scroll">
     <table id="tabela-pacientes-dentista" class="tabela">
       <thead>
         <tr>
@@ -34,11 +37,14 @@ export function inicializarTabelaPacientes() {
           <td>--</td>
         </tr>
       </thead>
-      <tbody id="tbody-pacientes">
-        <tr><td colspan="5" style="text-align:center;">Carregando pacientes...</td></tr>
-      </tbody>
+    <tbody id="tbody-pacientes">
+      <tr><td colspan="5" style="text-align:center;">Carregando pacientes...</td></tr>
+    </tbody>
     </table>
-  `;
+  </div>
+`;
+
+
 
   // Inicializa os filtros e ordenação
   initSortAndFilters("tabela-pacientes-dentista", carregarPacientesDentista);
@@ -61,10 +67,11 @@ export async function carregarPacientesDentista({ ordenacao = {}, filtros = {} }
     if (valor) params.append(chave, valor);
   });
 
-  const url = `http://localhost:5000/dentista/pacientes/dashboard?${params.toString()}`;
+  const url = `${BASE_URL}/dentista/pacientes/dashboard?${params.toString()}`;
+
 
   try {
-    console.log(`🔍 Buscando pacientes na API: ${url}`);
+    //console.log(`🔍 Buscando pacientes na API: ${url}`);
     
     const response = await fetch(url, {
       method: "GET",
@@ -74,7 +81,7 @@ export async function carregarPacientesDentista({ ordenacao = {}, filtros = {} }
     if (!response.ok) throw new Error(`Erro HTTP ${response.status}`);
 
     const pacientes = await response.json();
-    console.log("📌 Resposta da API:", pacientes);
+    //console.log("📌 Resposta da API:", pacientes);
 
     if (!Array.isArray(pacientes)) {
       throw new Error("Os dados recebidos não são uma lista válida!");
@@ -123,7 +130,7 @@ document.querySelectorAll(".btn-ver").forEach(btn =>
 
 // Função que busca os detalhes do paciente diretamente pelo ID (Tabela 3)
 async function verDetalhesPacienteDentista(pacienteId) {
-  console.log(`🔎 Ver detalhes do paciente ID: ${pacienteId}`);
+  //console.log(`🔎 Ver detalhes do paciente ID: ${pacienteId}`);
 
   const selectPaciente = document.getElementById("paciente-ativo");
   if (!selectPaciente) {
@@ -139,6 +146,9 @@ async function verDetalhesPacienteDentista(pacienteId) {
   await carregarPedidosPaciente(pacienteId);
 
   // Scroll até os detalhes do paciente
-  document.getElementById("info-dentista").scrollIntoView({ behavior: "smooth" });
+  const alvo = document.getElementById("info-dentista");
+  const offset = -100; // Ajuste como quiser
+  const y = alvo.getBoundingClientRect().top + window.scrollY + offset;
+  window.scrollTo({ top: y, behavior: "smooth" });
 }
 

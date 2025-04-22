@@ -6,6 +6,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 
+
 const dentistasRoutes = require('./routes/dentistas');
 const pacientesRoutes = require('./routes/pacientes');
 const pedidosRoutes = require('./routes/pedidos');
