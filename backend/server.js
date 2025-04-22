@@ -19,7 +19,14 @@ const dashboardDentistaRoutes = require("./routes/dashboardDentista");
 const app = express();
 
 // Configurações básicas
-app.use(cors({ origin: '*' }));
+app.use(cors({
+  origin: [
+    "http://localhost:8000",             // dev local
+    "https://4avalon.github.io",         // GitHub Pages
+  ],
+  credentials: true
+}));
+
 app.use(express.json());
 
 // Rotas
