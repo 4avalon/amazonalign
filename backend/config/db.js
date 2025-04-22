@@ -1,11 +1,13 @@
-const { Client } = require('pg'); // Importação do PostgreSQL
+const { Client } = require('pg');
 const dotenv = require('dotenv');
 
-// Carregar variáveis de ambiente
 dotenv.config();
 
 const client = new Client({
   connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
 client.connect()
